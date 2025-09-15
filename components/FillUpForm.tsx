@@ -53,8 +53,8 @@ const FillUpForm = () => {
     };
 
     try {
-        const res = await fetch(`https://ontap-creatives-website.vercel.app/api/product-inquiry-emails`, {
-            method: 'POST',
+        const res = await fetch(`https://ontap-creatives-website-crississipis-projects.vercel.app/api/product-inquiry-emails`, {
+            method: 'POST, OPTIONS',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload),
         });
