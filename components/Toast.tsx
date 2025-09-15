@@ -1,3 +1,5 @@
+"use client"
+
 import { motion } from 'framer-motion'
 import React, { JSX } from 'react'
 import { HiCheck, HiExclamationCircle } from 'react-icons/hi'
@@ -14,6 +16,7 @@ const Toast = ({ icon, message }: ToastProps) => {
     "success" : <HiCheck className='text-violet'/>,
     "info" : <HiExclamationCircle className='text-sky-400'/>
   }
+
   return (
     <motion.div 
         animate={{x: [1, 0, -1], y: [1,0,-1]}}

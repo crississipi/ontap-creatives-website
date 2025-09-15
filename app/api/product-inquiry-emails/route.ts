@@ -34,15 +34,15 @@ export async function POST(req: Request) {
         <div><strong>${email}</strong> of <a href='mailto:${compName}'>${compName}</a> has sent you an email.&nbsp; Kindly reply at your earliest convenience.</div>
         <div style="margin-top: 20px; padding: 15px 0; border-width: 1px 0; border-style: dashed; border-color: lightgrey;">
         <table role="presentation">
+        <tbody>
         <tr>
         <td style="vertical-align: top;">
-        <div style="color: #2c3e50; font-size: 18px;">
-          <strong>Client Name: ${name}</strong> <strong><em>Company: ${compName}</em></strong>
-        </div>
+        <div style="color: #2c3e50; font-size: 18px;"><strong>Client Name: ${name}</strong><strong><em>Company: ${compName}</em></strong></div>
         <div style="color: #000000; font-size: 12px;">${time}</div>
         <span style="font-size: 16px;">${message}</span>
         </td>
         </tr>
+        </tbody>
         </table>
         </div>
         </div>`,

@@ -4,6 +4,7 @@ import React, { useEffect, useRef, useState } from 'react'
 import Input from './Input'
 import { motion } from 'framer-motion';
 import { HiArrowRight } from 'react-icons/hi2';
+import Toast from './Toast';
 
 
 
@@ -40,7 +41,9 @@ const FillUpForm = () => {
     compName: '',
     subject: `OnTap Product Inquiry`,
   });
-  const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "";
+  const [show, setShow] = useState(false);
+  const [icon, setIcon] = useState('info');
+  const [message, setMessage] = useState('Template Info');
 
   const submitEmail = async () => {
     const payload = {
@@ -53,7 +56,7 @@ const FillUpForm = () => {
     };
 
     try {
-        const res = await fetch(`https://ontap-creatives-website-crississipis-projects.vercel.app/api/product-inquiry-emails`, {
+        const res = await fetch(`https://ontap-creatives-website.vercel.app/api/product-inquiry-emails`, {
             method: 'POST, OPTIONS',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload),
@@ -62,7 +65,9 @@ const FillUpForm = () => {
         const data = await res.json();
 
         if (data.success) {
-            alert('Message sent successfully!');
+            setShow(true);
+            setIcon('success');
+            setMessage(`Message sent successfully!`);
             storeUserInfo({
             fname: '',
             lname: '',
@@ -73,11 +78,15 @@ const FillUpForm = () => {
             subject: `OnTap Product Inquiry`,
             });
         } else {
-            alert(`Error: ${data.message}`);
+          setShow(true);
+          setIcon('error');
+          setMessage(`Error: ${data.message}`);
         }
         } catch (error) {
             console.error('Error sending email:', error);
-            alert('An unexpected error occurred.');
+            setShow(true);
+            setIcon('error');
+            setMessage(`An unexpected error occurred.`);
         }
   };
 
@@ -129,6 +138,12 @@ const FillUpForm = () => {
 
   return (
     <div ref={fillUpRef} className='w-full flex flex-col py-20 items-center gap-5'>
+        {show && (
+          <Toast 
+            icon={icon}
+            message={message}
+          />
+        )}
         <h2 className='w-full text-center text-3xl font-bold'>To Arrange a Demonstration <span className='text-dark-blue'>or to Place Bulk Orders</span></h2>
         <p className='text-lg font-bold'>Kindly fill up this form</p>
         <motion.form 

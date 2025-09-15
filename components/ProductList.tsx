@@ -72,6 +72,7 @@ const ProductList = () => {
       <div className='w-full md:w-3/4 h-full grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-7 px-3 py-8 md:px-10'>
         {ProductCardInfo[0].map((val,i) => (
           <motion.div
+            key={`prodcard-${i}`}
             initial={{scale: 0.7}}
             animate={{scale: 1}}
             transition={{
@@ -99,6 +100,7 @@ const ProductList = () => {
       <div className='w-full md:w-3/4 h-full grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-7 px-3 md:px-10 py-8'>
         {ProductCardInfo[1].map((val,i) => (
           <motion.div
+            key={`prodcard-${i}`}
             initial={{scale: 0.7}}
             animate={{scale: 1}}
             transition={{

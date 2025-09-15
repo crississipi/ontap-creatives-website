@@ -29,7 +29,7 @@ const OnTapAnimation = () => {
   const { ref: section1Ref, isInView: section1Visible } = useInView();
 
   return (
-    <div ref={section1Ref} className='h-full w-full flex relative perspective-distant items-center'>
+    <div ref={section1Ref} className='scale-80 md:scale-100 h-full w-full flex relative perspective-distant items-center'>
         <div className={`w-48 md:w-54 absolute transform-3d ${section1Visible ? 'md:right-3/5 right-65/100' : 'right-2/10'} top-1/2 -translate-y-1/2 rounded-lg -rotate-z-90 overflow-hidden rotate-y-65 ease-out duration-500`}>
             <Image
                 height={500}

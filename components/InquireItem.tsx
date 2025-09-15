@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import ProductCard from './ProductCard'
 import { ProductCardProps, ProductProps } from '@/types';
 import { HiOutlineArrowLongRight, HiOutlineArrowSmallLeft, HiOutlineXMark, HiPhone } from 'react-icons/hi2';
@@ -1946,57 +1946,72 @@ const InquireItem = ({ imgUrl, productName, productDesc, size, setInquireItem, i
         <strong className='lowercase'>{userInfo.email}</strong>
     </>);
   const emailRef = useRef<HTMLDivElement | null>(null);
-  const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "";
+  const [show, setShow] = useState(false);
+  const [icon, setIcon] = useState('info');
+  const [message, setMessage] = useState('Template Info');
+  
+  useEffect(() => {
+    if (show) {
+      const timer = setTimeout(() => {
+        setShow(false);
+      }, 3000);
 
-const getInputs = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-  const { name, value } = e.target;
-
-  if (name === "contact") {
-    let digits = value.replace(/\D/g, "");
-
-    const countryDigits = countryCode.code.replace(/\D/g, "");
-    if (digits.startsWith(countryDigits)) {
-      digits = digits.slice(countryDigits.length);
+      // Cleanup when show changes or component unmounts
+      return () => clearTimeout(timer);
     }
+  }, [show]);
 
-    if (countryCode.maxDigits) {
-      if (digits.length > countryCode.maxDigits) {
-        digits = digits.slice(0, countryCode.maxDigits);
+  const getInputs = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+
+    if (name === "contact") {
+      let digits = value.replace(/\D/g, "");
+
+      const countryDigits = countryCode.code.replace(/\D/g, "");
+      if (digits.startsWith(countryDigits)) {
+        digits = digits.slice(countryDigits.length);
       }
-    }
 
-    let formatted = digits;
-    if (countryCode?.format) {
-      try {
-        formatted = countryCode.format(digits);
-      } catch {
-        formatted = digits;
+      if (countryCode.maxDigits) {
+        if (digits.length > countryCode.maxDigits) {
+          digits = digits.slice(0, countryCode.maxDigits);
+        }
       }
+
+      let formatted = digits;
+      if (countryCode?.format) {
+        try {
+          formatted = countryCode.format(digits);
+        } catch {
+          formatted = digits;
+        }
+      }
+
+      formatted = `${countryCode.code} ${formatted}`.trim();
+
+      storeUserInfo((prev) => ({ ...prev, contact: formatted }));
+
+      e.target.value = formatted;
+
+      return;
     }
 
-    formatted = `${countryCode.code} ${formatted}`.trim();
-
-    storeUserInfo((prev) => ({ ...prev, contact: formatted }));
-
-    e.target.value = formatted;
-
-    return;
-  }
-
-  // Default update for other fields
-  storeUserInfo((prev) => ({
-    ...prev,
-    [name]: value,
-  }));
-};
+    // Default update for other fields
+    storeUserInfo((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
 
   const submitEmail = async () => {
     if (step === 0) {
         if (!userInfo.name || !userInfo.contact || !userInfo.email) {
-            alert('Please fill out all required fields.');
+            setShow(true);
+            setIcon('info');
+            setMessage(`Please fill out all required fields.`);
         } else {
             try {
-                const res = await fetch(`https://ontap-creatives-website-crississipis-projects.vercel.app/api/email-verification`, {
+                const res = await fetch(`https://ontap-creatives-website.vercel.app/api/email-verification`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json'},
                     body: JSON.stringify({
@@ -2008,10 +2023,14 @@ const getInputs = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>)
                 const data = await res.json();
 
                 if (data.success) {
-                    alert('OTP sent successfully!');
+                    setShow(true);
+                    setIcon('success');
+                    setMessage(`OTP sent successfully!`);
                     nextStep(1);
                 } else {
-                    alert('Failed to send OTP: ' + data.message)
+                  setShow(true);
+                  setIcon('error');
+                  setMessage(`Failed to send OTP: ${data.message}`);
                 }
             } catch (err) {
                 console.log('Error sending OTP: ' + err);
@@ -2019,7 +2038,7 @@ const getInputs = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>)
         }
     } else if (step === 1) {
         try {
-            const res = await fetch(`https://ontap-creatives-website-crississipis-projects.vercel.app/api/verify-otp`, {
+            const res = await fetch(`https://ontap-creatives-website.vercel.app/api/verify-otp`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -2031,7 +2050,9 @@ const getInputs = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>)
             const data = await res.json();
 
             if (data.success) {
-                <Toast icon='success' message='OTP matched.' />
+                setShow(true);
+                setIcon('success');
+                setMessage(`OTP matched.`);
                 nextStep(2);
                 setEmailContent(
                 <>
@@ -2063,7 +2084,11 @@ const getInputs = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>)
                     <strong className="lowercase">{userInfo.email}</strong>
                 </>
                 );
-            } else { <Toast icon='error' message='OTP not matched.' />}
+            } else { 
+              setShow(true);
+              setIcon('error');
+              setMessage(`OTP not matched.`);
+            }
         } catch (err) { console.log(err) };
     } else {
         const messageHtml = emailRef.current?.innerHTML || '';
@@ -2077,7 +2102,7 @@ const getInputs = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>)
         };
 
         try {
-        const res = await fetch(`https://ontap-creatives-website-crississipis-projects.vercel.app/api/product-inquiry-emails`, {
+        const res = await fetch(`https://ontap-creatives-website.vercel.app/api/product-inquiry-emails`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload),
@@ -2086,7 +2111,9 @@ const getInputs = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>)
         const data = await res.json();
 
         if (data.success) {
-            alert('Message sent successfully!');
+            setShow(true);
+            setIcon('success');
+            setMessage(`Message sent successfully!`);
             nextStep(0);
             storeUserInfo({
             name: '',
@@ -2096,11 +2123,15 @@ const getInputs = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>)
             });
             setOtp('');
         } else {
-            <Toast icon='error' message={`Error: ${data.message}`} />
+          setShow(true);
+          setIcon('error');
+          setMessage(`Error: ${data.message}`);
         }
         } catch (error) {
             console.error('Error sending email:', error);
-            <Toast icon='error' message='Error sending email. Please try again.' />
+            setShow(true);
+            setIcon('error');
+            setMessage(`Error sending email. Please try again.`);
         }
     }
     };
@@ -2137,8 +2168,16 @@ const getInputs = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>)
     c.country.toLowerCase().includes(countrySearch.toLowerCase())
   );
 
+
+
   return (
     <div className='h-full w-full fixed top-0 left-0 bg-white/15 backdrop-blur-md z-100 flex items-center justify-center'>
+        {show && (
+          <Toast 
+            icon={icon}
+            message={message}
+          />
+        )}
         <div className='w-full h-full md:w-3/4 lg:w-1/2 md:h-2/3 rounded-xl bg-white shadow-md flex flex-col md:flex-row items-center p-3'>
             <button 
                 type="button"
