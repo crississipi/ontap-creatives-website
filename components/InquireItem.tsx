@@ -1996,7 +1996,7 @@ const getInputs = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>)
             alert('Please fill out all required fields.');
         } else {
             try {
-                const res = await fetch(`https://ontap-backend-system.vercel.app/api/email-verification`, {
+                const res = await fetch(`https://ontap-creatives-website.vercel.app/api/email-verification`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json'},
                     body: JSON.stringify({
@@ -2019,7 +2019,7 @@ const getInputs = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>)
         }
     } else if (step === 1) {
         try {
-            const res = await fetch(`https://ontap-backend-system.vercel.app/api/verify-otp`, {
+            const res = await fetch(`https://ontap-creatives-website.vercel.app/api/verify-otp`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -2077,7 +2077,7 @@ const getInputs = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>)
         };
 
         try {
-        const res = await fetch(`https://ontap-backend-system.vercel.app/api/product-inquiry-email`, {
+        const res = await fetch(`https://ontap-creatives-website.vercel.app/api/product-inquiry-email`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload),
