@@ -1,34 +1,23 @@
-// pages/api/email-verification.ts
-import type { NextApiRequest, NextApiResponse } from 'next';
 import nodemailer from 'nodemailer';
+import { otpStore, generateOtp } from '@/lib/otpStore';
+import cors from '@/lib/cors';
 
-type ResponseData = {
-  success: boolean;
-  message: string;
-};
-
-const otpStore = new Map<string, { otp: string; expiresAt: number }>();
-
-function generateOtp(): string {
-  return Math.floor(100000 + Math.random() * 900000).toString(); // 6-digit OTP
+export async function OPTIONS(req: Request) {
+  await cors(req as any, {} as any);
+  return new Response(null, { status: 200 });
 }
 
+export async function POST(req: Request) {
+  await cors(req as any, {} as any);
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse<ResponseData>) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ success: false, message: 'Method not allowed' });
-  }
-
-  const { email, name } = req.body;
+  const { email, name } = await req.json();
 
   if (!email || !name) {
-    return res.status(400).json({ success: false, message: 'Credentials are required.' });
+    return Response.json({ success: false, message: 'Credentials are required.' }, { status: 400 });
   }
 
-
-
   const otp = generateOtp();
-  const expiresAt = Date.now() + 5 * 60 * 1000; // 5 minutes
+  const expiresAt = Date.now() + 5 * 60 * 1000;
   otpStore.set(email, { otp, expiresAt });
 
   const transporter = nodemailer.createTransport({
@@ -40,14 +29,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       pass: process.env.SMTP_PASS,
     },
   });
-
-
-
+  
   try {
     await transporter.sendMail({
       from: `"Ontap Creatives Team" <${process.env.SMTP_USER}>`,
       to: email,
-      subject: 'Ontap Creatives: Account Sign-Up Verification',
+      subject: "Ontap Creatives: Account Sign-Up Verification",
       html: `<div style="font-family: system-ui, sans-serif, Arial; font-size: 12px">
   <div
     style="padding: 15px 0;"
@@ -94,14 +81,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   </div>
 </div>`,
     });
-    return res.status(200).json({ success: true, message: 'OTP sent to email' });
-  } catch (error: any) {
+
+    return Response.json({ success: true, message: 'OTP sent to email' }, { status: 200 });
+  } catch (error) {
     console.error('Failed to send OTP email:', error);
-    return res.status(500).json({ success: false, message: 'Failed to send email' });
+    return Response.json({ success: false, message: 'Failed to send email' }, { status: 500 });
   }
 }
-
-
-export { otpStore };
-
-

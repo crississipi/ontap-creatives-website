@@ -2077,7 +2077,7 @@ const getInputs = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>)
         };
 
         try {
-        const res = await fetch(`https://ontap-creatives-website.vercel.app/api/product-inquiry-email`, {
+        const res = await fetch(`https://ontap-creatives-website.vercel.app/api/product-inquiry-emails`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload),
