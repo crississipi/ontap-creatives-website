@@ -37,7 +37,7 @@ export async function POST(req: Request) {
         <tbody>
         <tr>
         <td style="vertical-align: top;">
-        <div style="color: #2c3e50; font-size: 18px;"><strong>Client Name: ${name}</strong>${compName && `<strong><em>Company: ${compName}</em></strong>`}</div>
+        <div style="color: #2c3e50; font-size: 18px;"><strong>Client Name: ${name}</strong>${compName ? `<strong><em>Company: ${compName}</em></strong>` : ``}</div>
         <div style="color: #000000; font-size: 12px; margin-top: 10px;">${time}</div>
         <div style="font-size: 16px;">${message}</div>
         </td>
