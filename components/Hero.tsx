@@ -469,7 +469,7 @@ const Hero = ({ endWarping }: StartingProps) => {
                                     width={500}
                                     alt='ontap creatives cards'
                                     src={val}
-                                    className='h-auto w-72 object-contain pt-5 object-center'
+                                    className='h-auto w-60 object-contain pt-10 pb-5 object-center'
                                 />
                             </motion.div>
                         )

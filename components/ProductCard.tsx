@@ -16,7 +16,17 @@ const ProductCard = ({ imgUrl, productName, productDesc, size, setInquireItem, h
       }}
     >
         <div className='h-3/5 w-full flex items-center justify-center relative'>
-          
+          {size === 'w-full aspect-[3/4] md:aspect-[3/5]' && (
+            <div className={`md:hidden rounded-xs md:rounded-md ${hoverable ? 'h-32 md:h-40 w-6/7 md:w-3/4 bg-neutral-200' : 'h-38 mt-18 w-full md:w-3/4 bg-light-blue md:bg-white flex justify-center'} relative`}>
+              <Image
+                height={500}
+                width={500}
+                alt='ontap creatives cards'
+                src={imgUrl}
+                className={`w-64 aspect-square object-contain pt-3 md:pt-5 object-center -mt-8 md:-mt-16 ${hoverable ? 'group-hover:scale-110' : 'scale-135 group-hover:scale-150'} ease-out duration-500`}
+              />
+            </div>
+          )}
           { size !== 'h-full w-full' && size !== 'min-h-3/7 w-full md:aspect-[3/5]' ? (
             <div
               className='hidden md:block absolute w-3/4 aspect-[3/2] top-1/2 -translate-1/2 left-1/2 z-50 rounded-xl [perspective:1000px]'
@@ -85,6 +95,7 @@ const ProductCard = ({ imgUrl, productName, productDesc, size, setInquireItem, h
               />
             </div>
           )}
+          
         </div>
         <h2 className={`font-bold ${hoverable ? 'pt-3 md:pt-0 text-base md:text-xl' : 'pt-16 md:pt-0 text-xl'}`}>{productName}</h2>
         <p className='hidden md:block mt-3 mb-5 px-5 text-justify group-hover:px-5.5 ease-out duration-500'>{productDesc}</p>

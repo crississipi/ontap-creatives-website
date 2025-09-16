@@ -88,20 +88,7 @@ const sliceRange = (arr: string[], start: number, end: number) => {
 const ClientList = () => {
   return (
     <>
-        <div className="z-50 hidden md:flex relative h-auto w-full overflow-hidden bg-light-blue flex-col py-6">
-            {/* Row 1: logos 1–10 (indexes 0–9) */}
-            <MarqueeRow images={sliceRange(logos, 0, 15)} direction="left" />
-
-            {/* Row 2: logos 11–15 + 1–5 (indexes 10–14 + 0–5) */}
-            <MarqueeRow
-                images={[...logos.slice(5, 15), ...logos.slice(0, 5)]}
-                direction="right"
-            />
-
-            {/* Row 3: logos 6–15 (indexes 5–15) */}
-            <MarqueeRow images={[...logos.slice(10, 15), ...logos.slice(0, 10)]} direction="left" />
-        </div>
-        <div className="md:hidden relative h-auto w-full overflow-hidden bg-light-blue flex flex-col">
+        <div className="relative h-auto w-full overflow-hidden bg-light-blue flex flex-col">
             <MarqueeRow images={logos.slice(0, 15)} direction="left" />
         </div>
     </>
