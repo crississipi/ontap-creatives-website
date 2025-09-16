@@ -57,7 +57,7 @@ const AffiliateProgramPage = () => {
                 <h1 className='text-4xl md:text-7xl md:pl-20 font-bold uppercase'>Affiliate Program</h1>
                 <p className='text-lg leading-6 md:pl-20 md:text-2xl md:leading-normal'>We are excited to present our Affiliate Program for cutting-edge Smart Business Card. This program is designed to create a mutually beneficial partnership, allowing reseller to Tap into a growing market and offer innovative smart business card service to their clients.</p>
             </motion.span>
-            <div className='h-2/3 aspect-square top-1/2 mt-6 -ml-3 left-4/7 absolute -translate-y-1/2 flex items-center justify-center perspective-distant'>
+            <div className='h-2/3 aspect-square top-1/2 mt-4 -ml-7 md:mt-6 md:-ml-3 left-4/7 absolute -translate-y-1/2 flex items-center justify-center perspective-distant'>
                 <span className='h-16 w-16 rounded-full absolute top-1/2 left-1/2 -translate-1/2 waterEffect' style={{ animationDelay: "0.5s" }}></span>
                 <span className='h-24 w-24 rounded-full absolute top-1/2 left-1/2 -translate-1/2 waterEffect' style={{ animationDelay: "0.55s" }}></span>
                 <span className='h-32 w-32 rounded-full absolute top-1/2 left-1/2 -translate-1/2 waterEffect' style={{ animationDelay: "0.6s" }}></span>
@@ -75,7 +75,7 @@ const AffiliateProgramPage = () => {
                     ease: 'easeOut',
                     delay: 0.3
                 }}
-                className='w-60 md:w-80 aspect-square scale-275 -ml-5 md:-ml-20 left-3/4 md:left-5/7 top-5/6 md:top-6/7 absolute md:-translate-y-1/3'
+                className='w-60 md:w-80 aspect-square scale-275 -ml-10 md:-ml-20 left-3/4 md:left-5/7 top-5/6 md:top-6/7 absolute md:-translate-y-1/3'
             >
                 <Image
                     height={4096}

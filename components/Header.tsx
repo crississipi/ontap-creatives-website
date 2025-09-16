@@ -17,7 +17,7 @@ const Header = ({ setPage }: HeaderProps) => {
             <button 
                 type="button"
                 className='h-full w-auto flex items-center px-3 group'
-                onClick={() => setPage(0)}
+                onClick={() => {setPage(0); isNavShown(false);}}
             >
                 <Image
                     priority

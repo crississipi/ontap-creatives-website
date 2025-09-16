@@ -31,15 +31,15 @@ export async function POST(req: Request) {
       to: email,
       subject,
       html: `<div style="font-family: system-ui, sans-serif, Arial; font-size: 12px;">
-        <div><strong>${email}</strong> of <a href='mailto:${compName}'>${compName}</a> has sent you an email.&nbsp; Kindly reply at your earliest convenience.</div>
+        <div><a href='mailto:${email}'><strong>${email}</strong></a> ${compName && `of ${compName}`} has sent you an email.&nbsp; Kindly reply at your earliest convenience.</div>
         <div style="margin-top: 20px; padding: 15px 0; border-width: 1px 0; border-style: dashed; border-color: lightgrey;">
         <table role="presentation">
         <tbody>
         <tr>
         <td style="vertical-align: top;">
-        <div style="color: #2c3e50; font-size: 18px;"><strong>Client Name: ${name}</strong><strong><em>Company: ${compName}</em></strong></div>
-        <div style="color: #000000; font-size: 12px;">${time}</div>
-        <span style="font-size: 16px;">${message}</span>
+        <div style="color: #2c3e50; font-size: 18px;"><strong>Client Name: ${name}</strong>${compName && `<strong><em>Company: ${compName}</em></strong>`}</div>
+        <div style="color: #000000; font-size: 12px; margin-top: 10px;">${time}</div>
+        <div style="font-size: 16px;">${message}</div>
         </td>
         </tr>
         </tbody>

@@ -13,3 +13,13 @@ export interface ProductCardProps {
 }
 
 export interface ObserverProps { isInView: boolean; }
+
+export interface Country {
+  icon: string;
+  country: string;
+  code: string;
+  regex: RegExp;
+  format: (value: string) => string;
+  placeholder: string;
+  maxDigits: number;
+}

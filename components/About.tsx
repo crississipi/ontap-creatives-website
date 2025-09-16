@@ -65,7 +65,7 @@ const About = () => {
             <motion.div 
                 initial={{ x: "-150%" }}
                 animate={{ x: section3Visible ? "0%" : "-150%" }}
-                transition={{ duration: 1.5, ease: "easeOut" }}
+                transition={{ duration: 0.7, ease: "easeOut" }}
                 className='flex gap-3 md:gap-5 flex-col md:flex-row md:w-2/3'
             >
                 <Image
@@ -83,7 +83,7 @@ const About = () => {
             <motion.div 
                 initial={{ x: "150%" }}
                 animate={{ x: section3Visible ? "0%" : "150%" }}
-                transition={{ duration: 1.5, ease: "easeOut" }}
+                transition={{ duration: 0.7, ease: "easeOut" }}
                 className='flex flex-col gap-3 md:gap-5 items-start md:flex-row md:w-2/3'
             >
                 <Image

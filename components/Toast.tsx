@@ -1,7 +1,7 @@
 "use client"
 
 import { motion } from 'framer-motion'
-import React, { JSX } from 'react'
+import React, { JSX, useState } from 'react'
 import { HiCheck, HiExclamationCircle } from 'react-icons/hi'
 import { HiMiniExclamationTriangle } from 'react-icons/hi2';
 
@@ -19,14 +19,14 @@ const Toast = ({ icon, message }: ToastProps) => {
 
   return (
     <motion.div 
-        animate={{x: [1, 0, -1], y: [1,0,-1]}}
+        animate={{boxShadow: ['0 0 0 1px #999', '0 0 0 4px #999', '0 0 0 1px #999']}}
         transition={{
-            duration: 0.01,
+            duration: 1,
             ease: 'easeOut',
             repeat: Infinity,
             repeatType: 'mirror'
         }}
-        className={`fixed z-999999 rounded-xl ${icon === 'error' && 'bg-rose-500'} ${icon === 'success' && 'bg-violet'} ${icon === 'info' && 'bg-sky-400'} h-20 top-10 w-3/4 md:w-1/4 md:max-w-1/4 p-5 gap-3 flex items-center`}
+        className={`fixed z-999999 rounded-xl text-white ${icon === 'error' && 'bg-rose-500'} ${icon === 'success' && 'bg-violet'} ${icon === 'info' && 'bg-sky-400'} h-16 top-10 w-3/4 md:w-1/4 md:max-w-1/4 p-3 gap-3 flex items-center`}
     >
         <motion.span 
         animate={{scale: [0.9, 1, 0.9]}}
@@ -36,7 +36,7 @@ const Toast = ({ icon, message }: ToastProps) => {
             repeat: Infinity,
             repeatType: 'loop'
         }}
-        className='h-10 w-10 rounded-full bg-white z-999 flex items-center justify-center text-dark-blue text-2xl'
+        className='h-10 w-10 rounded-full bg-white z-999 flex items-center justify-center text-2xl'
         >
             {Icon[icon]}
         </motion.span>

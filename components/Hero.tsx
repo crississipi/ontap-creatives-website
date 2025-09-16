@@ -97,7 +97,7 @@ const Hero = ({ endWarping }: StartingProps) => {
             transition={{
                 duration: 1.5,
                 ease: 'easeOut',
-                delay: endWarping ? 0 : 3.5
+                delay: endWarping ? 0 : 2.5
             }}
             className='w-full flex flex-col items-center'
             >
@@ -117,9 +117,9 @@ const Hero = ({ endWarping }: StartingProps) => {
                     initial={{scale: 0, x: 0, y: -200}}
                     animate={{scale: 1, x: -750, y: 0}}
                     transition={{
-                        duration: 1.5,
+                        duration: 1,
                         ease: 'linear',
-                        delay: endWarping ? 0 : 4
+                        delay: endWarping ? 0 : 3
                     }}
                     className='absolute w-72 h-42 top-1/2 -translate-1/2 left-1/2 z-50 rounded-xl [perspective:1000px]'
                 >
@@ -130,21 +130,21 @@ const Hero = ({ endWarping }: StartingProps) => {
                             rotateZ: '-35deg'
                         }}
                         animate={{
-                            rotateX: '20deg',
-                            rotateY: '45deg',
-                            rotateZ: '-25deg'
+                            rotateX: '10deg',
+                            rotateY: '25deg',
+                            rotateZ: '-5deg'
                         }}
                         transition={{
-                            duration: 1.5,
+                            duration: 1,
                             ease: 'linear',
-                            delay: endWarping ? 0 : 4
+                            delay: endWarping ? 0 : 3
                         }}
                         className='h-full w-full overflow-hidden rounded-xl'
                     >
-                        <div className="relative w-full h-full transition-transform duration-700 transform-3d shadow-md">
+                        <div className="relative w-full h-full transition-transform duration-700 transform-3d shadow-xl shadow-neutral-500 border-2 border-neutral-50 rounded-2xl before:h-full before:w-full before:absolute before:z-50 before:bg-neutral-100/50">
                             <div className="absolute inset-0 rotate-y-180">
                                 <Image
-                                    src="/images/card-cover.png"
+                                    src="/images/card-1/front.png"
                                     alt="Front"
                                     fill
                                     className="object-cover rounded-xl shadow-lg backface-hidden"
@@ -152,7 +152,7 @@ const Hero = ({ endWarping }: StartingProps) => {
                             </div>
                             <div className="absolute inset-0">
                                 <Image
-                                    src="/images/card-cover.png"
+                                    src="/images/card-1/back.png"
                                     alt="Back"
                                     fill
                                     className="object-cover rounded-xl shadow-lg backface-hidden"
@@ -167,30 +167,30 @@ const Hero = ({ endWarping }: StartingProps) => {
                             rotateZ: '-35deg'
                         }}
                         animate={{
-                            rotateX: '20deg',
-                            rotateY: '45deg',
-                            rotateZ: '-25deg'
+                            rotateX: '10deg',
+                            rotateY: '25deg',
+                            rotateZ: '-5deg'
                         }}
                         transition={{
-                            duration: 1.5,
+                            duration: 1,
                             ease: 'linear',
-                            delay: endWarping ? 0 : 4.5
+                            delay: endWarping ? 0 : 3
                         }}
-                        className='h-full w-full overflow-hidden rounded-xl absolute top-1/5 left-1/5'
+                        className='h-full w-full rounded-xl absolute top-1/5 left-1/5 before:h-66/100 before:w-full before:absolute before:-z-20 before:top-5 before:-left-5 before:bg-black/50 before:rounded-tl-lg'
                     >
-                        <div className="relative w-full h-full transition-transform duration-700 transform-3d shadow-md">
+                        <div className="relative w-full h-full transition-transform duration-700 transform-3d shadow-md border-2 border-neutral-50 rounded-2xl">
                             <div className="absolute inset-0 rotate-y-180">
                                 <Image
-                                    src="/images/card-cover.png"
-                                    alt="Front"
+                                    src="/images/card-1/back.png"
+                                    alt="Back"
                                     fill
                                     className="object-cover rounded-xl shadow-lg backface-hidden"
                                 />
                             </div>
                             <div className="absolute inset-0">
                                 <Image
-                                    src="/images/card-cover.png"
-                                    alt="Back"
+                                    src="/images/card-1/front.png"
+                                    alt="Front"
                                     fill
                                     className="object-cover rounded-xl shadow-lg backface-hidden"
                                 />
@@ -202,9 +202,9 @@ const Hero = ({ endWarping }: StartingProps) => {
                     initial={{scale: 0, x: 0, y: -200}}
                     animate={{scale: 1, x: -250, y: 0}}
                     transition={{
-                        duration: 1.5,
+                        duration: 1,
                         ease: 'linear',
-                        delay: endWarping ? 0.5 : 4.5
+                        delay: endWarping ? 0.5 : 3.2
                     }}
                     className='absolute w-72 h-42 top-1/2 -translate-1/2 left-1/2 z-50 rounded-xl [perspective:1000px]'
                 >
@@ -215,21 +215,21 @@ const Hero = ({ endWarping }: StartingProps) => {
                             rotateZ: '-35deg'
                         }}
                         animate={{
-                            rotateX: '20deg',
-                            rotateY: '45deg',
-                            rotateZ: '-25deg'
+                            rotateX: '10deg',
+                            rotateY: '25deg',
+                            rotateZ: '-5deg'
                         }}
                         transition={{
-                            duration: 1.5,
+                            duration: 1,
                             ease: 'linear',
-                            delay: endWarping ? 0.5 : 4.5
+                            delay: endWarping ? 0.5 : 3.2
                         }}
                         className='h-full w-full overflow-hidden rounded-xl'
                     >
-                        <div className="relative w-full h-full transition-transform duration-700 transform-3d shadow-md">
+                        <div className="relative w-full h-full transition-transform duration-700 transform-3d shadow-xl shadow-neutral-500 rounded-2xl before:h-full before:w-full before:absolute before:z-50 before:bg-black/20">
                             <div className="absolute inset-0 rotate-y-180">
                                 <Image
-                                    src="/images/card-cover.png"
+                                    src="/images/card-2/front.png"
                                     alt="Front"
                                     fill
                                     className="object-cover rounded-xl shadow-lg backface-hidden"
@@ -237,7 +237,7 @@ const Hero = ({ endWarping }: StartingProps) => {
                             </div>
                             <div className="absolute inset-0">
                                 <Image
-                                    src="/images/card-cover.png"
+                                    src="/images/card-2/back.png"
                                     alt="Back"
                                     fill
                                     className="object-cover rounded-xl shadow-lg backface-hidden"
@@ -252,30 +252,30 @@ const Hero = ({ endWarping }: StartingProps) => {
                             rotateZ: '-35deg'
                         }}
                         animate={{
-                            rotateX: '20deg',
-                            rotateY: '45deg',
-                            rotateZ: '-25deg'
+                            rotateX: '10deg',
+                            rotateY: '25deg',
+                            rotateZ: '-5deg'
                         }}
                         transition={{
-                            duration: 1.5,
+                            duration: 1,
                             ease: 'linear',
-                            delay: endWarping ? 0.5 : 4.5
+                            delay: endWarping ? 0.5 : 3.2
                         }}
-                        className='h-full w-full overflow-hidden rounded-xl absolute top-1/5 left-1/5'
+                        className='h-full w-full rounded-xl absolute top-1/5 left-1/5  before:h-66/100 before:w-full before:absolute before:-z-20 before:top-5 before:-left-5 before:bg-black/50 before:rounded-tl-lg'
                     >
-                        <div className="relative w-full h-full transition-transform duration-700 transform-3d shadow-md">
+                        <div className="relative w-full h-full transition-transform duration-700 transform-3d shadow-md rounded-2xl">
                             <div className="absolute inset-0 rotate-y-180">
                                 <Image
-                                    src="/images/card-cover.png"
-                                    alt="Front"
+                                    src="/images/card-2/back.png"
+                                    alt="Back"
                                     fill
                                     className="object-cover rounded-xl shadow-lg backface-hidden"
                                 />
                             </div>
                             <div className="absolute inset-0">
                                 <Image
-                                    src="/images/card-cover.png"
-                                    alt="Back"
+                                    src="/images/card-2/front.png"
+                                    alt="Front"
                                     fill
                                     className="object-cover rounded-xl shadow-lg backface-hidden"
                                 />
@@ -287,9 +287,9 @@ const Hero = ({ endWarping }: StartingProps) => {
                     initial={{scale: 0, x: 0, y: -200}}
                     animate={{scale: 1, x: 250, y: 0}}
                     transition={{
-                        duration: 1.5,
+                        duration: 1,
                         ease: 'linear',
-                        delay: endWarping ? 1 : 5
+                        delay: endWarping ? 1 : 3.4
                     }}
                     className='absolute w-72 h-42 top-1/2 -translate-1/2 left-1/2 z-50 rounded-xl [perspective:1000px]'
                 >
@@ -300,21 +300,21 @@ const Hero = ({ endWarping }: StartingProps) => {
                             rotateZ: '-35deg'
                         }}
                         animate={{
-                            rotateX: '20deg',
-                            rotateY: '45deg',
-                            rotateZ: '-25deg'
+                            rotateX: '10deg',
+                            rotateY: '25deg',
+                            rotateZ: '-5deg'
                         }}
                         transition={{
-                            duration: 1.5,
+                            duration: 1,
                             ease: 'linear',
-                            delay: endWarping ? 1 : 5
+                            delay: endWarping ? 1 : 3.4
                         }}
                         className='h-full w-full overflow-hidden rounded-xl'
                     >
-                        <div className="relative w-full h-full transition-transform duration-700 transform-3d shadow-md">
+                        <div className="relative w-full h-full transition-transform duration-700 transform-3d shadow-xl shadow-neutral-500 rounded-2xl before:h-full before:w-full before:absolute before:z-50 before:bg-black/20">
                             <div className="absolute inset-0 rotate-y-180">
                                 <Image
-                                    src="/images/card-cover.png"
+                                    src="/images/card-3/front.png"
                                     alt="Front"
                                     fill
                                     className="object-cover rounded-xl shadow-lg backface-hidden"
@@ -322,7 +322,7 @@ const Hero = ({ endWarping }: StartingProps) => {
                             </div>
                             <div className="absolute inset-0">
                                 <Image
-                                    src="/images/card-cover.png"
+                                    src="/images/card-3/back.png"
                                     alt="Back"
                                     fill
                                     className="object-cover rounded-xl shadow-lg backface-hidden"
@@ -337,30 +337,30 @@ const Hero = ({ endWarping }: StartingProps) => {
                             rotateZ: '-35deg'
                         }}
                         animate={{
-                            rotateX: '20deg',
-                            rotateY: '45deg',
-                            rotateZ: '-25deg'
+                            rotateX: '10deg',
+                            rotateY: '25deg',
+                            rotateZ: '-5deg'
                         }}
                         transition={{
-                            duration: 1.5,
+                            duration: 1,
                             ease: 'linear',
-                            delay: endWarping ? 1 : 4.5
+                            delay: endWarping ? 1 : 3.4
                         }}
-                        className='h-full w-full overflow-hidden rounded-xl absolute top-1/5 left-1/5'
+                        className='h-full w-full rounded-xl absolute top-1/5 left-1/5 before:h-66/100 before:w-full before:absolute before:-z-20 before:top-5 before:-left-5 before:bg-black/50 before:rounded-tl-lg'
                     >
-                        <div className="relative w-full h-full transition-transform duration-700 transform-3d shadow-md">
+                        <div className="relative w-full h-full transition-transform duration-700 transform-3d shadow-md rounded-2xl">
                             <div className="absolute inset-0 rotate-y-180">
                                 <Image
-                                    src="/images/card-cover.png"
-                                    alt="Front"
+                                    src="/images/card-3/back.png"
+                                    alt="Back"
                                     fill
                                     className="object-cover rounded-xl shadow-lg backface-hidden"
                                 />
                             </div>
                             <div className="absolute inset-0">
                                 <Image
-                                    src="/images/card-cover.png"
-                                    alt="Back"
+                                    src="/images/card-3/front.png"
+                                    alt="Front"
                                     fill
                                     className="object-cover rounded-xl shadow-lg backface-hidden"
                                 />
@@ -372,9 +372,9 @@ const Hero = ({ endWarping }: StartingProps) => {
                     initial={{scale: 0, x: 0, y: -200}}
                     animate={{scale: 1, x: 750, y: 0}}
                     transition={{
-                        duration: 1.5,
+                        duration: 1,
                         ease: 'linear',
-                        delay: endWarping ? 1.5 : 5.5
+                        delay: endWarping ? 1.5 : 3.6
                     }}
                     className='absolute w-72 h-42 top-1/2 -translate-1/2 left-1/2 z-50 rounded-xl [perspective:1000px]'
                 >
@@ -385,21 +385,21 @@ const Hero = ({ endWarping }: StartingProps) => {
                             rotateZ: '-35deg'
                         }}
                         animate={{
-                            rotateX: '20deg',
-                            rotateY: '45deg',
-                            rotateZ: '-25deg'
+                            rotateX: '10deg',
+                            rotateY: '25deg',
+                            rotateZ: '-5deg'
                         }}
                         transition={{
-                            duration: 1.5,
+                            duration: 1,
                             ease: 'linear',
-                            delay: endWarping ? 1.5 : 5.5
+                            delay: endWarping ? 1.5 : 3.6
                         }}
                         className='h-full w-full overflow-hidden rounded-xl'
                     >
-                        <div className="relative w-full h-full transition-transform duration-700 transform-3d shadow-md">
+                        <div className="relative w-full h-full transition-transform duration-700 transform-3d shadow-xl shadow-neutral-500 rounded-2xl before:h-full before:w-full before:absolute before:z-50 before:bg-black/20">
                             <div className="absolute inset-0 rotate-y-180">
                                 <Image
-                                    src="/images/card-cover.png"
+                                    src="/images/card-4/front.png"
                                     alt="Front"
                                     fill
                                     className="object-cover rounded-xl shadow-lg backface-hidden"
@@ -407,7 +407,7 @@ const Hero = ({ endWarping }: StartingProps) => {
                             </div>
                             <div className="absolute inset-0">
                                 <Image
-                                    src="/images/card-cover.png"
+                                    src="/images/card-4/back.png"
                                     alt="Back"
                                     fill
                                     className="object-cover rounded-xl shadow-lg backface-hidden"
@@ -422,30 +422,30 @@ const Hero = ({ endWarping }: StartingProps) => {
                             rotateZ: '-35deg'
                         }}
                         animate={{
-                            rotateX: '20deg',
-                            rotateY: '45deg',
-                            rotateZ: '-25deg'
+                            rotateX: '10deg',
+                            rotateY: '25deg',
+                            rotateZ: '-5deg'
                         }}
                         transition={{
-                            duration: 1.5,
+                            duration: 1,
                             ease: 'linear',
-                            delay: endWarping ? 1.5 : 4.5
+                            delay: endWarping ? 1.5 : 3.6
                         }}
-                        className='h-full w-full overflow-hidden rounded-xl absolute top-1/5 left-1/5'
+                        className='h-full w-full rounded-xl absolute top-1/5 left-1/5 before:h-66/100 before:w-full before:absolute before:-z-20 before:top-5 before:-left-5 before:bg-black/50 before:rounded-tl-lg'
                     >
-                        <div className="relative w-full h-full transition-transform duration-700 transform-3d shadow-md">
+                        <div className="relative w-full h-full transition-transform duration-700 transform-3d shadow-md rounded-2xl">
                             <div className="absolute inset-0 rotate-y-180">
                                 <Image
-                                    src="/images/card-cover.png"
-                                    alt="Front"
+                                    src="/images/card-4/back.png"
+                                    alt="Back"
                                     fill
                                     className="object-cover rounded-xl shadow-lg backface-hidden"
                                 />
                             </div>
                             <div className="absolute inset-0">
                                 <Image
-                                    src="/images/card-cover.png"
-                                    alt="Back"
+                                    src="/images/card-4/front.png"
+                                    alt="Front"
                                     fill
                                     className="object-cover rounded-xl shadow-lg backface-hidden"
                                 />
@@ -517,7 +517,7 @@ const Hero = ({ endWarping }: StartingProps) => {
                             transition={{
                             duration: 0.7,
                             ease: 'easeOut',
-                            delay: endWarping ? i/4 : 5 + (i/4)
+                            delay: endWarping ? i/4 : 3 + (i/4)
                         }}
                     >
                             <h3 className='text-blue text-lg'>{details.name}</h3>
