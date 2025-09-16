@@ -12,7 +12,7 @@ import { countries } from '@/data/countries';
 
 type ProdCard = ProductCardProps & ProductProps;
 
-const InquireItem = ({ imgUrl, productName, productDesc, size, setInquireItem, inquire, hoverable }: ProdCard) => {
+const InquireItem = ({ imgUrl, productName, productDesc, size, setInquireItem, inquire, hoverable, frontImg, backImg }: ProdCard) => {
   const [step, nextStep] = useState(0);
   const [otp, setOtp] = useState<string>("".padEnd(6, " "));
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
@@ -297,6 +297,8 @@ const InquireItem = ({ imgUrl, productName, productDesc, size, setInquireItem, i
               setInquireItem={setInquireItem} 
               inquire={inquire}
               hoverable={hoverable}
+              frontImg={frontImg}
+              backImg={backImg}
             />
             <div className='h-full w-full md:w-3/5 flex flex-col items-end gap-5'>
                 <span className='w-full flex justify-between items-start pt-5 md:pt-0'>

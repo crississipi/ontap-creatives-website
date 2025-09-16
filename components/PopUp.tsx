@@ -16,7 +16,7 @@ const PopUp = ({ setShowPopup }: PopupProps) => {
     name: '',
     contact: '',
     email: '',
-    message: '',
+    message: 'Your message here...',
     subject: `OnTap Product Inquiry`,
   });
 
@@ -221,7 +221,6 @@ const PopUp = ({ setShowPopup }: PopupProps) => {
                 </span>
                 <span className='col-span-full p-3 px-5 rounded-md border h-38 md:h-48 border-light-blue hover:border-blue ease-out duration-200'>
                     <textarea 
-                        defaultValue='Your message here...' 
                         name='message' 
                         className='h-full w-full outline-none resize-none'
                         value={userInfo.message}

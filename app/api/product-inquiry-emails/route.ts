@@ -28,7 +28,7 @@ export async function POST(req: Request) {
   try {
     await transporter.sendMail({
       from: `"OnTap Inquiry" <${process.env.SMTP_USER}>`,
-      to: email,
+      to: 'design.ontap.ph@gmail.com',
       subject,
       html: `<div style="font-family: system-ui, sans-serif, Arial; font-size: 12px;">
         <div><a href='mailto:${email}'><strong>${email}</strong></a> ${compName && `of ${compName}`} has sent you an email.&nbsp; Kindly reply at your earliest convenience.</div>

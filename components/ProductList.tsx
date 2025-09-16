@@ -11,21 +11,29 @@ const ProductCardInfo = [
       imgUrl: '/images/card-1.png',
       name: 'Poly Vinyl',
       desc: 'Also known as a PVC business card, it is a durable and flexible material that is resistant to water, tears and fading, making it a great option for long-lasting business cards.',
+      frontImg: '/images/card-1/front.png',
+      backImg: '/images/card-1/back.png'
     },
     {
       imgUrl: '/images/card-2.png',
       name: 'Carbon Bizcard',
       desc: 'A PVC card with a carbon sticker blends the practicality of PVC with the sophisticated look of carbon fiber, offering both functional and visual benefits.',
+      frontImg: '/images/card-2/front.png',
+      backImg: '/images/card-2/back.png'
     },
     {
       imgUrl: '/images/card-3.png',
       name: 'Bamboo/Wood',
       desc: 'It showcase a unique blend of elegance and eco-friendliness. The natural texture and grain of Bamboo or Wood lend a touch of organic beauty on each card.',
+      frontImg: '/images/card-3/front.png',
+      backImg: '/images/card-3/back.png'
     },
     {
       imgUrl: '/images/card-4.png',
       name: 'Elite Business Card',
       desc: 'Translucent business card made of acrylic, with frosted or glittered finish, offers a remarkable versatility, aura of innovation and contemporary sophistication, aligning  with perfectly progressive brand image.',
+      frontImg: '/images/card-4/front-card.png',
+      backImg: '/images/card-4/back-card.png'
     },
   ],
   [
@@ -33,26 +41,36 @@ const ProductCardInfo = [
       imgUrl: '/images/info-tag.png',
       name: 'Info Tap',
       desc: '',
+      frontImg: '',
+      backImg: ''
     },
     {
       imgUrl: '/images/id-tap.png',
       name: 'ID Tap',
       desc: '',
+      frontImg: '',
+      backImg: ''
     },
     {
       imgUrl: '/images/dog-tag.png',
       name: 'Pet Badge',
       desc: '',
+      frontImg: '',
+      backImg: ''
     },
     {
       imgUrl: '/images/key-chain.png',
       name: 'OnTap Keychain',
       desc: '',
+      frontImg: '',
+      backImg: ''
     },
     {
       imgUrl: '/images/qr-standee.png',
       name: 'QR Standee and Table Tap',
       desc: '',
+      frontImg: '',
+      backImg: ''
     },
   ]
 ];
@@ -86,11 +104,13 @@ const ProductList = () => {
                 imgUrl={val.imgUrl}
                 productName={val.name}
                 productDesc={val.desc}
-                size='aspect-[3/4] md:aspect-[3/5]'
+                size='w-full aspect-[3/4] md:aspect-[3/5]'
                 setInquireItem={setInquireItem}
                 setClickedItem={setClickedItem}
                 hoverable={true}
                 inquire={inquire}
+                frontImg={val.frontImg}
+                backImg={val.backImg}
               />
           </motion.div>
         ))}
@@ -117,9 +137,11 @@ const ProductList = () => {
               productDesc={val.desc}
               size='h-full w-full'
               setInquireItem={setInquireItem}
-              setClickedItem={setClickedItem} // ✅ pass setter
+              setClickedItem={setClickedItem}
               hoverable={true}
               inquire={inquire}
+              frontImg={val.frontImg}
+              backImg={val.backImg}
             />
           </motion.div>
         ))}
@@ -134,6 +156,8 @@ const ProductList = () => {
           setInquireItem={setInquireItem} 
           inquire={inquire} 
           hoverable={false}
+          frontImg={clickedItem.frontImg}
+          backImg={clickedItem.backImg}
         />
       )}
     </section>

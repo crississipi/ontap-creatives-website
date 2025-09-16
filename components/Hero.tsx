@@ -112,7 +112,7 @@ const Hero = ({ endWarping }: StartingProps) => {
                 <h1 className='text-4xl md:text-7xl mt-5 md:mt-5 text-blue'>Smart Business Card</h1>
                 <h2 className='text-base text-center px-3 mt-5 md:text-2xl md:w-2/3'>Turn every interaction into an opportunity for growth. Embrace the future of networking with our Digital Business Card - your key to a world of endless possibilities</h2>
             </motion.div>
-            <div className='hidden h-70 w-full md:grid md:grid-cols-2 lg:grid-cols-4 md:my-18 relative [perspective:1000px]'>
+            <div className='hidden h-70 w-9/10 md:grid md:grid-cols-2 lg:grid-cols-4 md:my-18 relative [perspective:1000px]'>
                 <motion.div
                     initial={{scale: 0, x: 0, y: -200}}
                     animate={{scale: 1, x: -750, y: 0}}
@@ -121,7 +121,7 @@ const Hero = ({ endWarping }: StartingProps) => {
                         ease: 'linear',
                         delay: endWarping ? 0 : 3
                     }}
-                    className='absolute w-72 h-42 top-1/2 -translate-1/2 left-1/2 z-50 rounded-xl [perspective:1000px]'
+                    className='absolute w-72 h-42 top-1/2 -translate-1/2 left-1/2 z-50 rounded-xl [perspective:1000px] ml-24'
                 >
                     <motion.div 
                         initial={{
@@ -176,7 +176,7 @@ const Hero = ({ endWarping }: StartingProps) => {
                             ease: 'linear',
                             delay: endWarping ? 0 : 3
                         }}
-                        className='h-full w-full rounded-xl absolute top-1/5 left-1/5 before:h-66/100 before:w-full before:absolute before:-z-20 before:top-5 before:-left-5 before:bg-black/50 before:rounded-tl-lg'
+                        className='h-full w-full rounded-xl absolute top-1/5 left-1/5 before:h-66/100 before:w-full before:absolute before:-z-20 before:top-5 before:-left-5 before:bg-black/30 before:rounded-tl-lg'
                     >
                         <div className="relative w-full h-full transition-transform duration-700 transform-3d shadow-md border-2 border-neutral-50 rounded-2xl">
                             <div className="absolute inset-0 rotate-y-180">
@@ -206,7 +206,7 @@ const Hero = ({ endWarping }: StartingProps) => {
                         ease: 'linear',
                         delay: endWarping ? 0.5 : 3.2
                     }}
-                    className='absolute w-72 h-42 top-1/2 -translate-1/2 left-1/2 z-50 rounded-xl [perspective:1000px]'
+                    className='absolute w-72 h-42 top-1/2 -translate-1/2 left-1/2 z-50 rounded-xl [perspective:1000px] ml-8'
                 >
                     <motion.div 
                         initial={{
@@ -261,7 +261,7 @@ const Hero = ({ endWarping }: StartingProps) => {
                             ease: 'linear',
                             delay: endWarping ? 0.5 : 3.2
                         }}
-                        className='h-full w-full rounded-xl absolute top-1/5 left-1/5  before:h-66/100 before:w-full before:absolute before:-z-20 before:top-5 before:-left-5 before:bg-black/50 before:rounded-tl-lg'
+                        className='h-full w-full rounded-xl absolute top-1/5 left-1/5  before:h-66/100 before:w-full before:absolute before:-z-20 before:top-5 before:-left-5 before:bg-black/30 before:rounded-tl-lg'
                     >
                         <div className="relative w-full h-full transition-transform duration-700 transform-3d shadow-md rounded-2xl">
                             <div className="absolute inset-0 rotate-y-180">
@@ -291,7 +291,7 @@ const Hero = ({ endWarping }: StartingProps) => {
                         ease: 'linear',
                         delay: endWarping ? 1 : 3.4
                     }}
-                    className='absolute w-72 h-42 top-1/2 -translate-1/2 left-1/2 z-50 rounded-xl [perspective:1000px]'
+                    className='absolute w-72 h-42 top-1/2 -translate-1/2 left-1/2 z-50 rounded-xl [perspective:1000px] -ml-8'
                 >
                     <motion.div 
                         initial={{
@@ -346,7 +346,7 @@ const Hero = ({ endWarping }: StartingProps) => {
                             ease: 'linear',
                             delay: endWarping ? 1 : 3.4
                         }}
-                        className='h-full w-full rounded-xl absolute top-1/5 left-1/5 before:h-66/100 before:w-full before:absolute before:-z-20 before:top-5 before:-left-5 before:bg-black/50 before:rounded-tl-lg'
+                        className='h-full w-full rounded-xl absolute top-1/5 left-1/5 before:h-66/100 before:w-full before:absolute before:-z-20 before:top-5 before:-left-5 before:bg-black/30 before:rounded-tl-lg'
                     >
                         <div className="relative w-full h-full transition-transform duration-700 transform-3d shadow-md rounded-2xl">
                             <div className="absolute inset-0 rotate-y-180">
@@ -376,7 +376,7 @@ const Hero = ({ endWarping }: StartingProps) => {
                         ease: 'linear',
                         delay: endWarping ? 1.5 : 3.6
                     }}
-                    className='absolute w-72 h-42 top-1/2 -translate-1/2 left-1/2 z-50 rounded-xl [perspective:1000px]'
+                    className='absolute w-72 h-42 top-1/2 -translate-1/2 left-1/2 z-50 rounded-xl [perspective:1000px] -ml-24'
                 >
                     <motion.div 
                         initial={{
@@ -399,16 +399,8 @@ const Hero = ({ endWarping }: StartingProps) => {
                         <div className="relative w-full h-full transition-transform duration-700 transform-3d shadow-xl shadow-neutral-500 rounded-2xl before:h-full before:w-full before:absolute before:z-50 before:bg-black/20">
                             <div className="absolute inset-0 rotate-y-180">
                                 <Image
-                                    src="/images/card-4/front.png"
+                                    src="/images/card-4/back-card.png"
                                     alt="Front"
-                                    fill
-                                    className="object-cover rounded-xl shadow-lg backface-hidden"
-                                />
-                            </div>
-                            <div className="absolute inset-0">
-                                <Image
-                                    src="/images/card-4/back.png"
-                                    alt="Back"
                                     fill
                                     className="object-cover rounded-xl shadow-lg backface-hidden"
                                 />
@@ -431,20 +423,12 @@ const Hero = ({ endWarping }: StartingProps) => {
                             ease: 'linear',
                             delay: endWarping ? 1.5 : 3.6
                         }}
-                        className='h-full w-full rounded-xl absolute top-1/5 left-1/5 before:h-66/100 before:w-full before:absolute before:-z-20 before:top-5 before:-left-5 before:bg-black/50 before:rounded-tl-lg'
+                        className='h-full w-full rounded-xl absolute top-1/5 left-1/5 before:h-66/100 before:w-full before:absolute before:-z-20 before:top-5 before:-left-5 before:bg-black/30 before:rounded-tl-lg'
                     >
                         <div className="relative w-full h-full transition-transform duration-700 transform-3d shadow-md rounded-2xl">
-                            <div className="absolute inset-0 rotate-y-180">
-                                <Image
-                                    src="/images/card-4/back.png"
-                                    alt="Back"
-                                    fill
-                                    className="object-cover rounded-xl shadow-lg backface-hidden"
-                                />
-                            </div>
                             <div className="absolute inset-0">
                                 <Image
-                                    src="/images/card-4/front.png"
+                                    src="/images/card-4/front-card.png"
                                     alt="Front"
                                     fill
                                     className="object-cover rounded-xl shadow-lg backface-hidden"
