@@ -24,7 +24,7 @@ export async function POST(req: Request) {
       pass: process.env.SMTP_PASS,
     },
   });
-
+  
   try {
     await transporter.sendMail({
       from: `"OnTap Inquiry" <${process.env.SMTP_USER}>`,
