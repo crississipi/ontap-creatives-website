@@ -5,6 +5,8 @@ import React, { JSX, useState } from 'react'
 import Image from 'next/image'
 import { RiArrowLeftDoubleLine, RiDashboardLine, RiLogoutBoxLine, RiPaintBrushLine, RiUserSettingsLine } from 'react-icons/ri'
 import Dashboard from './Dashboard'
+import VisitorsPage from './VisitorsPage'
+import Customization from './Customization'
 
 const Navigations = [
     {
@@ -25,7 +27,9 @@ const Mainpage = ({ setPage }: HeaderProps) => {
   const [minimized, isMinimized] = useState(false);
   const [page, changePage] = useState(0);
   const pages: Record<number, JSX.Element> = {
-    0: <Dashboard />
+    0: <Dashboard />,
+    1: <VisitorsPage />,
+    2: <Customization />
   }
   return (
     <div className='h-full w-full flex overflow-hidden'>
