@@ -9,13 +9,13 @@ const ProductCard = ({ imgUrl, productName, productDesc, size, setInquireItem, h
 
   return (
     <button 
-      className={`col-span-1 relative flex flex-col items-center rounded-md bg-white ${hoverable ? `${size} border border-neutral-200 group hover:shadow-lg hover:scale-101 md:hover:scale-105 hover:border-0 ease-out duration-500` : 'w-full h-1/2 md:h-full md:w-2/5 md:bg-light-blue'}`}
+      className={`col-span-1 relative flex flex-col items-center bg-white ${hoverable ? `${size} border border-neutral-200 group hover:shadow-lg hover:scale-101 md:hover:scale-105 hover:border-transparent ease-out duration-500` : 'w-full h-1/2 md:h-full md:w-2/5 md:bg-light-blue'}`}
       onClick={() => {
         setClickedItem?.({ imgUrl, name: productName, desc: productDesc, frontImg, backImg });
         setInquireItem(true);
       }}
     >
-        <div className='h-3/5 w-full flex items-center justify-center relative'>
+        <div className='h-1/2 w-full flex items-center justify-center relative'>
           {size === 'w-full aspect-[3/4] md:aspect-[3/5]' && (
             <div className={`md:hidden rounded-xs md:rounded-md ${hoverable ? 'h-32 md:h-40 w-6/7 md:w-3/4 bg-neutral-200' : 'h-38 mt-18 w-full md:w-3/4 bg-light-blue md:bg-white flex justify-center'} relative`}>
               <Image
@@ -29,7 +29,7 @@ const ProductCard = ({ imgUrl, productName, productDesc, size, setInquireItem, h
           )}
           { size !== 'h-full w-full' && size !== 'min-h-3/7 w-full md:aspect-[3/5]' ? (
             <div
-              className='hidden md:block absolute w-3/4 aspect-[3/2] top-1/2 -translate-1/2 left-1/2 z-50 rounded-xl [perspective:1000px]'
+              className='hidden md:block absolute w-3/4 aspect-[3/2] top-2/5 -translate-1/2 left-1/2 z-50 rounded-xl [perspective:1000px]'
             >
               <div 
                 className='h-full w-full rounded-xl absolute group-hover:-rotate-x-10 group-hover:rotate-z-35 group-hover:top-10 top-0 duration-500 
@@ -102,7 +102,7 @@ const ProductCard = ({ imgUrl, productName, productDesc, size, setInquireItem, h
       
         {hoverable && (
             <span 
-                className='text-sm py-3 md:text-base mt-auto md:py-4 bg-light-blue w-full font-semibold text-center group-hover:bg-blue group-focus:bg-dark-blue group-focus:text-white ease-out duration-500'
+                className='text-sm py-3 md:text-base mt-auto md:py-3 bg-light-blue w-full font-semibold text-center group-hover:bg-blue group-focus:bg-dark-blue group-focus:text-white ease-out duration-500'
             >
               INQUIRE NOW
             </span>

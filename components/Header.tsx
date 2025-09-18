@@ -12,7 +12,7 @@ interface HeaderProps {
 const Header = ({ setPage }: HeaderProps) => {
   const [showNav, isNavShown] = useState(false);
   return (
-    <div className='h-16 w-full bg-white flex fixed top-0 font-semibold z-50 items-center left-0'>
+    <div className='h-16 w-full bg-white flex fixed top-0 font-semibold z-9999 items-center left-0'>
         <div className='w-full h-full md:w-auto flex items-center z-50 bg-white'>
             <button 
                 type="button"
