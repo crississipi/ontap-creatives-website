@@ -4,10 +4,7 @@ import React, { useState } from 'react'
 import Image from "next/image";
 import { BsFillCaretRightFill } from 'react-icons/bs';
 import { HiOutlineMenuAlt3 } from 'react-icons/hi';
-
-interface HeaderProps {
-    setPage: (page: number) => void;
-};
+import { HeaderProps } from '@/types';
 
 const Header = ({ setPage }: HeaderProps) => {
   const [showNav, isNavShown] = useState(false);
@@ -26,6 +23,7 @@ const Header = ({ setPage }: HeaderProps) => {
                     alt='ontap creatives logo'
                     src='/images/ontap-logo.png'
                     className='max-h-14 w-14 object-contain group-focus:scale-110 ease-out duration-200'
+                    draggable={false}
                 />
             </button>
             <button 

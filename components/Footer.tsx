@@ -17,6 +17,7 @@ const Footer = ({ setPage }: FooterProps) => {
                 alt='ontap creatives logo'
                 src='/images/ontap-logo.png'
                 className='max-h-20 md:max-h-24 aspect-square object-contain'
+                draggable={false}
             />
             <button 
                 type="button"

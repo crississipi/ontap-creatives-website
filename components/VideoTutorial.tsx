@@ -37,6 +37,7 @@ const VideoTutorial = () => {
             alt='ontap creatives cards'
             src='/images/video-tutorial-bg.png'
             className='h-full w-full object-cover object-center absolute top-1/2 left-1/2 -translate-1/2'
+            draggable={false}
         />
         <h2 className='w-4/5 text-center text-3xl md:text-5xl z-20 text-white font-bold md:w-1/2 md:leading-12'>Watch the Video Tutorial on How to Use OnTap Business Card</h2>
         <motion.div

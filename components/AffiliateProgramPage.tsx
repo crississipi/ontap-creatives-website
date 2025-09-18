@@ -43,6 +43,7 @@ const AffiliateProgramPage = () => {
                 alt='affiliate page background'
                 src='/images/affiliate-bg.png'
                 className='h-full w-full object-cover object-center absolute top-1/2 left-1/2 -translate-1/2'
+                draggable={false}
             />
             <motion.span 
                 className='z-20 text-white flex flex-col w-2/3 md:w-1/2 gap-5 mt-16'
@@ -83,6 +84,7 @@ const AffiliateProgramPage = () => {
                     alt='affiliate page background'
                     src='/images/hand.png'
                     className='h-full w-full z-40 object-contain object-center'
+                    draggable={false}
                 />
             </motion.span>
         </div>
@@ -120,6 +122,7 @@ const AffiliateProgramPage = () => {
                 alt='affiliate page background'
                 src='/images/join-team-bg.png'
                 className='h-full md:h-auto w-full object-cover md:object-contain object-center absolute top-1/2 left-1/2 -translate-1/2'
+                draggable={false}
             />
             <h2 className='z-10 w-full text-3xl font-bold text-dark-blue text-center md:text-7xl md:mt-10'>JOIN OUR TEAM</h2>
             <h3 className='z-10 md:my-auto text-2xl ml-32 md:mx-auto my-14 font-bold text-dark-blue md:leading-18 md:text-6xl md:w-1/3'>BECOME AN AFFILIATE MEMBER TODAY</h3>

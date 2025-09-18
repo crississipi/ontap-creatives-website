@@ -309,6 +309,7 @@ const InquireItem = ({ imgUrl, productName, productDesc, size, setInquireItem, i
                             width={500}
                             src='/icons/gmaillogo.png'
                             className='w-6 md:w-8 aspect-square object-contain object-center'
+                            draggable={false}
                         />
                         <p className='font-semibold'>{step === 0 ? 'Leave Us a Message' : 'Account Verification'}</p>
                     </span>

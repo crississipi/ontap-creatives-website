@@ -37,6 +37,7 @@ const OnTapAnimation = () => {
                 alt='ontap creatives cards'
                 src='/images/card-cover.png'
                 className='w-full object-contain object-center'
+                draggable={false}
             />
         </div>
         <div className={`h-full ${section1Visible ? 'min-w-42 max-w-42' : 'min-w-0 max-w-0 overflow-hidden'} flex items-center relative ml-7 perspective-distant transform-3d ease-out duration-500`}>
@@ -69,6 +70,7 @@ const OnTapAnimation = () => {
             alt='ontap creatives cards'
             src='/images/ontapphone.png'
             className={`w-32 md:w-40 object-contain pt-5 object-center rounded-lg -mt-5 z-50 ${section1Visible ? 'right-1/2' : 'mx-auto md:mx-0 right-0'} ease-out duration-75`}
+            draggable={false}
         />
     </div>
   )

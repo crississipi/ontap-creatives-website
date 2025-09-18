@@ -16,6 +16,7 @@ const AboutUs = () => {
                 alt='affiliate page background'
                 src='/images/about-us-bg.png'
                 className='h-full w-full object-cover object-center absolute left-0'
+                draggable={false}
             />
         </div>
         <h2 className='px-5 md:text-2xl md:px-20 md:mt-10'>At ONTAP CREATIVES INC., we believe first impressions last. In this digital age, we understand that business introduction often occur online before they happen face-to-face.</h2>
@@ -27,6 +28,7 @@ const AboutUs = () => {
                 alt='affiliate page background'
                 src='/images/ontap-logo.png'
                 className='h-16 md:h-24 w-full object-contain object-center'
+                draggable={false}
             />
         </div>
     </section>

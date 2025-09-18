@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@lottiefiles/dotlottie-wc": "^0.8.1",
     "cors": "^2.8.5",
     "framer-motion": "^12.23.12",
     "next": "^15.5.2",

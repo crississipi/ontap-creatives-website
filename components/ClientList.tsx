@@ -69,6 +69,7 @@ const MarqueeRow: React.FC<MarqueeRowProps> = ({ images, direction = "left" }) =
               alt={`Client Logo ${i}`}
               src={src}
               className="h-full object-contain object-center"
+              draggable={false}
             />
           </div>
         ))}

@@ -89,6 +89,7 @@ const Hero = ({ endWarping }: StartingProps) => {
             alt='ontap creatives logo'
             src='/images/ontap-hero-bg.png'
             className='h-full w-full object-cover pt-5 absolute top-1/2 left-1/2 -translate-1/2'
+            draggable={false}
         />
         <div className='z-30 flex flex-col items-center pt-10 pb-10'>
             <motion.div 
@@ -108,6 +109,7 @@ const Hero = ({ endWarping }: StartingProps) => {
                     alt='ontap creatives logo'
                     src='/images/ontap-logo-1.png'
                     className='h-auto w-32 md:w-50 object-cover pt-5'
+                    draggable={false}
                 />
                 <h1 className='text-4xl md:text-7xl mt-5 md:mt-5 text-blue'>Smart Business Card</h1>
                 <h2 className='text-base text-center px-3 mt-5 md:text-2xl md:w-2/3'>Turn every interaction into an opportunity for growth. Embrace the future of networking with our Digital Business Card - your key to a world of endless possibilities</h2>
@@ -148,6 +150,7 @@ const Hero = ({ endWarping }: StartingProps) => {
                                     alt="Front"
                                     fill
                                     className="object-cover rounded-xl shadow-lg backface-hidden"
+                                    draggable={false}
                                 />
                             </div>
                             <div className="absolute inset-0">
@@ -156,6 +159,7 @@ const Hero = ({ endWarping }: StartingProps) => {
                                     alt="Back"
                                     fill
                                     className="object-cover rounded-xl shadow-lg backface-hidden"
+                                    draggable={false}
                                 />
                             </div>
                         </div>
@@ -185,6 +189,7 @@ const Hero = ({ endWarping }: StartingProps) => {
                                     alt="Back"
                                     fill
                                     className="object-cover rounded-xl shadow-lg backface-hidden"
+                                    draggable={false}
                                 />
                             </div>
                             <div className="absolute inset-0">
@@ -193,6 +198,7 @@ const Hero = ({ endWarping }: StartingProps) => {
                                     alt="Front"
                                     fill
                                     className="object-cover rounded-xl shadow-lg backface-hidden"
+                                    draggable={false}
                                 />
                             </div>
                         </div>
@@ -233,6 +239,7 @@ const Hero = ({ endWarping }: StartingProps) => {
                                     alt="Front"
                                     fill
                                     className="object-cover rounded-xl shadow-lg backface-hidden"
+                                    draggable={false}
                                 />
                             </div>
                             <div className="absolute inset-0">
@@ -241,6 +248,7 @@ const Hero = ({ endWarping }: StartingProps) => {
                                     alt="Back"
                                     fill
                                     className="object-cover rounded-xl shadow-lg backface-hidden"
+                                    draggable={false}
                                 />
                             </div>
                         </div>
@@ -270,6 +278,7 @@ const Hero = ({ endWarping }: StartingProps) => {
                                     alt="Back"
                                     fill
                                     className="object-cover rounded-xl shadow-lg backface-hidden"
+                                    draggable={false}
                                 />
                             </div>
                             <div className="absolute inset-0">
@@ -278,6 +287,7 @@ const Hero = ({ endWarping }: StartingProps) => {
                                     alt="Front"
                                     fill
                                     className="object-cover rounded-xl shadow-lg backface-hidden"
+                                    draggable={false}
                                 />
                             </div>
                         </div>
@@ -318,6 +328,7 @@ const Hero = ({ endWarping }: StartingProps) => {
                                     alt="Front"
                                     fill
                                     className="object-cover rounded-xl shadow-lg backface-hidden"
+                                    draggable={false}
                                 />
                             </div>
                             <div className="absolute inset-0">
@@ -326,6 +337,7 @@ const Hero = ({ endWarping }: StartingProps) => {
                                     alt="Back"
                                     fill
                                     className="object-cover rounded-xl shadow-lg backface-hidden"
+                                    draggable={false}
                                 />
                             </div>
                         </div>
@@ -355,6 +367,7 @@ const Hero = ({ endWarping }: StartingProps) => {
                                     alt="Back"
                                     fill
                                     className="object-cover rounded-xl shadow-lg backface-hidden"
+                                    draggable={false}
                                 />
                             </div>
                             <div className="absolute inset-0">
@@ -363,6 +376,7 @@ const Hero = ({ endWarping }: StartingProps) => {
                                     alt="Front"
                                     fill
                                     className="object-cover rounded-xl shadow-lg backface-hidden"
+                                    draggable={false}
                                 />
                             </div>
                         </div>
@@ -403,6 +417,7 @@ const Hero = ({ endWarping }: StartingProps) => {
                                     alt="Front"
                                     fill
                                     className="object-cover rounded-xl shadow-lg backface-hidden"
+                                    draggable={false}
                                 />
                             </div>
                         </div>
@@ -432,6 +447,7 @@ const Hero = ({ endWarping }: StartingProps) => {
                                     alt="Front"
                                     fill
                                     className="object-cover rounded-xl shadow-lg backface-hidden"
+                                    draggable={false}
                                 />
                             </div>
                         </div>
@@ -470,6 +486,7 @@ const Hero = ({ endWarping }: StartingProps) => {
                                     alt='ontap creatives cards'
                                     src={val}
                                     className='h-auto w-60 object-contain pt-10 pb-5 object-center'
+                                    draggable={false}
                                 />
                             </motion.div>
                         )

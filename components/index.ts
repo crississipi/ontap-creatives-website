@@ -12,6 +12,7 @@ import InquireItem from "./InquireItem";
 import FAQs from "./FAQs";
 import Starting from "./Starting";
 import PopUp from "./PopUp";
+import Cookies from "./Cookies";
 
 export {
     Header, 
@@ -27,5 +28,6 @@ export {
     InquireItem,
     FAQs,
     Starting,
-    PopUp
+    PopUp,
+    Cookies
 }

@@ -74,6 +74,7 @@ const About = () => {
                     alt='ontap creatives cards'
                     src='/images/about-img-1.png'
                     className='h-64 md:h-auto w-full md:w-64 object-cover pt-5 object-center rounded-lg -mt-3'
+                    draggable={false}
                 />
                 <span className='h-full md:py-5'>
                     <h4 className='text-dark-blue text-xl md:text-2xl'>Grow your Sphere of Influence</h4>
@@ -92,6 +93,7 @@ const About = () => {
                     alt='ontap creatives cards'
                     src='/images/about-img-2.png'
                     className='h-64 md:h-auto w-full md:w-64 object-cover pt-5 object-center rounded-lg -mt-3'
+                    draggable={false}
                 />
                 <span className='h-full md:py-5'>
                     <h4 className='text-dark-blue text-xl md:text-2xl'>Seamless Connectivity</h4>

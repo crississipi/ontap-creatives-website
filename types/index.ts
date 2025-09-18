@@ -1,3 +1,7 @@
+export interface HeaderProps {
+    setPage: (page: number) => void;
+};
+
 export interface ProductProps {
     setInquireItem: (inquire: boolean) => void;
     inquire: boolean;

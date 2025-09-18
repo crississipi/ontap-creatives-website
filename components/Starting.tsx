@@ -38,6 +38,7 @@ const Starting = () => {
                     alt='animate hand image'
                     src='/images/animate-hand-1.png'
                     className='object-contain object-center'
+                    draggable={false}
                 />
             </motion.div>
         </motion.div>
@@ -66,6 +67,7 @@ const Starting = () => {
                     alt='animate hand image'
                     src='/images/animate-hand-2.png'
                     className='object-contain object-center'
+                    draggable={false}
                 />
             </motion.div>
         </motion.div>

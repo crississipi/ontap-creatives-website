@@ -24,6 +24,7 @@ const ProductCard = ({ imgUrl, productName, productDesc, size, setInquireItem, h
                 alt='ontap creatives cards'
                 src={imgUrl}
                 className={`w-64 aspect-square object-contain pt-3 md:pt-5 object-center -mt-8 md:-mt-16 ${hoverable ? 'group-hover:scale-110' : 'scale-135 group-hover:scale-150'} ease-out duration-500`}
+                draggable={false}
               />
             </div>
           )}
@@ -43,6 +44,7 @@ const ProductCard = ({ imgUrl, productName, productDesc, size, setInquireItem, h
                       alt="Front"
                       fill
                       className="object-cover rounded-xl shadow-lg backface-hidden"
+                      draggable={false}
                     />
                   </div>
                   {frontImg !== '/images/card-4/front-card.png' && (
@@ -52,6 +54,7 @@ const ProductCard = ({ imgUrl, productName, productDesc, size, setInquireItem, h
                         alt="Back"
                         fill
                         className="object-cover rounded-xl shadow-lg backface-hidden"
+                        draggable={false}
                       />
                     </div>
                   )}
@@ -70,6 +73,7 @@ const ProductCard = ({ imgUrl, productName, productDesc, size, setInquireItem, h
                         alt="Back"
                         fill
                         className="object-cover rounded-xl shadow-lg backface-hidden"
+                        draggable={false}
                       />
                     </div>
                   )}
@@ -79,6 +83,7 @@ const ProductCard = ({ imgUrl, productName, productDesc, size, setInquireItem, h
                       alt="Front"
                       fill
                       className="object-cover rounded-xl shadow-lg backface-hidden"
+                      draggable={false}
                     />
                   </div>
                 </div>
@@ -92,6 +97,7 @@ const ProductCard = ({ imgUrl, productName, productDesc, size, setInquireItem, h
                 alt='ontap creatives cards'
                 src={imgUrl}
                 className={`w-64 aspect-square object-contain pt-3 md:pt-5 object-center -mt-8 md:-mt-16 ${hoverable ? 'group-hover:scale-110' : 'scale-135 group-hover:scale-150'} ease-out duration-500`}
+                draggable={false}
               />
             </div>
           )}
