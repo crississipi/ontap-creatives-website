@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react'
 import ProductCard from './ProductCard'
 import InquireItem from './InquireItem';
 import { motion } from 'framer-motion';
+import { PopUp } from '.';
 
 const ProductCardInfo = [
   [
@@ -78,13 +79,40 @@ const ProductCardInfo = [
 const ProductList = () => {
   const [inquire, setInquireItem] = useState(false);
   const [clickedItem, setClickedItem] = useState<any>(null); 
+  const [showPopup, setShowPopup] = useState(false);
   
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
+
+  useEffect(() => {
+    let canTrigger = true;
+    let cooldownTimer: NodeJS.Timeout;
+
+    const handleScroll = () => {
+      const scrollPosition = window.innerHeight + window.scrollY;
+      const bottom = document.documentElement.scrollHeight;
+
+      if (scrollPosition >= bottom - 2 && canTrigger) {
+        setShowPopup(true);
+        canTrigger = false;
+
+        cooldownTimer = setTimeout(() => {
+          canTrigger = true;
+        }, 10000);
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll);
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      clearTimeout(cooldownTimer);
+    };
+  }, []);
   
   return (
-    <section className='min-h-[100vh] w-full flex flex-col items-center justify-center py-16 bg-neutral-50'>
+    <section className='min-h-[100vh] w-full flex flex-col items-center justify-center py-16 bg-neutral-50 relative'>
       <h1 className='z-10 w-full text-center text-2xl mt-10 text-black font-semibold md:text-5xl'>OnTap BizCard Products</h1>
       
       <div className='w-full md:w-3/4 h-full grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-7 px-3 py-8 md:px-10'>
@@ -160,6 +188,7 @@ const ProductList = () => {
           backImg={clickedItem.backImg}
         />
       )}
+      {showPopup && <PopUp setShowPopup={setShowPopup}/>}
     </section>
   );
 };

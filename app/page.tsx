@@ -10,7 +10,7 @@ import { BsQuestionLg } from "react-icons/bs";
 export default function Home() {
   const [page, setPage] = useState(0);
   const [endWarping, endWarpingNow] = useState(false);
-  const [showPopup, setShowPopup] = useState(false);
+
   const [showCookies, setShowCookies] = useState(false);
   const [adminLogin, showAdminLogin] = useState(false);
 
@@ -53,32 +53,6 @@ export default function Home() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  useEffect(() => {
-    let canTrigger = true;
-    let cooldownTimer: NodeJS.Timeout;
-
-    const handleScroll = () => {
-      const scrollPosition = window.innerHeight + window.scrollY;
-      const bottom = document.documentElement.scrollHeight;
-
-      if (scrollPosition >= bottom - 2 && canTrigger) {
-        setShowPopup(true);
-        canTrigger = false;
-
-        cooldownTimer = setTimeout(() => {
-          canTrigger = true;
-        }, 10000);
-      }
-    };
-
-    window.addEventListener("scroll", handleScroll);
-
-    return () => {
-      window.removeEventListener("scroll", handleScroll);
-      clearTimeout(cooldownTimer);
-    };
-  }, []);
-
   return (
     <main className='min-h-[100vh] h-auto w-full flex flex-col items-center relative overflow-x-hidden p-0 m-0 select-none'>
       {adminLogin ? (<Page />) : (
@@ -114,7 +88,6 @@ export default function Home() {
               FAQs
             </motion.button>
           )}
-          {showPopup && <PopUp setShowPopup={setShowPopup}/>}
           {showCookies && <AnimatePresence><Cookies setShowCookies={setShowCookies}/></AnimatePresence>}
       </>
     )}

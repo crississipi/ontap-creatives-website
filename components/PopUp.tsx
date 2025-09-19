@@ -136,7 +136,7 @@ const PopUp = ({ setShowPopup }: PopupProps) => {
   );
   
   return (
-    <div className='fixed h-full w-full z-99999 bg-white/20 backdrop-blur-md flex items-center justify-center left-0'>
+    <div className='fixed h-[100vh] w-full z-99999 bg-white/20 backdrop-blur-md flex items-center justify-center left-0 top-0'>
         {show && (
           <Toast 
             icon={icon}

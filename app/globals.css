@@ -16,6 +16,10 @@
   --color-footer-bg: #212529;
 }
 
+* {
+  outline: none;
+}
+
 ::-webkit-scrollbar { width: 5px !important; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: #5A5CA8; border-radius: 10px; }
