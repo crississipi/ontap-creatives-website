@@ -1,8 +1,11 @@
 import React from 'react'
 import Image from 'next/image'
-import { HeaderProps } from '@/types'
+import { AdminPageProps, HeaderProps } from '@/types'
+import { RiLogoutBoxLine } from 'react-icons/ri'
 
-const AdminLogin = ({ setPage }: HeaderProps) => {
+type AdminProps = AdminPageProps & HeaderProps
+
+const AdminLogin = ({ showAdminLogin, setPage }: AdminProps) => {
   
   return (
     <div className='w-full h-[100vh] flex items-center justify-center relative'>
@@ -28,6 +31,7 @@ const AdminLogin = ({ setPage }: HeaderProps) => {
             </div>
             <button type="button" className='mb-auto py-4 px-10 bg-light-blue rounded-md hover:bg-blue focus:bg-dark-blue focus:text-white ease-out duration-200' onClick={() => setPage(1)}>LOGIN</button>
         </div>
+        <button type="button" className='flex items-center gap-2 px-5 pl-3 py-3 rounded-md bg-white z-10 absolute bottom-10 left-10 hover:bg-light-blue focus:bg-violet focus:text-white ease-out duration-200' onClick={() => showAdminLogin(false)}><RiLogoutBoxLine className='text-xl'/> Exit</button>
     </div>
   )
 }

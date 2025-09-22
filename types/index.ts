@@ -29,3 +29,7 @@ export interface Country {
   placeholder: string;
   maxDigits: number;
 }
+
+export interface AdminPageProps {
+  showAdminLogin: (admin: boolean) => void;
+}

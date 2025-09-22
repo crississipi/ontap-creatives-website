@@ -177,7 +177,7 @@ const Dashboard = () => {
     setShowMap(false);
     const timeout = setTimeout(() => {
       setShowMap(true);
-    }, 100);
+    }, 50);
 
     return () => clearTimeout(timeout);
   }, [lat, long, zoom]); 
@@ -255,7 +255,7 @@ const Dashboard = () => {
                             <button type="button" className='p-2 rounded-md border border-transparent hover:border-violet focus:bg-dark-blue focus:text-white ease-out duration-200'><HiDotsHorizontal /></button>
                         </div>
                         <div className='h-1/2 w-full'>
-                            <UserRetention />
+                            <UserRetention accessedIn='dashboard'/>
                         </div>
                         <div className='h-1/2 w-full flex flex-col px-3 gap-1 text-sm mt-5'>
                             <span className='px-5 py-2 rounded-sm border border-violet flex items-center justify-between'>Inquiring <strong>200</strong></span>

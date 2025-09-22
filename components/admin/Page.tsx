@@ -1,11 +1,12 @@
 import React, { JSX, useState } from 'react'
 import AdminLogin from './AdminLogin';
 import Mainpage from './Mainpage';
+import { AdminPageProps } from '@/types';
 
-const Page = () => {
+const Page = ({ showAdminLogin }: AdminPageProps) => {
   const [page, setPage] = useState(0);
   const pages: Record<number, JSX.Element> = {
-    0: <AdminLogin setPage={setPage}/>,
+    0: <AdminLogin showAdminLogin={showAdminLogin} setPage={setPage}/>,
     1: <Mainpage setPage={setPage}/>
   }
   return (

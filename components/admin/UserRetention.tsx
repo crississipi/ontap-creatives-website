@@ -31,6 +31,10 @@ type PieSectorDataItem = React.SVGProps<SVGPathElement> &
   Partial<SectorProps> &
   PieSectorData;
 
+interface PieProps {
+  accessedIn: string;
+}
+
 // 👇 Add custom colors to each data entry
 const data = [
   { name: 'Bounced', value: 400, fill: '#212529' },
@@ -112,15 +116,17 @@ const renderActiveShape = ({
   );
 };
 
-const UserRetention = () => {
+const UserRetention = ({accessedIn}: PieProps) => {
   return (
-    <div className="w-full h-[250px]">
-      <ResponsiveContainer width="100%" height="100%">
-        <PieChart>
+    <div className={`w-full relative ${accessedIn === 'userinfo' ? 'scale-125 h-[215px] -mt-24' : 'h-[250px] scale-100'}`}>
+      <ResponsiveContainer className={`w-full ${accessedIn === 'userinfo' ? 'h-[250px] mt-20' : 'h-full'}`}>
+        <PieChart margin={{top: 0, left: 0, right: 0, bottom: 0}}>
           <Pie
             data={data}
             cx="50%"
             cy="45%"
+            startAngle={accessedIn === 'dashboard' ? 0 : 180}
+            endAngle={accessedIn === 'dashboard' ? 360 : 0}
             innerRadius={40}
             outerRadius={60}
             dataKey="value"
