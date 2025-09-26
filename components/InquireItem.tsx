@@ -1,8 +1,7 @@
 "use client"
 
 import React, { useEffect, useRef, useState } from 'react'
-import ProductCard from './ProductCard'
-import { Country, ProductCardProps, ProductProps } from '@/types';
+import { Country, EditProps, ProductCardProps, ProductProps } from '@/types';
 import { HiOutlineArrowLongRight, HiOutlineArrowSmallLeft, HiOutlineXMark, HiPhone } from 'react-icons/hi2';
 import Image from 'next/image';
 import { HiLocationMarker } from 'react-icons/hi';
@@ -10,9 +9,9 @@ import { TbCaretDownFilled } from 'react-icons/tb';
 import Toast from './Toast';
 import { countries } from '@/data/countries';
 
-type ProdCard = ProductCardProps & ProductProps;
+type ProdCard = ProductCardProps & ProductProps & EditProps;
 
-const InquireItem = ({ imgUrl, productName, productDesc, size, setInquireItem, inquire, hoverable, frontImg, backImg }: ProdCard) => {
+const InquireItem = ({ imgUrl, productName, productDesc, size, setInquireItem, inquire, hoverable, frontImg, backImg, editable }: ProdCard) => {
   const [step, nextStep] = useState(0);
   const [otp, setOtp] = useState<string>("".padEnd(6, " "));
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
@@ -273,8 +272,6 @@ const InquireItem = ({ imgUrl, productName, productDesc, size, setInquireItem, i
     c.country.toLowerCase().includes(countrySearch.toLowerCase())
   );
 
-
-
   return (
     <div className='h-full w-full fixed top-0 left-0 bg-white/15 backdrop-blur-md z-100 flex items-center justify-center'>
         {show && (
@@ -289,17 +286,6 @@ const InquireItem = ({ imgUrl, productName, productDesc, size, setInquireItem, i
                 className='md:hidden text-black/50 flex items-center gap-2 mr-auto rounded-md bg-light-blue/50 py-2 px-3 hover:text-black hover:bg-light-blue focus:text-white focus:bg-blue ease-out duration-200'
                 onClick={() => setInquireItem(false)}
             ><HiOutlineArrowSmallLeft className='text-3xl'/></button>
-            <ProductCard  
-              imgUrl={imgUrl}
-              productName={productName}
-              productDesc={productDesc}
-              size={size}
-              setInquireItem={setInquireItem} 
-              inquire={inquire}
-              hoverable={hoverable}
-              frontImg={frontImg}
-              backImg={backImg}
-            />
             <div className='h-full w-full md:w-3/5 flex flex-col items-end gap-5'>
                 <span className='w-full flex justify-between items-start pt-5 md:pt-0'>
                     <span className='flex gap-3 items-center ml-3 md:ml-10 md:mt-3'>

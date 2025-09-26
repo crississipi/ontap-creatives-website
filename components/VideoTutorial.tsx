@@ -3,6 +3,8 @@
 import React, { useEffect, useRef, useState } from 'react'
 import Image from 'next/image'
 import { motion } from 'framer-motion';
+import { EditProps } from '@/types';
+import { EditableText } from '.';
 
 function useInView(threshold = 0.1) {
   const ref = useRef<HTMLDivElement | null>(null);
@@ -26,7 +28,7 @@ function useInView(threshold = 0.1) {
   return { ref, isInView };
 }
 
-const VideoTutorial = () => {
+const VideoTutorial = ({editable}: EditProps) => {
   const { ref: videoTutorialRef, isInView: videoTutorialVisible } = useInView();
 
   return (
@@ -39,7 +41,13 @@ const VideoTutorial = () => {
             className='h-full w-full object-cover object-center absolute top-1/2 left-1/2 -translate-1/2'
             draggable={false}
         />
-        <h2 className='w-4/5 text-center text-3xl md:text-5xl z-20 text-white font-bold md:w-1/2 md:leading-12'>Watch the Video Tutorial on How to Use OnTap Business Card</h2>
+        {editable ? (
+          <EditableText tag="h2" className='w-4/5 text-center text-3xl md:text-5xl z-20 text-white font-bold md:w-1/2 md:leading-12' type='textarea'>
+            Watch the Video Tutorial on How to Use OnTap Business Card
+          </EditableText>
+        ) : (
+          <h2 className='w-4/5 text-center text-3xl md:text-5xl z-20 text-white font-bold md:w-1/2 md:leading-12'>Watch the Video Tutorial on How to Use OnTap Business Card</h2>
+        )}
         <motion.div
           className='w-full h-80 bg-gray-400 z-20 md:w-1/2 md:h-120 md:rounded-md'
           initial={{scale: 0.8}}

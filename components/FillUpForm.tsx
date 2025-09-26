@@ -137,7 +137,7 @@ const FillUpForm = () => {
   ]
 
   return (
-    <div ref={fillUpRef} className='w-full flex flex-col py-20 items-center gap-5'>
+    <div ref={fillUpRef} className='w-full min-h-max flex flex-col py-20 items-center gap-5 overflow-hidden'>
         {show && (
           <Toast 
             icon={icon}

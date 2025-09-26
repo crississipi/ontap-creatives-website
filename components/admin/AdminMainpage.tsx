@@ -1,10 +1,11 @@
 "use client"
 
-import { HeaderProps } from '@/types'
+import { EditProps, HeaderProps } from '@/types'
 import React, { JSX, useState } from 'react'
 import Image from 'next/image'
 import { RiArrowLeftDoubleLine, RiDashboardLine, RiDiscountPercentLine, RiGalleryLine, RiLogoutBoxLine, RiPaintBrushLine, RiText, RiUserSettingsLine } from 'react-icons/ri'
-import { Content, Customization, Dashboard, ProductPage, Promos, UserInfo, VisitorsPage } from '.'
+import { AffiliateInfo, AffiliatesPage, Content, Customization, Dashboard, ProductPage, Promos, UserInfo, VisitorsPage } from '.'
+import { LuBriefcaseBusiness } from 'react-icons/lu'
 
 const Navigations = [
     {
@@ -16,20 +17,29 @@ const Navigations = [
         name: 'Inquiries'
     },
     {
+        icon: <LuBriefcaseBusiness />,
+        name: 'Affiliates'
+    },
+    {
         icon: <RiPaintBrushLine />,
         name: 'Customization'
     },
 ];
 
-const Mainpage = ({ setPage }: HeaderProps) => {
+type MainpageProps = HeaderProps & EditProps;
+
+const AdminMainpage = ({ setPage, editable }: MainpageProps) => {
   const [minimized, isMinimized] = useState(false);
   const [page, changePage] = useState(0);
   const [child, setChild] = useState(<Promos />);
+  const [tag, setTag] = useState('promos')
   const pages: Record<number, JSX.Element> = {
     0: <Dashboard />,
     1: <VisitorsPage changePage={changePage}/>,
-    2: <Customization child={child}/>,
-    3: <UserInfo />
+    2: <AffiliatesPage changePage={changePage}/>,
+    3: <Customization child={child} tag={tag} />,
+    4: <UserInfo />,
+    5: <AffiliateInfo />
   };
   const [showMore, setShowMore] = useState(false);
 
@@ -42,6 +52,7 @@ const Mainpage = ({ setPage }: HeaderProps) => {
                 alt='logo image'
                 src='/images/ontap-logo.png'
                 className='h-14 w-14 object-center object-contain'
+                draggable={false}
             />
             <button type="button" className='p-1.5 rounded-md top-24 -right-3 absolute bg-white shadow-md text-xl z-50 ring-2 ring-transparent hover:ring-light-blue focus:ring-violet focus:text-violet ease-out duration-200' onClick={() => isMinimized(!minimized)}><RiArrowLeftDoubleLine className={`${minimized ? 'rotate-180' : ''}`}/></button>
             <div className='w-full flex flex-col mt-20 justify-center items-center relative'>
@@ -50,7 +61,11 @@ const Mainpage = ({ setPage }: HeaderProps) => {
                     key={`navigation_${i}`} 
                     type="button"
                     className={`w-full flex items-center ${minimized && 'justify-center'} group hover:bg-light-blue text-dark-blue font-semibold focus:bg-violet focus:text-white ease-out duration-200`}
-                    onClick={() => {i < 2 ? changePage(i) : setShowMore(!showMore); changePage(i)}}
+                    onClick={() => 
+                        {i < 3 ? changePage(i) : 
+                            setShowMore(!showMore); 
+                            changePage(i)
+                        }}
                     >
                         <span className={`text-xl p-3 ${!minimized && 'pl-5'}`}>
                             {nav.icon}
@@ -68,7 +83,7 @@ const Mainpage = ({ setPage }: HeaderProps) => {
                         <button 
                             type="button"
                             className={`w-full flex items-center ${minimized && 'justify-center'} group hover:bg-light-blue text-dark-blue font-semibold focus:bg-violet focus:text-white ease-out duration-200`}
-                            onClick={() => setChild(<Promos />)}
+                            onClick={() => {setChild(<Promos />); setTag('promos')}}
                         >
                             <span className={`text-xl p-3 ${!minimized && 'pl-5'}`}>
                                 <RiDiscountPercentLine />
@@ -82,7 +97,7 @@ const Mainpage = ({ setPage }: HeaderProps) => {
                         <button 
                             type="button"
                             className={`w-full flex items-center ${minimized && 'justify-center'} group hover:bg-light-blue text-dark-blue font-semibold focus:bg-violet focus:text-white ease-out duration-200`}
-                            onClick={() => setChild(<ProductPage />)}
+                            onClick={() => {setChild(<ProductPage />); setTag('productpage')}}
                         >
                             <span className={`text-xl p-3 ${!minimized && 'pl-5'}`}>
                                 <RiGalleryLine />
@@ -96,7 +111,7 @@ const Mainpage = ({ setPage }: HeaderProps) => {
                         <button 
                             type="button"
                             className={`w-full flex items-center ${minimized && 'justify-center'} group hover:bg-light-blue text-dark-blue font-semibold focus:bg-violet focus:text-white ease-out duration-200`}
-                            onClick={() => setChild(<Content />)}
+                            onClick={() => {setChild(<Content />); setTag('content');}}
                         >
                             <span className={`text-xl p-3 ${!minimized && 'pl-5'}`}>
                                 <RiText />
@@ -122,4 +137,4 @@ const Mainpage = ({ setPage }: HeaderProps) => {
   )
 }
 
-export default Mainpage
+export default AdminMainpage

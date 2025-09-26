@@ -3,6 +3,8 @@
 import React, { useEffect, useRef, useState } from 'react'
 import Image from "next/image";
 import { AnimatePresence, motion } from 'framer-motion';
+import { EditProps } from '@/types';
+import { EditableText } from '.';
 
 const cardUrls = [
     "/images/card-1.png",
@@ -65,7 +67,9 @@ interface StartingProps {
     endWarping: boolean;
 }
 
-const Hero = ({ endWarping }: StartingProps) => {
+type HeroProps = StartingProps & EditProps;
+
+const Hero = ({ endWarping, editable }: HeroProps) => {
   const [card, nextCard] = useState(0);
   const { ref: heroRef, isInView: heroVisible } = useInView();
 
@@ -102,17 +106,26 @@ const Hero = ({ endWarping }: StartingProps) => {
             }}
             className='w-full flex flex-col items-center'
             >
-                <Image
-                    priority
-                    height={500}
-                    width={500}
-                    alt='ontap creatives logo'
-                    src='/images/ontap-logo-1.png'
-                    className='h-auto w-32 md:w-50 object-cover pt-5'
-                    draggable={false}
-                />
-                <h1 className='text-4xl md:text-7xl mt-5 md:mt-5 text-blue'>Smart Business Card</h1>
-                <h2 className='text-base text-center px-3 mt-5 md:text-2xl md:w-2/3'>Turn every interaction into an opportunity for growth. Embrace the future of networking with our Digital Business Card - your key to a world of endless possibilities</h2>
+                {editable ? (
+                    <>
+                        <EditableText tag="h1" className='w-full text-center text-4xl md:text-8xl mt-5 md:mt-5 text-blue' type='input'>
+                            Smart Business Card
+                        </EditableText>
+                        <EditableText tag="p" className='w-1/3 text-center mt-3 mb-3 text-lg font-thin tracking-wider' type='input'>
+                            DIGITAL TREND. INNOVATIONS. SEAMLESS CONNECTIONS
+                        </EditableText>
+                        <EditableText tag="h2" className='text-base text-center px-3 mt-5 lg:text-3xl md:w-2/3 font-normal' type='textarea'>
+                            Turn every interaction into an opportunity for growth. Embrace the future of networking with our Digital Business Card - your key to a world of endless possibilities
+                        </EditableText>
+                    </>
+                ) : (
+                    <>
+                        <h1 className='text-4xl md:text-8xl mt-5 md:mt-5 text-blue'>Smart Business Card</h1>
+                        <p className='mt-3 mb-3 text-lg font-thin tracking-wider'>DIGITAL TREND. INNOVATIONS. SEAMLESS CONNECTIONS</p>
+                        <h2 className='text-base text-center px-3 mt-5 lg:text-3xl md:w-2/3 font-normal'>Turn every interaction into an opportunity for growth. Embrace the future of networking with our Digital Business Card - your key to a world of endless possibilities</h2>
+                    </>
+                )}
+                
             </motion.div>
             <div className='hidden h-70 w-9/10 md:grid md:grid-cols-2 lg:grid-cols-4 md:my-18 relative [perspective:1000px]'>
                 <motion.div
@@ -521,8 +534,22 @@ const Hero = ({ endWarping }: StartingProps) => {
                             delay: endWarping ? i/4 : 3 + (i/4)
                         }}
                     >
-                            <h3 className='text-blue text-lg'>{details.name}</h3>
-                            <p className='leading-5 text-base'>{details.text}</p>
+                        {editable ? (
+                            <>
+                                <EditableText tag="h3" className='text-blue text-lg' type='input'>
+                                    {details.name}
+                                </EditableText>
+                                <EditableText tag="p" className='leading-5 text-base' type='textarea'>
+                                    {details.text}
+                                </EditableText>
+                            </>
+                        ) : (
+                            <>
+                                <h3 className='text-blue text-lg'>{details.name}</h3>
+                                <p className='leading-5 text-base'>{details.text}</p>
+                            </>
+                        )}
+                            
                         </motion.span>
                     ))}
                 </div>

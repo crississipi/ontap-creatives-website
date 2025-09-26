@@ -22,6 +22,8 @@ interface VisitorProps {
     changePage: (newPage: number) => void;
 }
 
+const SearchFilters = [""];
+
 const VisitorsPage = ({ changePage }: VisitorProps) => {
     const [sort, sortItems] = useState<SortState>({
         name: false,
@@ -134,7 +136,7 @@ const VisitorsPage = ({ changePage }: VisitorProps) => {
                                 <button 
                                     type="button" 
                                     className='col-span-19 grid grid-cols-19 hover:bg-light-blue focus:bg-dark-blue focus:text-white ease-out duration-200'
-                                    onDoubleClick={() => changePage(3)}
+                                    onDoubleClick={() => changePage(4)}
                                 >
                                     <span className='h-12 col-span-3 px-3 flex items-center border-r border-neutral-200'>Juan Dela Cruz</span>
                                     <span className='h-12 col-span-3 px-3 flex items-center border-r border-neutral-200'>Panday</span>

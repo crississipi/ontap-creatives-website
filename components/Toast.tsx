@@ -1,7 +1,7 @@
 "use client"
 
 import { motion } from 'framer-motion'
-import React, { JSX, useState } from 'react'
+import React, { JSX } from 'react'
 import { HiCheck, HiExclamationCircle } from 'react-icons/hi'
 import { HiMiniExclamationTriangle } from 'react-icons/hi2';
 

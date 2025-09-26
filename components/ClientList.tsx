@@ -2,6 +2,7 @@
 
 import React, { useState, useRef, useEffect} from "react";
 import Image from "next/image";
+import { EditProps } from "@/types";
 
 const logos = Array.from(
   { length: 15 },
@@ -86,7 +87,7 @@ const sliceRange = (arr: string[], start: number, end: number) => {
   return [...arr.slice(start), ...arr.slice(0, end)];
 };
 
-const ClientList = () => {
+const ClientList = ({editable}: EditProps) => {
   return (
     <>
         <div className="relative h-auto w-full overflow-hidden bg-light-blue flex flex-col">

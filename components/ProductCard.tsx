@@ -1,21 +1,52 @@
 "use client";
-import React from 'react'
+
+import React, { JSX, useState } from 'react'
 import Image from 'next/image'
 import { ProductCardProps, ProductProps } from '@/types';
+import { RiChatPollLine, RiDiscountPercentLine, RiSparklingLine, RiStarFill, RiStarHalfFill, RiStarLine } from 'react-icons/ri';
+import { MdOutlineTrendingUp } from 'react-icons/md';
+import { FaAward } from 'react-icons/fa';
+import { HiMiniFire } from 'react-icons/hi2';
+import { LuHandCoins } from 'react-icons/lu';
+import { TbCurrencyPeso } from 'react-icons/tb';
 
 type ProdCard = ProductCardProps & ProductProps;
 
-const ProductCard = ({ imgUrl, productName, productDesc, size, setInquireItem, hoverable, setClickedItem, frontImg, backImg }: ProdCard ) => {
+const ProductCard = ({ imgUrl, productName, productDesc, size, setInquireItem, hoverable, setClickedItem, frontImg, backImg, price, ratings, sold, variableBackImg, variableFrontImg }: ProdCard ) => {
+  const Tag: Record<string, JSX.Element> = {
+    'Trending': <span className='px-3 pl-1 py-1 gap-3 rounded-full border border-amber-600 flex text-sm items-center'>
+      <span className='rounded-full bg-amber-500 p-1 text-base text-white'><MdOutlineTrendingUp /></span>
+      Trending
+    </span>,
+    'Best Seller': <span className='px-3 pl-1 py-1 gap-3 rounded-full border border-purple-600 flex text-sm items-center'>
+      <span className='rounded-full bg-purple-500 p-1 text-base text-white'><FaAward/></span>
+      Best Seller
+      </span>,
+    'Most Popular': <span className='px-3 pl-1 py-1 gap-3 rounded-full border border-rose-600 flex text-sm items-center'>
+      <span className='rounded-full bg-rose-500 p-1 text-base text-white'><HiMiniFire/></span>
+      Most Popular
+      </span>,
+    'Most Affordable': <span className='px-3 pl-1 py-1 gap-3 rounded-full border border-emerald-600 flex text-sm items-center'>
+      <span className='rounded-full bg-emerald-500 p-1 text-base text-white'><LuHandCoins/></span>  
+      Most Affordable
+    </span>,
+    'Top Reviewed': <span className='px-3 pl-1 py-1 gap-3 rounded-full border border-fuchsia-600 flex text-sm items-center'>
+      <span className='rounded-full bg-fuchsia-500 p-1 text-base text-white'><RiChatPollLine/></span>
+      Top Reviewed
+    </span>,
+    'Discounted': <span className='px-3 pl-2 py-1 gap-3 rounded-full border border-orange-600 bg-orange-500 text-white flex text-sm items-center'><RiDiscountPercentLine  className='text-lg'/>Up to 15% off</span>,
+    'Newly Launched': <span className='px-3 pl-2 py-1 gap-3 rounded-full border border-sky-600 bg-sky-500 text-white flex text-sm items-center'><RiSparklingLine  className='text-lg'/>Newly Launched</span>
+  };
 
   return (
     <button 
-      className={`col-span-1 relative flex flex-col items-center bg-white ${hoverable ? `${size} border border-neutral-200 group hover:shadow-lg hover:scale-101 md:hover:scale-105 hover:border-transparent ease-out duration-500` : 'w-full h-1/2 md:h-full md:w-2/5 md:bg-light-blue'}`}
+      className={`relative flex flex-col items-center ${hoverable ? `${size} border border-neutral-200 group hover:shadow-lg hover:scale-101 md:hover:scale-105 hover:border-transparent ease-out duration-500` : 'w-full h-1/2 md:h-full md:w-2/5 md:bg-light-blue'}`}
       onClick={() => {
-        setClickedItem?.({ imgUrl, name: productName, desc: productDesc, frontImg, backImg });
+        setClickedItem?.({ imgUrl, name: productName, desc: productDesc, front:frontImg, back:backImg, price, ratings, sold, varBack:variableBackImg!, varFront:variableFrontImg! });
         setInquireItem(true);
       }}
     >
-        <div className='h-1/2 w-full flex items-center justify-center relative'>
+        <div className='h-1/2 w-full mt-10 flex items-center justify-center relative'>
           {size === 'w-full aspect-[3/4] md:aspect-[3/5]' && (
             <div className={`md:hidden rounded-xs md:rounded-md ${hoverable ? 'h-32 md:h-40 w-6/7 md:w-3/4 bg-neutral-200' : 'h-38 mt-18 w-full md:w-3/4 bg-light-blue md:bg-white flex justify-center'} relative`}>
               <Image
@@ -103,16 +134,30 @@ const ProductCard = ({ imgUrl, productName, productDesc, size, setInquireItem, h
           )}
           
         </div>
-        <h2 className={`font-bold ${hoverable ? 'pt-3 md:pt-0 text-base md:text-xl' : 'pt-16 md:pt-0 text-xl'}`}>{productName}</h2>
-        <p className='hidden md:block mt-3 mb-5 px-5 text-justify group-hover:px-5.5 ease-out duration-500'>{productDesc}</p>
-      
-        {hoverable && (
-            <span 
-                className='text-sm py-3 md:text-base mt-auto md:py-3 bg-light-blue w-full font-semibold text-center group-hover:bg-blue group-focus:bg-dark-blue group-focus:text-white ease-out duration-500'
-            >
-              INQUIRE NOW
+        <h2 className={`font-bold mt-auto ${hoverable ? 'pt-3 md:pt-0 text-base md:text-xl' : 'pt-16 md:pt-0 text-xl'} text-left px-5 w-full`}>{productName}</h2>
+        <div className='w-full flex items-center justify-between px-5 my-5'>
+          <div className='text-left flex font-extrabold items-center'>
+            {price.ontap === 0 ? (
+              <p className='text-xl'>Upon Inquiry</p>
+            ) : (
+              <>
+                <TbCurrencyPeso className='text-2xl'/>
+                <p className='text-3xl'>{price.ontap.toLocaleString()}</p>
+              </>
+            )}
+          </div>
+          <div className='flex flex-col items-end leading-5'>
+            <span className='flex items-center gap-1 text-amber-500'>
+              {ratings > 4.5 && <RiStarFill />}
+              {ratings <= 4.5 && <RiStarHalfFill />}
+              {ratings < 3 && <RiStarLine />}
+              
+              <strong>{ratings}</strong>
+              <p className='text-neutral-500 text-sm'>({sold - 20} reviews)</p>
             </span>
-        )}
+            <p className='text-sm'><strong>{sold}</strong> sold</p>
+          </div>
+        </div>
     </button>
   )
 }
