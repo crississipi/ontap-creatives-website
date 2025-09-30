@@ -147,7 +147,7 @@ const FillUpForm = () => {
         <h2 className='w-full text-center text-3xl font-bold'>To Arrange a Demonstration <span className='text-dark-blue'>or to Place Bulk Orders</span></h2>
         <p className='text-lg font-bold'>Kindly fill up this form</p>
         <motion.form 
-            className='w-9/10 md:w-1/3 p-5 bg-neutral-100 rounded-md gap-5 flex flex-col'
+            className='w-9/10 md:w-1/2 lg:w-1/3 p-5 bg-neutral-100 rounded-md gap-5 flex flex-col'
             initial={{ y: '100%'}}
             animate={{ y: fillUpVisible ? '0%' : '100%'}}
             transition={{
@@ -173,7 +173,7 @@ const FillUpForm = () => {
                 <textarea name='messageBox' className='resize-none min-h-52 rounded-sm bg-neutral-200 p-3 px-5' value={userInfo.message} onChange={getInputs}></textarea>
             </span>
             <span className='w-full flex justify-end'>
-                <button type="button" className='px-5 py-3 pr-4 flex items-center gap-3 rounded-md bg-light-blue hover:bg-blue focus:bg-dark-blue focus:text-white ease-out duration-200' onClick={() => submitEmail}>Submit <HiArrowRight /></button>
+                <button type="button" className='px-5 py-3 pr-4 flex items-center font-bold gap-3 rounded-md bg-light-blue hover:bg-blue focus:bg-dark-blue focus:text-white ease-out duration-200' onClick={() => submitEmail}>Submit <HiArrowRight /></button>
             </span>
         </motion.form>   
     </div>

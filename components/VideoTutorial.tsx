@@ -32,7 +32,7 @@ const VideoTutorial = ({editable}: EditProps) => {
   const { ref: videoTutorialRef, isInView: videoTutorialVisible } = useInView();
 
   return (
-    <div ref={videoTutorialRef} className='h-auto w-full flex flex-col items-center gap-10 py-20 relative'>
+    <div ref={videoTutorialRef} className='h-auto w-full flex flex-col items-center gap-10 py-10 md:py-20 relative'>
         <Image
             height={1000}
             width={1000}
@@ -49,7 +49,7 @@ const VideoTutorial = ({editable}: EditProps) => {
           <h2 className='w-4/5 text-center text-3xl md:text-5xl z-20 text-white font-bold md:w-1/2 md:leading-12'>Watch the Video Tutorial on How to Use OnTap Business Card</h2>
         )}
         <motion.div
-          className='w-full h-80 bg-gray-400 z-20 md:w-1/2 md:h-120 md:rounded-md'
+          className='w-full min-h-80 bg-gray-400 z-20 md:w-9/10 lg:w-1/2 aspect-video md:rounded-md'
           initial={{scale: 0.8}}
           animate={{scale: videoTutorialVisible ? 1 : 0.8}}
           transition={{

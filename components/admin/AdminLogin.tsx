@@ -8,7 +8,7 @@ type AdminProps = AdminPageProps & HeaderProps
 const AdminLogin = ({ showAdminLogin, setPage }: AdminProps) => {
   
   return (
-    <div className='w-full h-[100vh] flex items-center justify-center relative'>
+    <div className='w-full h-[100vh] flex items-center justify-center relative '>
         <Image
             height={500}
             width={500}
@@ -16,7 +16,7 @@ const AdminLogin = ({ showAdminLogin, setPage }: AdminProps) => {
             src='/images/ontap-hero-bg.png'
             className='h-full w-full absolute object-center object-cover'
         />
-        <div className='lg:h-1/2 lg:w-1/5 rounded-lg bg-white/20 backdrop-blur-lg flex flex-col items-center py-5'>
+        <div className='h-2/5 w-2/3 md:w-1/2 lg:h-1/2 lg:w-1/3 rounded-lg bg-white/20 backdrop-blur-lg flex flex-col items-center py-5'>
             <Image
                 height={500}
                 width={500}

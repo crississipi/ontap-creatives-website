@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react'
 import ProductCard from './ProductCard'
-import { motion } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import { PopUp, ShowMoreInfo } from '.';
 import { EditProps } from '@/types';
 
@@ -21,7 +21,7 @@ const ProductCardInfo = [
       frontImg: '/images/card-1/front.png',
       backImg: '/images/card-1/back.png',
       varFront: '/images/card-5/front.png',
-      varBack: '/images/card-5/front.png',
+      varBack: '/images/card-5/back.png',
       tags: ["Most Affordable", "Best Seller"],
       price: {
         ontap: 799,
@@ -32,7 +32,7 @@ const ProductCardInfo = [
     },
     {
       imgUrl: '',
-      name: 'Carbon Fibre Digital Business Card',
+      name: 'Carbon Fiber Digital Business Card',
       desc: 
           <p>
             Upgrade your networking with the <strong>Carbon Fible Digital Business Card</strong> — where <strong>luxury design meets smart technology</strong>. Crafted from <strong>premium carbon fiber</strong>, it offers a <strong>sleek, lightweight, and ultra-durable finish</strong> that sets you apart from the ordinary. 
@@ -191,7 +191,7 @@ const ProductList = ({editable}: EditProps) => {
 
         cooldownTimer = setTimeout(() => {
           canTrigger = true;
-        }, 10000);
+        }, 30000);
       }
     };
 
@@ -207,7 +207,7 @@ const ProductList = ({editable}: EditProps) => {
     <section className='min-h-[100vh] w-full flex flex-col items-center justify-center py-16 bg-neutral-50 relative'>
       <h1 className='z-10 w-full text-center text-2xl mt-10 text-black font-semibold md:text-5xl'>OnTap BizCard Products</h1>
       
-      <div className='w-full md:w-3/4 h-full grid grid-cols-2 grid-rows-1 md:grid-cols-4 gap-3 px-3 py-8 md:px-10'>
+      <div className='w-full 2xl:w-3/4 h-auto grid grid-cols-2 gap-3 px-3 py-8 md:grid-rows-2 md:px-10 lg:grid-rows-1 lg:grid-cols-3 lg:h-full xl:grid-cols-4'>
         {ProductCardInfo[0].map((val,i) => (
           <motion.div
             key={`prodcard-${i}`}
@@ -218,14 +218,14 @@ const ProductList = ({editable}: EditProps) => {
               ease: 'easeOut',
               delay: (i + 1) / 10
             }}
-            className='col-span-1 row-span-full h-auto flex'
+            className='col-span-1 h-auto flex md:row-span-1'
           >
             <ProductCard 
                 key={`product-${i}`} 
                 imgUrl={val.imgUrl}
                 productName={val.name}
                 productDesc={val.desc}
-                size='w-full aspect-[3/4] md:aspect-[3/4]'
+                size='w-full aspect-[9/10] aspect-[3/4]'
                 setInquireItem={setInquireItem}
                 setClickedItem={setClickedItem}
                 hoverable={true}
@@ -244,7 +244,7 @@ const ProductList = ({editable}: EditProps) => {
       </div>
       
       <h2 className='z-10 w-full text-center text-2xl mt-10 text-black font-semibold md:text-5xl'>Other Products</h2>
-      <div className='w-full md:w-3/4 h-full grid grid-cols-2 md:grid-cols-4 gap-3 px-3 md:px-10 py-8'>
+      <div className='w-full h-full grid grid-cols-2 gap-3 px-3 md:px-10 py-8 lg:grid-cols-3 xl:grid-cols-4 2xl:w-3/4'>
         {ProductCardInfo[1].map((val,i) => (
           <motion.div
             key={`prodcard-${i}`}
@@ -255,7 +255,7 @@ const ProductList = ({editable}: EditProps) => {
               ease: 'easeOut',
               delay: (i + 1) / 10
             }}
-            className='h-auto w-auto aspect-[3/4]'
+            className='h-auto w-auto aspect-[2/3]'
           >
             <ProductCard 
               key={`otherprod-${i}`} 
@@ -299,7 +299,7 @@ const ProductList = ({editable}: EditProps) => {
             variableFrontImg={clickedItem.varFront}         
           />
         )}
-      {showPopup && <PopUp setShowPopup={setShowPopup}/>}
+      <AnimatePresence mode='wait'>{showPopup && <PopUp setShowPopup={setShowPopup}/>}</AnimatePresence>
     </section>
   );
 };

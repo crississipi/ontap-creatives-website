@@ -53,7 +53,7 @@ const Mainpage = ({ editable }: EditProps) => {
               <Footer setPage={setPage}/>
             </>
             ) : SectionPage[page]}
-          {page !== 2 && (
+          {page !== 2 && page !== 3 && (
             <motion.button 
               type="button" 
               animate={{x:[20, 5, 20]}}

@@ -225,8 +225,8 @@ const Dashboard = () => {
                 <button type="button" className='flex items-center gap-3 rounded-lg bg-blue text-white px-4 py-2 hover:bg-violet focus:bg-dark-blue ease-out duration-200'><RiExportFill />Export</button>
             </div>
         </div>
-        <div className='w-full h-full grid grid-cols-6 gap-3 overflow-hidden'>
-            <div className='col-span-4 flex flex-col gap-5 overflow-hidden'>
+        <div className='w-full h-auto lg:h-full grid grid-cols-6 gap-3 lg:overflow-hidden'>
+            <div className='col-span-full lg:col-span-4 flex flex-col gap-5 lg:overflow-hidden'>
                 <div className='w-full flex gap-3 items-center flex-nowrap'>
                     {Cards.map((card, i) => (
                         <div key={`dashboard-card_${i}`} className='rounded-md px-3 py-2 shadow-md shadow-neutral-200 bg-white items-stretch w-full flex flex-col'>
@@ -235,11 +235,11 @@ const Dashboard = () => {
                                 <h2 className='font-semibold text-sm'>{card.title}</h2>
                             </div>
                             <p className='mt-3 text-neutral-500 text-sm'>{card.subTitle}</p>
-                            <p className='text-xl font-semibold ml-auto'>{card.count}</p>
+                            <p className='text-xl font-semibold ml-auto lg:text-base lg:font-extrabold'>{card.count}</p>
                         </div>
                     ))}
                 </div>
-                <div className='w-full min-h-100 flex gap-3'>
+                <div className='w-full min-h-100 lg:min-h-80 flex gap-3'>
                     <div className='w-2/3 h-full flex flex-col rounded-lg bg-white shadow-md shadow-neutral-200'>
                         <div className='flex w-full items-center justify-between p-5 py-4 pr-3'>
                             <h3 className='font-semibold text-sm'>Website Analytics</h3>
@@ -258,10 +258,10 @@ const Dashboard = () => {
                             <UserRetention accessedIn='dashboard'/>
                         </div>
                         <div className='h-1/2 w-full flex flex-col px-3 gap-1 text-sm mt-5'>
-                            <span className='px-5 py-2 rounded-sm border border-violet flex items-center justify-between'>Inquiring <strong>200</strong></span>
-                            <span className='px-5 py-2 rounded-sm border border-dark-blue flex items-center justify-between'>Repeated Visits <strong>300</strong></span>
-                            <span className='px-5 py-2 rounded-sm border border-blue flex items-center justify-between'>Finished Viewing Website <strong>300</strong></span>
-                            <span className='px-5 py-2 rounded-sm border border-footer-bg flex items-center justify-between'>Staying Below Average Duration <strong>400</strong></span>
+                            <span className='px-5 py-2 rounded-sm border border-violet flex items-center justify-between lg:py-1 lg:px-3'>Inquiring <strong>200</strong></span>
+                            <span className='px-5 py-2 rounded-sm border border-dark-blue flex items-center justify-between lg:py-1 lg:px-3'>Repeated Visits <strong>300</strong></span>
+                            <span className='px-5 py-2 rounded-sm border border-blue flex items-center justify-between lg:py-1 lg:px-3'>Finished Viewing Website <strong>300</strong></span>
+                            <span className='px-5 py-2 rounded-sm border border-footer-bg flex items-center justify-between lg:py-1 lg:px-3'>Below Average Duration <strong>400</strong></span>
                         </div>
                     </div>
                 </div>
@@ -271,14 +271,14 @@ const Dashboard = () => {
                         <button type="button" className='p-2 rounded-md border border-transparent hover:border-violet focus:bg-dark-blue focus:text-white ease-out duration-200'><HiDotsHorizontal /></button>
                     </div>
                     <div className='h-full w-full flex flex-col overflow-hidden px-2'>
-                        <div className='h-10 w-full pr-1 grid grid-cols-6 border-b  border-neutral-300 overflow-hidden font-bold'>
+                        <div className='h-10 w-full pr-1 grid grid-cols-6 border-b  border-neutral-300 overflow-hidden font-bold lg:text-sm 2xl:text-base'>
                             <span className='col-span-2 py-2 pl-5'>Activity</span>
                             <span className='col-span-1 py-2 text-center'>Visitor ID</span>
                             <span className='col-span-1 py-2 text-center'>Time Started</span>
                             <span className='col-span-1 py-2 text-center'>Session Duration</span>
                             <span className='col-span-1 py-2 text-center'>Status</span>
                         </div>
-                        <div className='h-full w-full flex flex-col overflow-x-hidden'>
+                        <div className='h-full w-full flex flex-col overflow-x-hidden lg:text-sm 2xl:text-base'>
                             {Array.from({ length: 10 }).map((_,i) => (
                                 <button key={i} type='button' className='w-full py-3 pr-0 grid grid-cols-6 hover:bg-light-blue focus:bg-dark-blue focus:text-white ease-out duration-200'>
                                     <span className='col-span-2 text-left px-5'>Accessed Mainpage</span>
@@ -292,9 +292,9 @@ const Dashboard = () => {
                     </div>
                 </div>
             </div>
-            <div className='max-h-full col-span-2 gap-3 flex flex-col overflow-hidden'>
-                <div className='w-full h-3/5 rounded-lg bg-white shadow-md shadow-neutral-200 overflow-hidden'>
-                    {showMap && (
+            <div className='col-span-full max-h-full lg:col-span-2 gap-3 flex flex-col lg:overflow-hidden'>
+                <div className='w-full h-3/5 rounded-lg bg-white shadow-md shadow-neutral-200 lg:overflow-hidden'>
+                    {false && showMap && (
                         <WorldMap 
                             lat={lat}
                             long={long}
@@ -302,7 +302,7 @@ const Dashboard = () => {
                         />
                     )}
                 </div>
-                <div className='w-full h-2/5 rounded-lg bg-white shadow-md shadow-neutral-200 overflow-x-hidden'>
+                <div className='w-full h-2/5 rounded-lg bg-white shadow-md shadow-neutral-200 lg:overflow-x-hidden'>
                     <div className='flex w-full items-center justify-between p-5 pt-4 pb-3 pr-3'>
                         <h3 className='font-semibold text-sm'>Visitor's Area Locations</h3>
                         <button type="button" className='p-2 rounded-md border border-transparent hover:border-violet focus:bg-dark-blue focus:text-white ease-out duration-200'><HiDotsHorizontal /></button>
@@ -312,10 +312,10 @@ const Dashboard = () => {
                             <button 
                                 key={i} 
                                 type='button' 
-                                className='px-3 py-2 flex items-center justify-between text-black hover:bg-light-blue focus:bg-dark-blue focus:text-white ease-out duration-200'
+                                className='px-3 lg:px-1 py-2 flex items-center justify-between text-black hover:bg-light-blue focus:bg-dark-blue focus:text-white ease-out duration-200'
                                 onClick={() => changeLoc(val.latitude, val.longitude, 7)}
                             >
-                                <span>{val.abbr}</span>
+                                <span className='lg:text-sm 2xl:text-base'>{val.abbr}</span>
                                 <span className='font-semibold'>{val.count}</span>
                             </button>
                         ))}

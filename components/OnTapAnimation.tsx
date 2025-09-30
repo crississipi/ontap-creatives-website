@@ -29,49 +29,143 @@ const OnTapAnimation = () => {
   const { ref: section1Ref, isInView: section1Visible } = useInView();
 
   return (
-    <div ref={section1Ref} className='scale-80 md:scale-100 h-full w-full flex relative perspective-distant items-center'>
-        <div className={`w-48 md:w-54 absolute transform-3d ${section1Visible ? 'md:right-3/5 right-65/100' : 'right-2/10'} top-1/2 -translate-y-1/2 rounded-lg -rotate-z-90 overflow-hidden rotate-y-65 ease-out duration-500`}>
-            <Image
-                height={500}
-                width={500}
-                alt='ontap creatives cards'
-                src='/images/card-cover.png'
-                className='w-full object-contain object-center'
-                draggable={false}
-            />
-        </div>
-        <div className={`h-full ${section1Visible ? 'min-w-42 max-w-42' : 'min-w-0 max-w-0 overflow-hidden'} flex items-center relative ml-7 perspective-distant transform-3d ease-out duration-500`}>
-            <span className='h-4 w-4 rounded-full absolute left-4 md:-left-5 pulseGrow scale-80 md:scale-100'></span>
-            <span className='h-12 w-12 rounded-full absolute left-5 md:-left-4 pulseGrow scale-80 md:scale-100' style={{ animationDelay: "0.05s" }}></span>
-            <span className='h-20 w-20 rounded-full absolute left-6 md:-left-3 pulseGrow scale-80 md:scale-100' style={{ animationDelay: "0.1s" }}></span>
-            <span className='h-28 w-28 rounded-full absolute left-7 md:-left-2 pulseGrow scale-80 md:scale-100' style={{ animationDelay: "0.1.5s" }}></span>
-            <span className='h-36 w-36 rounded-full absolute left-8 md:-left-1 pulseGrow scale-80 md:scale-100' style={{ animationDelay: "0.2s" }}></span>
-            <span className='h-42 w-42 rounded-full absolute left-9 md:left-0 pulseGrow scale-80 md:scale-100' style={{ animationDelay: "0.25s" }}></span>
-            <span className='h-50 w-50 rounded-full absolute left-10 md:left-1 pulseGrow scale-80 md:scale-100' style={{ animationDelay: "0.3s" }}></span>
-            <span className='h-58 w-58 rounded-full absolute left-11 md:left-2 pulseGrow scale-80 md:scale-100' style={{ animationDelay: "0.35s" }}></span>
-            <span className='h-64 w-64 rounded-full absolute left-12 md:left-3 pulseGrow scale-80 md:scale-100' style={{ animationDelay: "0.4s" }}></span>
-            <span className='h-72 w-72 rounded-full absolute left-13 md:left-4 pulseGrow scale-80 md:scale-100' style={{ animationDelay: "0.45s" }}></span>
-            <span className='h-80 w-80 rounded-full absolute left-14 md:left-5 pulseGrow scale-80 md:scale-100' style={{ animationDelay: "0.5s" }}></span>
-            <span className='h-88 w-88 rounded-full absolute left-15 md:left-6 pulseGrow scale-80 md:scale-100' style={{ animationDelay: "0.55s" }}></span>
-        </div>
-        <span className={`h-full w-1/2 md:w-3/4 rotate-y-50 border-2 border-blue absolute ${section1Visible ? 'md:left-9/10 md:scale-115 left-3/5 scale-115 z-60' : 'left-1/2 -translate-x-1/2 md:scale-50 scale-30 z-30'} rounded-4xl ease-out duration-500 delay-100`}></span>
-        <span className={`h-full w-1/2 md:w-3/4 rotate-y-50 border-2 border-blue absolute ${section1Visible ? 'md:left-5/7 md:scale-105 left-1/2 scale-105 z-60' : 'left-1/2 -translate-x-1/2 md:scale-50 scale-30 z-30'} rounded-4xl ease-out duration-500 delay-150`}></span>
-        <span className={`h-full w-1/2 md:w-3/4 rotate-y-50 border-2 border-blue absolute z-40 ${section1Visible ? 'md:left-1/3 md:scale-85 left-2/7 scale-85' : 'left-1/2 -translate-x-1/2 md:scale-50 scale-30'} rounded-4xl ease-out duration-500 delay-200`}>
-        </span>
-        <span className={`h-full w-1/2 md:w-3/4 rotate-y-50 border-2 border-blue absolute z-40 ${section1Visible ? 'md:left-1/7 md:scale-75 left-1/6 scale-75' : 'left-1/2 -translate-x-1/2 md:scale-50 scale-30'} rounded-4xl ease-out duration-500 delay-250`}>
-        </span>
-        <span className={`h-full w-1/2 md:w-3/4 rotate-y-50 border-2 border-blue absolute z-40 ${section1Visible ? 'left-1/20 md:-left-2 md:scale-65 scale-65' : 'left-1/2 -translate-x-1/2 md:scale-50 scale-30'} rounded-3xl ease-out duration-500 delay-300`}>
-        </span>
-        <span className={`h-full w-1/2 md:w-3/4 rotate-y-50 border-2 border-blue absolute z-40 ${section1Visible ? 'md:-left-1/5 md:scale-55 -left-5 scale-55' : 'left-1/2 -translate-x-1/2 md:scale-50 scale-30'} rounded-2xl ease-out duration-500 delay-350`}>
-        </span>
+    <div
+      ref={section1Ref}
+      className="scale-85 lg:scale-95 xl:scale-100 h-120 w-full flex relative perspective-distant items-center"
+    >
+      <div
+        className={`w-54 absolute transform-3d ${
+          section1Visible ? "md:right-[55%] lg:right-0 lg:left-5 xl:left-[5%] right-70/100" : "left-1/2 -translate-1/2"
+        } top-1/2 -translate-y-1/2 rounded-lg -rotate-z-90 overflow-hidden rotate-y-65 ease-out duration-500`}
+      >
         <Image
-            height={500}
-            width={500}
-            alt='ontap creatives cards'
-            src='/images/ontapphone.png'
-            className={`w-32 md:w-40 object-contain pt-5 object-center rounded-lg -mt-5 z-50 ${section1Visible ? 'right-1/2' : 'mx-auto md:mx-0 right-0'} ease-out duration-75`}
-            draggable={false}
+          height={500}
+          width={500}
+          alt="ontap creatives cards"
+          src="/images/card-2/front.png"
+          className="w-full object-contain object-center"
+          draggable={false}
         />
+      </div>
+      <div
+        className={`h-full ${
+          section1Visible ? "min-w-42 max-w-42" : "min-w-0 max-w-0 mx-auto overflow-hidden"
+        } flex items-center relative ml-5 md:-ml-3 lg:ml-24 xl:ml-24 2xl:ml-44 perspective-distant rotate-y-55 transform-3d ease-out duration-500`}
+      >
+        <span
+          className={`h-4 w-4 rounded-full absolute z-50 border pulseGrow scale-80 md:scale-100`}
+          style={{ animationDelay: `0.05s` }}
+        ></span>
+        <span
+          className={`h-12 w-12 rounded-full absolute z-50 border pulseGrow left-4 scale-80 md:scale-100`}
+          style={{ animationDelay: `0.08s` }}
+        ></span>
+        <span
+          className={`h-20 w-20 rounded-full absolute z-50 border pulseGrow left-8 scale-80 md:scale-100`}
+          style={{ animationDelay: `0.11s` }}
+        ></span>
+        <span
+          className={`h-28 w-28 rounded-full absolute z-50 border pulseGrow left-12 scale-80 md:scale-100`}
+          style={{ animationDelay: `0.14s` }}
+        ></span>
+        <span
+          className={`h-36 w-36 rounded-full absolute z-50 border pulseGrow left-16 scale-80 md:scale-100`}
+          style={{ animationDelay: `0.17s` }}
+        ></span>
+        <span
+          className={`h-44 w-44 rounded-full absolute z-50 border pulseGrow left-20 scale-80 md:scale-100`}
+          style={{ animationDelay: `0.2s` }}
+        ></span>
+        <span
+          className={`h-52 w-52 rounded-full absolute z-50 border pulseGrow left-24 scale-80 md:scale-100`}
+          style={{ animationDelay: `0.23s` }}
+        ></span>
+        <span
+          className={`h-60 w-60 rounded-full absolute z-50 border pulseGrow left-28 scale-80 md:scale-100`}
+          style={{ animationDelay: `0.26s` }}
+        ></span>
+        <span
+          className={`h-68 w-68 rounded-full absolute z-50 border pulseGrow left-32 scale-80 md:scale-100`}
+          style={{ animationDelay: `0.29s` }}
+        ></span>
+        <span
+          className={`h-76 w-76 rounded-full absolute z-50 border pulseGrow left-36 scale-80 md:scale-100`}
+          style={{ animationDelay: `0.32s` }}
+        ></span>
+        <span
+          className={`h-84 w-84 rounded-full absolute z-50 border pulseGrow left-40 scale-80 md:scale-100`}
+          style={{ animationDelay: `0.35s` }}
+        ></span>
+        <span
+          className={`h-92 w-92 rounded-full absolute z-50 border pulseGrow left-44 scale-80 md:scale-100`}
+          style={{ animationDelay: `0.38s` }}
+        ></span>
+        <span
+          className={`h-100 w-100 rounded-full absolute z-50 border pulseGrow left-48 scale-80 md:scale-100`}
+          style={{ animationDelay: `0.41s` }}
+        ></span>
+      </div>
+      <span
+        className={`h-[95%] w-[60%] lg:h-[90%] lg:w-[50%] rotate-y-50 border-2 border-blue absolute ${
+          section1Visible
+            ? "md:left-[70%] lg:left-[60%] md:scale-115 left-[60%] scale-115 z-60"
+            : "left-1/2 -translate-x-1/2 md:scale-50 scale-30 z-30"
+        } rounded-4xl ease-out duration-500 delay-100`}
+      ></span>
+
+      <span
+        className={`h-[95%] w-[60%] lg:h-[90%] lg:w-[50%] rotate-y-50 border-2 border-blue absolute ${
+          section1Visible
+            ? "md:left-[55%] lg:left-[50%] md:scale-105 left-[45%] scale-105 z-60"
+            : "left-1/2 -translate-x-1/2 md:scale-50 scale-30 z-30"
+        } rounded-4xl ease-out duration-500 delay-150`}
+      ></span>
+
+      <span
+        className={`h-[95%] w-[60%] lg:h-[90%] lg:w-[40%] rotate-y-50 border-2 border-blue absolute z-40 ${
+          section1Visible
+            ? "md:left-[25%] lg:left-[35%] md:scale-85 left-[25%] scale-85"
+            : "left-1/2 -translate-x-1/2 md:scale-50 scale-30"
+        } rounded-4xl ease-out duration-500 delay-200`}
+      ></span>
+
+      <span
+        className={`h-[95%] w-[60%] lg:h-[90%] lg:w-[40%] rotate-y-50 border-2 border-blue absolute z-40 ${
+          section1Visible
+            ? "md:left-[14%] lg:left-[25%] md:scale-75 left-[15%] scale-75"
+            : "left-1/2 -translate-x-1/2 md:scale-50 scale-30"
+        } rounded-4xl ease-out duration-500 delay-250`}
+      ></span>
+
+      <span
+        className={`h-[95%] w-[60%] lg:h-[90%] lg:w-[30%] rotate-y-50 border-2 border-blue absolute z-40 ${
+          section1Visible
+            ? "left-[5%] lg:left-[20%] md:left-4 md:scale-65 scale-65"
+            : "left-1/2 -translate-x-1/2 md:scale-50 scale-30"
+        } rounded-3xl ease-out duration-500 delay-300`}
+      ></span>
+
+      <span
+        className={`h-[95%] w-[60%] lg:h-[90%] lg:w-[30%] rotate-y-50 border-2 border-blue absolute z-40 ${
+          section1Visible
+            ? "md:-left-[5%] lg:left-[15%] md:scale-55 -left-5 scale-55"
+            : "left-1/2 -translate-x-1/2 md:scale-50 scale-30"
+        } rounded-2xl ease-out duration-500 delay-350`}
+      ></span>
+
+      <div className={`w-40 object-contain pt-5 object-center rounded-lg -mt-5 z-50 absolute ${
+            section1Visible ? "right-1/4 md:-right-3 lg:right-1/5 xl:right-1/5 2xl:right-1/3" : "mx-auto md:mx-0 right-1/2 translate-x-1/2"
+          } ease-out duration-100`}
+      >
+        <Image
+          height={500}
+          width={500}
+          alt="ontap creatives cards"
+          src="/images/ontapphone.png"
+          className={`w-full object-contain object-center rounded-lg`}
+          draggable={false}
+        />
+      </div>
     </div>
   )
 }

@@ -68,13 +68,16 @@ const AffiliateProgramPage = ({editable}: EditProps) => {
                     </>
                 ) : (
                     <>
-                        <h1 className='text-4xl md:text-7xl md:pl-20 font-bold uppercase'>Affiliate Program</h1>
-                        <p className='text-lg leading-6 md:pl-20 md:text-2xl md:leading-normal'>We are excited to present our Affiliate Program for cutting-edge Smart Business Card. This program is designed to create a mutually beneficial partnership, allowing reseller to Tap into a growing market and offer innovative smart business card service to their clients.</p>
+                        <h1 className='text-4xl font-bold uppercase 
+                        md:text-7xl 
+                        lg:pl-20'>Affiliate Program</h1>
+                        <p className='text-lg leading-6 lg:pl-20 
+                        md:text-2xl md:leading-normal'>We are excited to present our Affiliate Program for cutting-edge Smart Business Card. This program is designed to create a mutually beneficial partnership, allowing reseller to Tap into a growing market and offer innovative smart business card service to their clients.</p>
                     </>
                 )}
                 
             </motion.span>
-            <div className='h-2/3 aspect-square top-1/2 mt-4 -ml-7 md:mt-6 md:-ml-3 left-4/7 absolute -translate-y-1/2 flex items-center justify-center perspective-distant'>
+            <div className='h-2/3 aspect-square top-1/2 mt-4 -ml-7 md:mt-6 md:-ml-3 left-4/7 lg:left-1/2 lg:ml-0 absolute -translate-y-1/2 flex items-center justify-center perspective-distant'>
                 <span className='h-16 w-16 rounded-full absolute top-1/2 left-1/2 -translate-1/2 waterEffect' style={{ animationDelay: "0.5s" }}></span>
                 <span className='h-24 w-24 rounded-full absolute top-1/2 left-1/2 -translate-1/2 waterEffect' style={{ animationDelay: "0.55s" }}></span>
                 <span className='h-32 w-32 rounded-full absolute top-1/2 left-1/2 -translate-1/2 waterEffect' style={{ animationDelay: "0.6s" }}></span>
@@ -92,7 +95,7 @@ const AffiliateProgramPage = ({editable}: EditProps) => {
                     ease: 'easeOut',
                     delay: 0.3
                 }}
-                className='w-60 md:w-80 aspect-square scale-275 -ml-10 md:-ml-20 left-3/4 md:left-5/7 top-5/6 md:top-6/7 absolute md:-translate-y-1/3'
+                className='w-60 lg:w-80 aspect-square scale-275 md:scale-350 -ml-10 absolute left-3/4 top-5/6 md:left-5/6 md:ml-0 md:top-3/4 lg:left-7/10 lg:top-[93%] lg:-translate-y-1/3'
             >
                 <Image
                     height={4096}
@@ -165,7 +168,7 @@ const AffiliateProgramPage = ({editable}: EditProps) => {
                 
             </span>
         </div>
-        <div className='h-max md:h-[100vh] w-full flex flex-col relative px-10 py-5 md:overflow-hidden'>
+        <div className='h-max md:h-[100vh] w-full flex flex-col relative px-10 md:pr-0 py-5 md:overflow-hidden'>
             <Image
                 height={4096}
                 width={4096}
@@ -176,20 +179,26 @@ const AffiliateProgramPage = ({editable}: EditProps) => {
             />
             {editable ? (
                 <>
-                    <EditableText tag="h2" className='z-10 w-full text-3xl font-bold text-dark-blue text-center md:text-7xl md:mt-10' type='input'>
+                    <EditableText tag="h2" className='z-10 w-full text-3xl font-bold text-dark-blue text-center 
+                    md:text-7xl md:mt-10' type='input'>
                         JOIN OUR TEAM
                     </EditableText>
-                    <EditableText tag="h3" className='h-54 z-10 md:my-auto text-2xl ml-32 md:mx-auto my-14 font-bold text-dark-blue md:leading-18 md:text-6xl md:w-1/3'  type='textarea'>
+                    <EditableText tag="h3" className='h-54 z-10 text-2xl ml-32 my-14 font-bold text-dark-blue 
+                    md:my-auto md:mx-auto md:leading-18 md:text-6xl md:w-1/3'  type='textarea'>
                         BECOME AN AFFILIATE MEMBER TODAY
                     </EditableText>
                 </>
             ) : (
                 <>
-                    <h2 className='z-10 w-full text-3xl font-bold text-dark-blue text-center md:text-7xl md:mt-10'>JOIN OUR TEAM</h2>
-                    <h3 className='z-10 md:my-auto text-2xl ml-32 md:mx-auto my-14 font-bold text-dark-blue md:leading-18 md:text-6xl md:w-1/3'>BECOME AN AFFILIATE MEMBER TODAY</h3>
+                    <h2 className='z-10 w-full text-3xl font-bold text-dark-blue text-center 
+                    md:text-7xl md:mt-10'>JOIN OUR TEAM</h2>
+                    <h3 className='
+                    z-10 text-2xl my-14 font-bold text-dark-blue ml-24 
+                    md:my-auto md:ml-auto md:mr-10 md:text-5xl md:w-2/3 
+                    lg:ml-auto lg:mr-30 lg:leading-18 lg:text-6xl lg:w-4/7 
+                    xl:w-1/3 xl:mx-auto'>BECOME AN AFFILIATE MEMBER TODAY</h3>
                 </>
             )}
-            
         </div>
     </div>
   );

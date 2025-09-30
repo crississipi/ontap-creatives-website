@@ -307,7 +307,7 @@ const FAQs = ({editable}: EditProps) => {
                 ) : (
                   <h4 className='mt-16 text-2xl md:text-3xl font-semibold w-full md:w-3/4 text-center'>{QA[selectedQuestion[0]].topic}</h4>
                 )}
-                <span className='h-full w-full md:w-3/4 text-lg flex flex-col gap-5 text-justify mt-10 md:text-xl'>
+                <span className='h-full w-full md:w-9/10 text-lg flex flex-col gap-5 text-justify mt-10 md:text-xl'>
                   <p className='indent-5'>
                     {Answers[selectedQuestion[0]][selectedQuestion[1]][0]}
                   </p>

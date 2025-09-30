@@ -44,7 +44,7 @@ const Cookies = ({ setShowCookies }: CookiesProps) => {
   return (
     <div 
       ref={cookiesRef} 
-      className='h-full w-full fixed z-99999 bg-black/30 flex flex-col items-center pt-10 gap-5 select-none'
+      className='h-full w-full fixed z-99999 bg-black/30 flex flex-col items-center pt-10 gap-5 px-5 md:px-0 select-none'
     >
         <motion.div 
           initial={{ y: -500 }}
@@ -54,7 +54,7 @@ const Cookies = ({ setShowCookies }: CookiesProps) => {
             duration: 0.3,
             ease: 'easeOut'
           }}
-          className='h-auto w-1/3 rounded-lg bg-white overflow-hidden py-3 shadow-md shadow-black/50 flex flex-col gap-3'
+          className='h-auto md:w-1/2 lg:w-1/3 rounded-lg bg-white overflow-hidden py-3 shadow-md shadow-black/50 flex flex-col gap-3'
         >
             <span className='max-h-20 w-full flex gap-3 items-center px-5'>
                 <span className='h-16 aspect-square overflow-hidden'>
@@ -73,7 +73,7 @@ const Cookies = ({ setShowCookies }: CookiesProps) => {
             <p className='px-5'>We use cookies to enhance your browsing experience and analyze our traffic. This enables us to know where and how to improve our system to deliver better and more efficient service. By continuing to use our site, you consent to our use of cookies.</p>
             <div className='h-min flex flex-col gap-3 items-stretch rounded-lg border border-light-blue p-3 mx-5'>
               <div className='flex gap-3'>
-                <button type='button' className='h-6 w-6 rounded-sm border border-blue items-center justify-center flex text-xl' onClick={() => setEnableEmail(!enableEmail)}>
+                <button type='button' className='h-6 min-w-6 rounded-sm border border-blue items-center justify-center flex text-xl' onClick={() => setEnableEmail(!enableEmail)}>
                   {enableEmail && (<HiCheck />)}
                 </button>
                 <p>I want to receive latest news, offers, and promos.</p>
@@ -87,7 +87,7 @@ const Cookies = ({ setShowCookies }: CookiesProps) => {
             <div className='w-full flex mb-2 justify-end px-5'>
               <button 
                 type="button" 
-                className='w-1/3 py-3 px-5 text-left rounded-md bg-light-blue text-dark-blue font-semibold hover:bg-blue focus:bg-dark-blue focus:text-white ease-out duration-200'
+                className='lg:w-auto py-3 px-5 text-left rounded-md bg-light-blue text-dark-blue font-semibold hover:bg-blue focus:bg-dark-blue focus:text-white ease-out duration-200'
                 onClick={accepted}
               >I Accept All Cookies</button>
             </div>

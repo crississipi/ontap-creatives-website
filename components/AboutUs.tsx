@@ -15,7 +15,7 @@ const AboutUs = ({editable}: EditProps) => {
           <EditableText tag="h1" className='z-20 md:text-9xl text-3xl tracking-wider text-white font-bold text-center' type='input'>
             ABOUT US!
           </EditableText> : 
-          <h1 className='z-20 md:text-9xl text-3xl tracking-wider text-white font-bold'>ABOUT US!</h1>
+          <h1 className='z-20 md:text-8xl lg:text-9xl text-3xl tracking-wider text-white font-bold'>ABOUT US!</h1>
         }
             <Image
                 height={4096}
