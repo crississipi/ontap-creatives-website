@@ -172,3 +172,21 @@ body {
   animation: waterEffect 1.5s infinite ease-out;
   animation-delay: 5s;
 }
+
+.card {
+  transform-style: preserve-3d;
+  box-shadow: -1px 0 28px 0 rgba(34, 33, 81, 0.01),
+    28px 28px 28px 0 rgba(34, 33, 81, 0.25);
+  transition: 0.4s ease-in-out transform, 0.4s ease-in-out box-shadow;
+
+  &:hover {
+    transform: translate3d(0px, 0px, 0px) scale(1.04);
+    box-shadow: -1px 0 28px 0 rgba(34, 33, 81, 0.01),
+      54px 54px 28px -10px rgba(34, 33, 81, 0.15);
+  }
+}
+
+.no-cursor {
+  cursor: not-allowed !important;
+  pointer-events: not-allowed !important;
+}

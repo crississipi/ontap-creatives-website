@@ -18,14 +18,14 @@ const Cards = [
     },
     {
         icon: <RiTimerLine />,
-        title: 'Duration',
+        title: 'Session',
         subTitle: 'Average Duration',
         count: '32.5s'
     },
     {
         icon: <RiQuestionAnswerLine />,
-        title: 'Inquiry',
-        subTitle: 'No. of Inquiries',
+        title: 'Orders',
+        subTitle: 'No. of Orders',
         count: 39
     },
     {
@@ -183,10 +183,10 @@ const Dashboard = () => {
   }, [lat, long, zoom]); 
 
   return (
-    <div className='w-full h-full max-h-[100vh] bg-neutral-100 px-5 py-10 pb-5 gap-5 flex flex-col overflow-hidden'>
+    <div className='w-full h-full max-h-[100vh] bg-neutral-100 px-5 py-10 pb-5 gap-5 flex flex-col md:overflow-hidden'>
         <div className='w-full flex items-center justify-between lg:pr-5'>
-            <h1 className='text-2xl font-semibold'>Dashboard</h1>
-            <div className='flex gap-3'>
+            <h1 className='text-2xl font-semibold pl-8'>Dashboard</h1>
+            <div className='flex gap-3 text-sm md:text-base'>
                 <div className='relative'>
                     <button type='button' className='p-2 px-4 pr-2.5 flex items-center gap-2 rounded-lg border border-neutral-400 hover:border-dark-blue hover:text-dark-blue focus:border-violet focus:text-violet ease-out duration-200' onClick={() => setFilter(!filter)}>
                         <RiCalendarLine />
@@ -229,18 +229,18 @@ const Dashboard = () => {
             <div className='col-span-full lg:col-span-4 flex flex-col gap-5 lg:overflow-hidden'>
                 <div className='w-full flex gap-3 items-center flex-nowrap'>
                     {Cards.map((card, i) => (
-                        <div key={`dashboard-card_${i}`} className='rounded-md px-3 py-2 shadow-md shadow-neutral-200 bg-white items-stretch w-full flex flex-col'>
+                        <div key={`dashboard-card_${i}`} className='rounded-md px-3 py-2 shadow-md shadow-neutral-200 bg-white items-stretch h-full md:h-auto w-full flex flex-col'>
                             <div className='flex gap-2 items-center'>
                                 <span className='text-xl text-violet'>{card.icon}</span>
                                 <h2 className='font-semibold text-sm'>{card.title}</h2>
                             </div>
-                            <p className='mt-3 text-neutral-500 text-sm'>{card.subTitle}</p>
-                            <p className='text-xl font-semibold ml-auto lg:text-base lg:font-extrabold'>{card.count}</p>
+                            <p className='mt-3 text-neutral-500 text-xs md:text-sm'>{card.subTitle}</p>
+                            <p className='md:text-xl font-semibold ml-auto lg:text-base lg:font-extrabold mt-auto md:mt-0'>{card.count}</p>
                         </div>
                     ))}
                 </div>
-                <div className='w-full min-h-100 lg:min-h-80 flex gap-3'>
-                    <div className='w-2/3 h-full flex flex-col rounded-lg bg-white shadow-md shadow-neutral-200'>
+                <div className='w-full min-h-100 lg:min-h-90 flex flex-col md:flex-row gap-3'>
+                    <div className='w-full h-[45vh] md:w-2/3 md:h-full flex flex-col rounded-lg bg-white shadow-md shadow-neutral-200'>
                         <div className='flex w-full items-center justify-between p-5 py-4 pr-3'>
                             <h3 className='font-semibold text-sm'>Website Analytics</h3>
                             <button type="button" className='p-2 rounded-md border border-transparent hover:border-violet focus:bg-dark-blue focus:text-white ease-out duration-200'><HiDotsHorizontal /></button>
@@ -249,51 +249,51 @@ const Dashboard = () => {
                             <WebAnalysis />
                         </div>
                     </div>
-                    <div className='h-full w-1/3 flex flex-col rounded-lg bg-white shadow-md shadow-neutral-200 relative'>
-                        <div className='flex w-full items-center justify-between p-5 py-4 pr-3 absolute z-10 top-0'>
+                    <div className='md:h-full w-full pb-3 md:pb-0 md:w-1/3 flex flex-col items-end md:items-start rounded-lg bg-white shadow-md shadow-neutral-200 relative'>
+                        <div className='col-span-full flex w-full items-center justify-between p-5 py-4 pr-3 md:absolute z-10 top-0'>
                             <h3 className='font-semibold text-sm'>User Retention</h3>
                             <button type="button" className='p-2 rounded-md border border-transparent hover:border-violet focus:bg-dark-blue focus:text-white ease-out duration-200'><HiDotsHorizontal /></button>
                         </div>
-                        <div className='h-1/2 w-full'>
+                        <div className='col-span-2 h-full md:h-1/2 w-80 md:w-full ml-5 md:ml-0 absolute -left-10 md:relative md:-left-0'>
                             <UserRetention accessedIn='dashboard'/>
                         </div>
-                        <div className='h-1/2 w-full flex flex-col px-3 gap-1 text-sm mt-5'>
-                            <span className='px-5 py-2 rounded-sm border border-violet flex items-center justify-between lg:py-1 lg:px-3'>Inquiring <strong>200</strong></span>
-                            <span className='px-5 py-2 rounded-sm border border-dark-blue flex items-center justify-between lg:py-1 lg:px-3'>Repeated Visits <strong>300</strong></span>
-                            <span className='px-5 py-2 rounded-sm border border-blue flex items-center justify-between lg:py-1 lg:px-3'>Finished Viewing Website <strong>300</strong></span>
-                            <span className='px-5 py-2 rounded-sm border border-footer-bg flex items-center justify-between lg:py-1 lg:px-3'>Below Average Duration <strong>400</strong></span>
+                        <div className='col-span-3 h-max md:h-1/2 w-max md:w-full grid grid-cols-2 md:flex md:flex-col px-3 md:py-0 gap-1 text-sm md:mt-5 lg:mt-1'>
+                            <span className='col-span-1 -mt w-full px-3 md:px-5 py-2 rounded-sm border border-violet flex flex-col md:flex-row items-center justify-between lg:px-3'>Placed Orders <strong className='ml-auto'>200</strong></span>
+                            <span className='col-span-1 px-3 md:px-5 py-2 rounded-sm border border-dark-blue flex flex-col md:flex-row items-center justify-between lg:px-3'>Repeated Visits <strong className='ml-auto'>300</strong></span>
+                            <span className='col-span-1 px-3 md:px-5 py-2 rounded-sm border border-blue flex flex-col md:flex-row items-center justify-between lg:px-3'>Finished Viewing <strong className='-mt-3 md:mt-0 ml-auto'>300</strong></span>
+                            <span className='col-span-1 px-3 md:px-5 py-2 rounded-sm border border-footer-bg flex flex-col md:flex-row items-center justify-between lg:px-3'>&lt; Average Duration <strong className='ml-auto'>400</strong></span>
                         </div>
                     </div>
                 </div>
-                <div className='w-full h-full flex flex-col rounded-lg bg-white shadow-md shadow-neutral-200 overflow-hidden'>
+                <div className='w-full md:h-full flex flex-col rounded-lg bg-white shadow-md shadow-neutral-200 overflow-hidden'>
                     <div className='flex w-full items-center justify-between p-5 pt-4 pb-0 pr-3'>
                         <h3 className='font-semibold text-sm'>Real-Time Activity</h3>
                         <button type="button" className='p-2 rounded-md border border-transparent hover:border-violet focus:bg-dark-blue focus:text-white ease-out duration-200'><HiDotsHorizontal /></button>
                     </div>
-                    <div className='h-full w-full flex flex-col overflow-hidden px-2'>
-                        <div className='h-10 w-full pr-1 grid grid-cols-6 border-b  border-neutral-300 overflow-hidden font-bold lg:text-sm 2xl:text-base'>
-                            <span className='col-span-2 py-2 pl-5'>Activity</span>
+                    <div className='h-fit md:h-full w-full flex flex-col overflow-hidden px-2'>
+                        <div className='h-10 w-full pr-1 grid grid-cols-6 border-b  border-neutral-300 overflow-hidden font-bold text-sm md:text-base lg:text-sm 2xl:text-base'>
                             <span className='col-span-1 py-2 text-center'>Visitor ID</span>
                             <span className='col-span-1 py-2 text-center'>Time Started</span>
-                            <span className='col-span-1 py-2 text-center'>Session Duration</span>
-                            <span className='col-span-1 py-2 text-center'>Status</span>
+                            <span className='col-span-1 py-2 text-center'>Session</span>
+                            <span className='col-span-1 py-2 text-left'>Status</span>
+                            <span className='col-span-2 py-2 text-center'>Location</span>
                         </div>
-                        <div className='h-full w-full flex flex-col overflow-x-hidden lg:text-sm 2xl:text-base'>
+                        <div className='h-full max-h-[30vh] md:max-h-auto w-full flex flex-col overflow-x-hidden text-sm md:text-base lg:text-sm 2xl:text-base'>
                             {Array.from({ length: 10 }).map((_,i) => (
                                 <button key={i} type='button' className='w-full py-3 pr-0 grid grid-cols-6 hover:bg-light-blue focus:bg-dark-blue focus:text-white ease-out duration-200'>
-                                    <span className='col-span-2 text-left px-5'>Accessed Mainpage</span>
                                     <span className='col-span-1 font-bold'>CA35067</span>
                                     <span className='col-span-1'>10:09:30</span>
                                     <span className='col-span-1'>00:12:25</span>
-                                    <span className='col-span-1'>Potential Client</span>
+                                    <span className='col-span-1 text-left overflow-hidden overflow-ellipsis text-nowrap'>Added to Cart</span>
+                                    <span className='col-span-2 text-center'>Metro Manila</span>
                                 </button>
                             ))}
                         </div>
                     </div>
                 </div>
             </div>
-            <div className='col-span-full max-h-full lg:col-span-2 gap-3 flex flex-col lg:overflow-hidden'>
-                <div className='w-full h-3/5 rounded-lg bg-white shadow-md shadow-neutral-200 lg:overflow-hidden'>
+            <div className='col-span-full max-h-full lg:col-span-2 gap-3 flex flex-col lg:overflow-hidden pb-10 md:pb-0'>
+                <div className='w-full h-[50vh] md:h-3/5 rounded-lg bg-white shadow-md shadow-neutral-200 lg:overflow-hidden'>
                     {false && showMap && (
                         <WorldMap 
                             lat={lat}
@@ -302,7 +302,7 @@ const Dashboard = () => {
                         />
                     )}
                 </div>
-                <div className='w-full h-2/5 rounded-lg bg-white shadow-md shadow-neutral-200 lg:overflow-x-hidden'>
+                <div className='w-full md:h-2/5 rounded-lg bg-white shadow-md shadow-neutral-200 lg:overflow-x-hidden'>
                     <div className='flex w-full items-center justify-between p-5 pt-4 pb-3 pr-3'>
                         <h3 className='font-semibold text-sm'>Visitor's Area Locations</h3>
                         <button type="button" className='p-2 rounded-md border border-transparent hover:border-violet focus:bg-dark-blue focus:text-white ease-out duration-200'><HiDotsHorizontal /></button>

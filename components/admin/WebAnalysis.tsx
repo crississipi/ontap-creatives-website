@@ -41,7 +41,7 @@ const data = [
 
 const WebAnalysis = () => {
   return (
-    <ResponsiveContainer width="100%" height="100%">
+    <ResponsiveContainer width="100%" height="100%" className='-z-10'>
       <LineChart
         width={500}
         height={300}

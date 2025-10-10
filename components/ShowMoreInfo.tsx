@@ -1,5 +1,5 @@
 "use client"
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useRef, useState } from 'react'
 import { RiArrowRightLine, RiHeartFill, RiHeartLine, RiQuestionFill, RiShoppingCart2Line, RiStarFill, RiStarHalfFill } from 'react-icons/ri'
 import Image from 'next/image'
 import { AnimatePresence, motion } from 'framer-motion'
@@ -8,6 +8,7 @@ import { HiMiniLink, HiOutlineMinusSmall, HiOutlinePlusSmall } from 'react-icons
 import { useClickOutside, useScrollLock } from '@/hooks'
 import { EditProps, ProductCardProps, ProductProps } from '@/types'
 import { HiOutlineX } from 'react-icons/hi'
+import AccountSignIn from './AccountSignIn'
 
 type ShowMoreInfoProps = ProductCardProps & EditProps & ProductProps
 
@@ -23,6 +24,7 @@ const ShowMoreInfo = ({ productName, productDesc, frontImg, backImg, variableBac
   const [logoSize, setLogoSize] = useState<'scale-100' | 'scale-125' | 'scale-150'>('scale-100');
   const [animationState, setAnimationState] = useState(true);
   const [showCustomize, setShowCustomize] = useState(false);
+  const [showLogin, setShowLogin] = useState(false);
   
   useScrollLock(inquire);
 
@@ -65,7 +67,7 @@ const ShowMoreInfo = ({ productName, productDesc, frontImg, backImg, variableBac
 
   return (
     <div className='h-full w-full fixed top-16 md:top-0 left-0 bg-white/15 backdrop-blur-sm z-100 flex items-center justify-center'>
-        <div ref={clickRef} className='h-full w-full md:h-4/5 lg:h-max md:w-4/5 lg:w-[90%] bg-white shadow-md rounded-2xl grid grid-cols-1 lg:grid-cols-10 lg:gap-1 lg:p-5 relative overflow-x-hidden lg:overflow-auto'>
+        <div ref={!showLogin ? clickRef : null} className='h-full w-full md:h-4/5 lg:h-max md:w-4/5 lg:w-[90%] bg-white shadow-md rounded-2xl grid grid-cols-1 lg:grid-cols-10 lg:gap-1 lg:p-5 relative overflow-x-hidden lg:overflow-auto'>
             <div className='flex items-center gap-2 group transition-all duration-200 absolute top-5 left-5 z-50 bg-white/30 backdrop-blur-md pr-3 rounded-r-full'>
                 <span className='rounded-full text-blue text-3xl flex items-center justify-center hover:ring-2 hover:ring-blue ease-out duration-200'><RiQuestionFill /></span>
                 <div className='hidden group-hover:flex items-center gap-1'>
@@ -109,7 +111,7 @@ const ShowMoreInfo = ({ productName, productDesc, frontImg, backImg, variableBac
                                         repeat: Infinity,
                                         repeatType: 'loop',
                                     }}
-                                    className="w-2/3 md:w-3/5 lg:w-5/6 aspect-[3/2] rounded-xl z-30 relative mt-10"
+                                    className="w-2/3 md:w-3/5 lg:w-5/6 2xl:w-3/5 aspect-[3/2] rounded-xl z-30 relative mt-10"
                                     style={{
                                         transformStyle: 'preserve-3d',
                                         perspective: '1000px',
@@ -207,7 +209,7 @@ const ShowMoreInfo = ({ productName, productDesc, frontImg, backImg, variableBac
                                     </div>
                                 </motion.div> : 
                                 <>
-                                    <div className="w-3/5 aspect-[3/2] md:w-1/2 lg:w-4/5 xl:w-3/4 rounded-xl z-30 relative">
+                                    <div className="w-3/5 aspect-[3/2] md:w-1/2 lg:w-4/5 xl:w-3/4 2xl:w-3/5 rounded-xl z-30 relative">
                                         <div
                                             className="absolute inset-0"
                                             style={{
@@ -258,7 +260,7 @@ const ShowMoreInfo = ({ productName, productDesc, frontImg, backImg, variableBac
                                             )}
                                         </div>
                                     </div>
-                                    <div className="w-3/5 aspect-[3/2] md:w-1/2 lg:w-4/5 xl:w-3/4 rounded-xl z-30 relative mt-3">
+                                    <div className="w-3/5 aspect-[3/2] md:w-1/2 lg:w-4/5 xl:w-3/4 2xl:w-3/5 rounded-xl z-30 relative mt-3">
                                         <div
                                             className="absolute inset-0"
                                             style={{
@@ -415,6 +417,99 @@ const ShowMoreInfo = ({ productName, productDesc, frontImg, backImg, variableBac
                        )}
                     </span>
                     <div className='md:hidden lg:flex w-full flex-col h-max lg:min-h-3/4 lg:shadow-transparent fixed lg:relative bottom-0 mb-16 md:mb-0 left-0 z-50 transition-all ease-out duration-700'>
+                        <div className={`hidden lg:flex w-full bg-neutral-100 md:bg-white flex-col mb-16`}>
+                                {(variableBackImg && variableFrontImg) && (
+                                    <div className='w-full flex flex-col p-5 pb-0 md:p-0'>
+                                        <h2 className='font-semibold'>Variations</h2>
+                                        <div className='flex gap-1 mt-1 mb-3'>
+                                            <button 
+                                                type="button" 
+                                                className={`max-w-28 flex flex-col gap-1 p-2 px-3 text-base md:text-sm border border-neutral-200 group ${variable === 'white' ? 'bg-violet text-white' : 'hover:bg-neutral-100'} hover:bg-neutral-100 focus:bg-violet focus:text-white transition-all ease-out duration-200`}
+                                                onClick={(e) => {setVariable('white'); e.preventDefault(); e.stopPropagation();}}
+                                            >
+                                                White
+                                            </button>
+                                            <button 
+                                                type="button" 
+                                                className={`max-w-28 flex flex-col gap-1 p-2 px-3 text-base md:text-sm border border-neutral-200 group ${variable === 'black' ? 'bg-violet text-white' : 'hover:bg-neutral-100'} hover:bg-neutral-100 focus:bg-violet focus:text-white transition-all ease-out duration-200`}
+                                                onClick={(e) => {setVariable('black'); e.preventDefault(); e.stopPropagation();}}
+                                            >
+                                                Black
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
+                                {imgUrl === '' && (
+                                    <div className={`w-full flex flex-col px-5 md:p-0 ${productName !== 'Polyvinyl Business Card' && 'pt-5'}`}>
+                                        <h2 className='font-semibold'>Logo Style</h2>
+                                        <div className='flex gap-1 mt-1 mb-3'>
+                                            <button 
+                                                type="button" 
+                                                className={`max-w-28 flex flex-col gap-1 p-2 text-base md:text-sm px-3 border border-neutral-200 group ${priceOption === 'ontap' ? 'bg-violet text-white' : 'hover:bg-neutral-100'} focus:bg-violet focus:text-white transition-all ease-out duration-200`}
+                                                onClick={(e) => {setPriceOption('ontap'); e.preventDefault(); e.stopPropagation();}}  
+                                            >OnTap</button>
+                                            <button 
+                                                type="button" 
+                                                className={`max-w-28 flex flex-col text-base md:text-sm gap-1 p-2 px-3 border border-neutral-200 group  ${priceOption === 'custom' ? 'bg-violet text-white' : 'hover:bg-neutral-100'} focus:bg-violet focus:text-white transition-all ease-out duration-200`}
+                                                onClick={(e) => {setPriceOption('custom'); e.preventDefault(); e.stopPropagation();}}  
+                                            >Custom</button>
+                                        </div>
+                                    </div>
+                                )}
+                                {priceOption === 'custom' && (
+                                    <div className='w-full flex flex-col md:flex-row gap-2 md:items-center mb-3 px-5 pt-3 p-0'>
+                                        <button 
+                                            type="button" 
+                                            className='h-14 w-14 md:h-8 md:w-8 rounded-sm bg-neutral-200 flex items-center justify-center relative group hover:text-white hover:bg-blue focus:bg-violet ease-out duration-200'
+                                            onClick={openFilePicker}
+                                        >
+                                            <HiMiniLink className='text-xl'/>
+                                            <span className='hidden absolute left-full ml-2 group-hover:block bg-white text-black w-max'>Please attach your custom logo here.</span>
+                                        </button>
+                                        <div className='flex gap-1 items-center text-sm'>
+                                            <span>Image Size: </span>
+                                            <span className='flex items-center gap-0.5'>
+                                                <button 
+                                                    type="button" 
+                                                    className={`flex flex-col gap-1 p-1 text-sm px-3 border border-neutral-200 group ${logoSize === 'scale-100' ? 'bg-violet text-white' : 'hover:bg-neutral-100'} focus:bg-violet focus:text-white transition-all ease-out duration-200`}
+                                                    onClick={(e) => {setLogoSize('scale-100'); e.preventDefault(); e.stopPropagation();}}
+                                                >Small</button>
+                                                <button
+                                                    type="button" 
+                                                    className={`flex flex-col gap-1 p-1 text-sm px-3 border border-neutral-200 group ${logoSize === 'scale-125' ? 'bg-violet text-white' : 'hover:bg-neutral-100'} focus:bg-violet focus:text-white transition-all ease-out duration-200`}
+                                                    onClick={(e) => {setLogoSize('scale-125'); e.preventDefault(); e.stopPropagation();}}
+                                                >Normal</button>
+                                                <button
+                                                    type="button" 
+                                                    className={`flex flex-col gap-1 p-1 text-sm px-3 border border-neutral-200 group ${logoSize === 'scale-150' ? 'bg-violet text-white' : 'hover:bg-neutral-100'} focus:bg-violet focus:text-white transition-all ease-out duration-200`}
+                                                    onClick={(e) => {setLogoSize('scale-150'); e.preventDefault(); e.stopPropagation();}}
+                                                >Big</button>
+                                            </span>
+                                        </div>
+                                    </div>
+                                )}
+                                <div className='w-full flex items-center justify-between px-5 pb-5 md:p-0'>
+                                    <div className='w-full flex flex-col'>
+                                        <h2 className='font-semibold mb-1'>Quantity</h2>
+                                        <div className='w-full flex items-center'>
+                                            <button 
+                                            type='button' 
+                                            className='p-2 rounded-sm bg-neutral-200 hover:bg-light-blue focus:bg-violet focus:text-white ease-out duration-200'
+                                            onClick={(e) => {setQty((prev) => prev > 1 ? prev - 1 : 1); e.preventDefault(); e.stopPropagation();}}
+                                            ><HiOutlineMinusSmall /></button>
+                                            <input type="text" inputMode="numeric" className='w-10 text-center font-bold' value={quantity} onChange={(e) => {
+                                                const intValue = parseInt(e.target.value, 10);
+                                                setQty(isNaN(intValue) ? 1 : intValue);
+                                            }}/>
+                                            <button 
+                                                type='button' 
+                                                className='p-2 rounded-sm bg-neutral-200 hover:bg-light-blue focus:bg-violet focus:text-white ease-out duration-200'
+                                                onClick={(e) => {setQty((prev) => prev + 1); e.preventDefault(); e.stopPropagation();}}
+                                            ><HiOutlinePlusSmall /></button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         <AnimatePresence mode='wait'>
                             {showCustomize && (
                             <motion.div 
@@ -426,7 +521,7 @@ const ShowMoreInfo = ({ productName, productDesc, frontImg, backImg, variableBac
                                 ease: 'easeOut'
                             }} 
                             ref={cartOptions} 
-                            className={`w-full bg-neutral-100 md:bg-white flex flex-col shadow-[0px_-3px_14px_#00000099] mb-16`}>
+                            className={`2xl:hidden w-full bg-neutral-100 md:bg-white flex flex-col shadow-[0px_-3px_14px_#00000099] mb-16`}>
                                 {(variableBackImg && variableFrontImg) && (
                                     <div className='w-full flex flex-col p-5 pb-0 md:p-0'>
                                         <h2 className='font-semibold'>Variations</h2>
@@ -534,16 +629,16 @@ const ShowMoreInfo = ({ productName, productDesc, frontImg, backImg, variableBac
                             </motion.div>
                         )}
                         </AnimatePresence>
-                        <div className={`flex justify-end md:justify-start gap-3 w-full pt-3 md:py-0 absolute bottom-0 bg-white p-3 md:p-0 z-30 ${!showCustomize && 'shadow-[0px_-3px_14px_#00000099]'}`}>
+                        <div className={`hidden lg:flex justify-end md:justify-start gap-3 w-full pt-3 md:py-0 absolute bottom-0 bg-white p-3 md:p-0 z-30 ${!showCustomize && 'shadow-[0px_-3px_14px_#00000099] lg:shadow-md lg:shadow-transparent'}`}>
                             <button 
                                 type="button" 
                                 className='px-5 py-3 rounded-md border border-neutral-300 text-black text-xl hover:bg-neutral-300 focus:text-white focus:bg-blue ease-out duration-200'
-                                onClick={() => setShowCustomize(true)}
+                                onClick={() => setShowLogin(true)}
                             ><RiShoppingCart2Line /></button>
                             <button 
                                 type="button" 
                                 className='pl-10 pr-7 md:pl-5 md:pr-3 py-3 rounded-md flex items-center gap-3 bg-dark-blue font-bold text-white hover:bg-violet focus:bg-footer-bg ease-out duration-200'
-                                onClick={() => setShowCustomize(true)}
+                                onClick={() => setShowLogin(true)}
                             >Buy now<RiArrowRightLine className='text-xl'/></button>
                         </div>
                     </div>
@@ -614,7 +709,7 @@ const ShowMoreInfo = ({ productName, productDesc, frontImg, backImg, variableBac
                     </div>
                 </div>
             </div>
-            <div className='hidden md:flex lg:hidden w-full flex-col h-max lg:min-h-3/4 shadow-[0px_-3px_14px_#00000099] lg:shadow-transparent sticky bottom-0 bg-neutral-100 md:bg-white ml-0 left-0 z-50'>
+            <div className='flex lg:hidden w-full flex-col h-max lg:min-h-3/4 shadow-[0px_-3px_14px_#00000099] lg:shadow-transparent sticky bottom-16 md:bottom-0 bg-neutral-100 md:bg-white ml-0 left-0 z-50'>
                         {showCustomize && (
                             <div ref={cartOptions} className='w-full grid grid-cols-4 mb-24'>
                                 {(variableBackImg && variableFrontImg) && (
@@ -737,6 +832,7 @@ const ShowMoreInfo = ({ productName, productDesc, frontImg, backImg, variableBac
                         </div>
                     </div>
         </div>
+        {showLogin && <AccountSignIn setShowLogin={setShowLogin}/>}
         <input
             type="file"
             accept="image/*"

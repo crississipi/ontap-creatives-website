@@ -5,6 +5,7 @@ import Image from "next/image";
 import { BsFillCaretRightFill } from 'react-icons/bs';
 import { HiOutlineMenuAlt3 } from 'react-icons/hi';
 import { HeaderProps } from '@/types';
+import { RiShoppingCart2Line } from 'react-icons/ri';
 
 const Header = ({ setPage }: HeaderProps) => {
   const [showNav, isNavShown] = useState(false);
@@ -88,6 +89,14 @@ const Header = ({ setPage }: HeaderProps) => {
             >
                 Shop
                 <BsFillCaretRightFill />
+            </button>
+            <button 
+                type="button" 
+                className='h-full px-5 text-xl flex items-center gap-1 hover:bg-dark-blue focus:bg-violet hover:text-white focus:text-white ease-out duration-200'
+                onClick={() => setPage(4)}
+            >
+                <RiShoppingCart2Line />
+                <span className='text-lg'>Cart</span>
             </button>
         </div>
     </div>

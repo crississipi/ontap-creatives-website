@@ -11,7 +11,7 @@
   "dependencies": {
     "cors": "^2.8.5",
     "d3-geo": "^3.1.1",
-    "framer-motion": "^12.23.12",
+    "framer-motion": "^12.23.22",
     "leaflet": "^1.9.4",
     "next": "^15.5.2",
     "nodemailer": "^7.0.5",

@@ -16,6 +16,10 @@ import Cookies from "./Cookies";
 import Mainpage from "./Mainpage";
 import EditableText from "./Editable";
 import ShowMoreInfo from "./ShowMoreInfo";
+import VoucherRoullete from "./VoucherRoullete";
+import CartPage from "./CartPage";
+import CheckOut from "./CheckOut";
+import ContactNum from "./ContactNum";
 
 export {
     Header, 
@@ -35,5 +39,9 @@ export {
     Cookies,
     Mainpage,
     EditableText,
-    ShowMoreInfo
+    ShowMoreInfo,
+    VoucherRoullete,
+    CartPage,
+    CheckOut,
+    ContactNum
 }
