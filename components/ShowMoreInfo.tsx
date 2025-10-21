@@ -10,9 +10,39 @@ import { EditProps, ProductCardProps, ProductProps } from '@/types'
 import { HiOutlineX } from 'react-icons/hi'
 import AccountSignIn from './AccountSignIn'
 
-type ShowMoreInfoProps = ProductCardProps & EditProps & ProductProps
+interface ShowMoreInfoProps {
+  // Accept either individual props OR a product object
+  product?: ProductProps;
+  // Individual props (for backward compatibility)
+  productName?: string;
+  productDesc?: React.ReactNode;
+  frontImg?: string;
+  backImg?: string;
+  variableBackImg?: string;
+  variableFrontImg?: string;
+  price?: { ontap: number; custom?: number };
+  ratings?: number;
+  sold?: number;
+  setInquireItem?: (inquire: boolean) => void;
+  inquire?: boolean;
+  imgUrl?: string;
+  editable?: boolean;
+}
 
-const ShowMoreInfo = ({ productName, productDesc, frontImg, backImg, variableBackImg, variableFrontImg, price, ratings, sold, setInquireItem, inquire, imgUrl }: ShowMoreInfoProps ) => {
+const ShowMoreInfo = ({ 
+  product,
+  // Individual props (fallbacks)
+  productName,
+  productDesc,
+  frontImg,
+  backImg,
+  variableBackImg,
+  variableFrontImg,
+  price,
+  setInquireItem,
+  inquire,
+  imgUrl,
+}: ShowMoreInfoProps) => {
   const [quantity, setQty] = useState(1);
   const [review, setReview] = useState('Latest');
   const [showMode, setShowMode] = useState(false);
@@ -26,10 +56,25 @@ const ShowMoreInfo = ({ productName, productDesc, frontImg, backImg, variableBac
   const [showCustomize, setShowCustomize] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
   
-  useScrollLock(inquire);
+  useScrollLock(inquire!);
+console.log(product)
+  // Use product object if provided, otherwise use individual props
+  const finalProductName = product?.name || productName || '';
+  const finalProductDesc = product?.description ? <p>{product.description}</p> : productDesc;
+  const finalFrontImg = product?.frontUrl || frontImg || '';
+  const finalBackImg = product?.backUrl || backImg || '';
+  const finalVariableFrontImg = product?.variableFrontImg || variableFrontImg || '';
+  const finalVariableBackImg = product?.variableBackImg || variableBackImg || '';
+  const finalImgUrl = product?.imgUrl || imgUrl || '';
+  
+  // Handle price - if product has customPrice, use it, otherwise use the individual price prop
+  const finalPrice = product ? {
+    ontap: product.price,
+    custom: product.customPrice || product.price
+  } : price || { ontap: 0 };
 
   // Detect outside click
-  const clickRef = useClickOutside<HTMLDivElement>(() => setInquireItem(false), inquire);
+  const clickRef = useClickOutside<HTMLDivElement>(() => setInquireItem?.(false), inquire);
   const cartOptions = useClickOutside<HTMLDivElement>(() => setShowCustomize(false), showCustomize);
 
   const CustomImg: Record<string, string[]> = {
@@ -83,16 +128,16 @@ const ShowMoreInfo = ({ productName, productDesc, frontImg, backImg, variableBac
             </div>
             <button 
                 type="button" 
-                className='md:hidden absolute text-2xl z-50 right-5 top-5 hover:text-rose-300 focus:text-rose-500 focus:scale-125 ease-out duration-200' onClick={() => setInquireItem(false)}
+                className='md:hidden absolute text-2xl z-50 right-5 top-5 hover:text-rose-300 focus:text-rose-500 focus:scale-125 ease-out duration-200' onClick={() => setInquireItem?.(false)}
             ><HiOutlineX /></button>
             <div className='col-span-1 md:col-span-3 h-full w-full flex lg:flex-col gap-2 [perspective:1000px] '>
                 <div className="w-full h-[40vh] lg:h-2/3 flex lg:flex-col gap-3 px-3 flex-row items-center rounded-lg justify-center relative perspective-[1000px]">
-                    {imgUrl !== '' ? 
+                    {finalImgUrl !== '' ? 
                         <Image
                             height={500}
                             width={500}
                             alt='product image'
-                            src={imgUrl!}
+                            src={finalImgUrl}
                             className='w-3/5 object-cover object-center'
                         /> :
                         <AnimatePresence>
@@ -127,11 +172,11 @@ const ShowMoreInfo = ({ productName, productDesc, frontImg, backImg, variableBac
                                         {priceOption === 'ontap' ? (
                                             <Image
                                                 src={
-                                                    variableFrontImg && variableBackImg
+                                                    finalVariableFrontImg && finalVariableBackImg
                                                     ? variable === 'white'
-                                                        ? frontImg
-                                                        : variableFrontImg
-                                                    : frontImg
+                                                        ? finalFrontImg
+                                                        : finalVariableFrontImg
+                                                    : finalFrontImg
                                                 }
                                                 alt="Front"
                                                 fill
@@ -142,7 +187,7 @@ const ShowMoreInfo = ({ productName, productDesc, frontImg, backImg, variableBac
                                             <div className='h-full w-full relative flex items-center justify-center'>
                                                 {variable === 'white' ? (
                                                     <Image
-                                                        src={CustomImg[productName][0]}
+                                                        src={CustomImg[finalProductName][0]}
                                                         alt="Back"
                                                         fill
                                                         className="object-cover rounded-xl shadow-lg absolute inset-0"
@@ -151,7 +196,7 @@ const ShowMoreInfo = ({ productName, productDesc, frontImg, backImg, variableBac
                                                 ) : (
                                                     <div className='w-full h-full rounded-xl bg-[#050505]'></div>
                                                 )}
-                                                <div className={`${logoSize} h-1/2 absolute inset-0 top-1/2 ${productName === 'Elite Digital Business Card' ? '-left-2/5 -translate-y-1/2' : 'left-1/2 -translate-1/2'} z-20`}>
+                                                <div className={`${logoSize} h-1/2 absolute inset-0 top-1/2 ${finalProductName === 'Elite Digital Business Card' ? '-left-2/5 -translate-y-1/2' : 'left-1/2 -translate-1/2'} z-20`}>
                                                     <Image
                                                         src={fileInfo?.preview ? fileInfo.preview : '/icons/logo-placeholder.png'}
                                                         alt={fileInfo?.preview ? fileInfo.name : 'logo placeholder'}
@@ -170,14 +215,14 @@ const ShowMoreInfo = ({ productName, productDesc, frontImg, backImg, variableBac
                                         transform: 'rotateY(180deg)',
                                         }}
                                     >
-                                        {priceOption === 'ontap' || productName !== 'Elite Digital Business Card' ? (
+                                        {priceOption === 'ontap' || finalProductName !== 'Elite Digital Business Card' ? (
                                             <Image
                                                 src={
-                                                    variableFrontImg && variableBackImg
+                                                    finalVariableFrontImg && finalVariableBackImg
                                                     ? variable === 'white'
-                                                        ? backImg
-                                                        : variableBackImg
-                                                    : backImg
+                                                        ? finalBackImg
+                                                        : finalVariableBackImg
+                                                    : finalBackImg
                                                 }
                                                 alt="Back"
                                                 fill
@@ -185,10 +230,10 @@ const ShowMoreInfo = ({ productName, productDesc, frontImg, backImg, variableBac
                                                 draggable={false}
                                             />
                                         ) : (
-                                        productName === 'Elite Digital Business Card' && (
+                                        finalProductName === 'Elite Digital Business Card' && (
                                             <div className='h-full w-full relative flex items-center justify-center'>
                                                 <Image
-                                                    src={CustomImg[productName][1]}
+                                                    src={CustomImg[finalProductName][1]}
                                                     alt="Back"
                                                     fill
                                                     className="object-cover rounded-xl shadow-lg absolute inset-0"
@@ -220,11 +265,11 @@ const ShowMoreInfo = ({ productName, productDesc, frontImg, backImg, variableBac
                                             {priceOption === 'ontap' ? (
                                                 <Image
                                                     src={
-                                                        variableFrontImg && variableBackImg
+                                                        finalVariableFrontImg && finalVariableBackImg
                                                         ? variable === 'white'
-                                                            ? frontImg
-                                                            : variableFrontImg
-                                                        : frontImg
+                                                            ? finalFrontImg
+                                                            : finalVariableFrontImg
+                                                        : finalFrontImg
                                                     }
                                                     alt="Front"
                                                     fill
@@ -235,7 +280,7 @@ const ShowMoreInfo = ({ productName, productDesc, frontImg, backImg, variableBac
                                                 <div className='h-full w-full relative flex items-center justify-center'>
                                                     {variable === 'white' ? (
                                                         <Image
-                                                            src={CustomImg[productName][0]}
+                                                            src={CustomImg[finalProductName][0]}
                                                             alt="Logo Placeholder"
                                                             fill
                                                             className="object-cover rounded-xl shadow-lg absolute inset-0"
@@ -245,9 +290,9 @@ const ShowMoreInfo = ({ productName, productDesc, frontImg, backImg, variableBac
                                                         <div className='w-full h-full bg-[#050505] rounded-xl'></div>
                                                     )}
                                                     <div className={`
-                                                        ${productName === 'Elite Digital Business Card' ? 
+                                                        ${finalProductName === 'Elite Digital Business Card' ? 
                                                         logoSize === 'scale-125' ? 'scale-110' : logoSize === 'scale-150' && 'scale-120' : 
-                                                        logoSize} h-2/5 absolute inset-0 top-1/2 ${productName === 'Elite Digital Business Card' ? '-left-2/5 -translate-y-1/2' : 'left-1/2 -translate-1/2'} z-20`}>
+                                                        logoSize} h-2/5 absolute inset-0 top-1/2 ${finalProductName === 'Elite Digital Business Card' ? '-left-2/5 -translate-y-1/2' : 'left-1/2 -translate-1/2'} z-20`}>
                                                         <Image
                                                             src={fileInfo?.preview ? fileInfo.preview : '/icons/logo-placeholder.png'}
                                                             alt={fileInfo?.preview ? fileInfo.name : 'logo placeholder'}
@@ -268,14 +313,14 @@ const ShowMoreInfo = ({ productName, productDesc, frontImg, backImg, variableBac
                                             transform: 'rotateY(0deg)',
                                             }}
                                         >
-                                            {priceOption === 'ontap' || productName !== 'Elite Digital Business Card' ? (
+                                            {priceOption === 'ontap' || finalProductName !== 'Elite Digital Business Card' ? (
                                                 <Image
                                                     src={
-                                                        variableFrontImg && variableBackImg
+                                                        finalVariableFrontImg && finalVariableBackImg
                                                         ? variable === 'white'
-                                                            ? backImg
-                                                            : variableBackImg
-                                                        : backImg
+                                                            ? finalBackImg
+                                                            : finalVariableBackImg
+                                                        : finalBackImg
                                                     }
                                                     alt="Back"
                                                     fill
@@ -283,17 +328,17 @@ const ShowMoreInfo = ({ productName, productDesc, frontImg, backImg, variableBac
                                                     draggable={false}
                                                 />
                                             ) : (
-                                            productName === 'Elite Digital Business Card' && (
+                                            finalProductName === 'Elite Digital Business Card' && (
                                                 <div className='h-full w-full relative flex items-center justify-center'>
                                                     <Image
-                                                        src={CustomImg[productName][1]}
+                                                        src={CustomImg[finalProductName][1]}
                                                         alt="Back"
                                                         fill
                                                         className="object-cover rounded-xl shadow-lg absolute inset-0"
                                                         draggable={false}
                                                     />
                                                     <div className={`
-                                                        ${productName === 'Elite Digital Business Card' ? 
+                                                        ${finalProductName === 'Elite Digital Business Card' ? 
                                                         logoSize === 'scale-125' ? 'scale-110' : logoSize === 'scale-150' && 'scale-120' : 
                                                         logoSize} h-2/5 absolute inset-0 top-1/2 left-2/5 -translate-y-1/2 z-20 opacity-60`}>
                                                         <Image
@@ -358,7 +403,7 @@ const ShowMoreInfo = ({ productName, productDesc, frontImg, backImg, variableBac
                         <RiStarFill />
                         <RiStarFill />
                         <RiStarHalfFill />
-                        <p className='font-bold text-base text-black ml-auto'>{ratings}</p>
+                        {/* <p className='font-bold text-base text-black ml-auto'>{finalRatings}</p> */}
                     </span>
                     <div className='w-full flex flex-col p-3 gap-2'>
                         <div className='w-full grid grid-cols-10 items-center gap-3 text-sm font-extrabold'>
@@ -400,26 +445,26 @@ const ShowMoreInfo = ({ productName, productDesc, frontImg, backImg, variableBac
             <div className='col-span-7 h-full grid grid-cols-5 p-5 pb-0 pr-0 pl-0 lg:pl-5 lg:pt-3 gap-y-5 lg:overflow-x-hidden items-start'>
                 
                 <div className='col-span-full lg:col-span-3 w-full h-full flex flex-col justify-start px-5 lg:px-0 relative'>
-                    <h1 className='col-span-full text-2xl lg:text-4xl font-extrabold text-black px-5 lg:px-0'>{productName}</h1>
-                    <span className='col-span-full leading-5 text-lg px-5 lg:px-0'>{productDesc}</span>
+                    <h1 className='col-span-full text-2xl lg:text-4xl font-extrabold text-black px-5 lg:px-0'>{finalProductName}</h1>
+                    <span className='col-span-full leading-5 text-lg px-5 lg:px-0'>{finalProductDesc}</span>
                     <div className='mb-3 text-sm flex gap-20'>
-                        <span><strong className='font-extrabold'>{sold}</strong> sold</span>
-                        <span className='flex items-center gap-1'><RiStarFill className='text-amber-500'/><strong className='font-extrabold'>{ratings}</strong> (199 reviews)</span>
+                        {/* <span><strong className='font-extrabold'>{finalSold}</strong> sold</span> */}
+                        {/* <span className='flex items-center gap-1'><RiStarFill className='text-amber-500'/><strong className='font-extrabold'>{finalRatings}</strong> (199 reviews)</span> */}
                     </div>
                     <span className='font-extrabold flex items-center mb-5'>
-                       {price.ontap === 0 ? (
+                       {finalPrice.ontap === 0 ? (
                         <p className='text-2xl'>Upon Inquiry</p>
                        ) : (
                         <>
                             <TbCurrencyPeso className='text-2xl'/>
-                            <p className='hidden lg:block text-4xl'>{(priceOption === 'ontap' ? price.ontap * quantity : price.custom! * quantity).toLocaleString('en-US', { minimumFractionDigits: 2,maximumFractionDigits: 2, })}</p>
-                            <p className='lg:hidden text-4xl'>{(priceOption === 'ontap' ? price.ontap: price.custom!).toLocaleString('en-US', { minimumFractionDigits: 2,maximumFractionDigits: 2, })}</p>
+                            <p className='hidden lg:block text-4xl'>{(priceOption === 'ontap' ? finalPrice.ontap * quantity : finalPrice.custom! * quantity).toLocaleString('en-US', { minimumFractionDigits: 2,maximumFractionDigits: 2, })}</p>
+                            <p className='lg:hidden text-4xl'>{(priceOption === 'ontap' ? finalPrice.ontap: finalPrice.custom!).toLocaleString('en-US', { minimumFractionDigits: 2,maximumFractionDigits: 2, })}</p>
                         </>
                        )}
                     </span>
                     <div className='md:hidden lg:flex w-full flex-col h-max lg:min-h-3/4 lg:shadow-transparent fixed lg:relative bottom-0 mb-16 md:mb-0 left-0 z-50 transition-all ease-out duration-700'>
                         <div className={`hidden lg:flex w-full bg-neutral-100 md:bg-white flex-col mb-16`}>
-                                {(variableBackImg && variableFrontImg) && (
+                                {(finalVariableBackImg && finalVariableFrontImg) && (
                                     <div className='w-full flex flex-col p-5 pb-0 md:p-0'>
                                         <h2 className='font-semibold'>Variations</h2>
                                         <div className='flex gap-1 mt-1 mb-3'>
@@ -440,8 +485,8 @@ const ShowMoreInfo = ({ productName, productDesc, frontImg, backImg, variableBac
                                         </div>
                                     </div>
                                 )}
-                                {imgUrl === '' && (
-                                    <div className={`w-full flex flex-col px-5 md:p-0 ${productName !== 'Polyvinyl Business Card' && 'pt-5'}`}>
+                                {finalImgUrl === '' && (
+                                    <div className={`w-full flex flex-col px-5 md:p-0 ${finalProductName !== 'Polyvinyl Business Card' && 'pt-5'}`}>
                                         <h2 className='font-semibold'>Logo Style</h2>
                                         <div className='flex gap-1 mt-1 mb-3'>
                                             <button 
@@ -523,7 +568,7 @@ const ShowMoreInfo = ({ productName, productDesc, frontImg, backImg, variableBac
                             }} 
                             ref={cartOptions} 
                             className={`2xl:hidden w-full bg-neutral-100 md:bg-white flex flex-col shadow-[0px_-3px_14px_#00000099] mb-16`}>
-                                {(variableBackImg && variableFrontImg) && (
+                                {(finalVariableBackImg && finalVariableFrontImg) && (
                                     <div className='w-full flex flex-col p-5 pb-0 md:p-0'>
                                         <h2 className='font-semibold'>Variations</h2>
                                         <div className='flex gap-1 mt-1 mb-3'>
@@ -544,8 +589,8 @@ const ShowMoreInfo = ({ productName, productDesc, frontImg, backImg, variableBac
                                         </div>
                                     </div>
                                 )}
-                                {imgUrl === '' && (
-                                    <div className={`w-full flex flex-col px-5 md:p-0 ${productName !== 'Polyvinyl Business Card' && 'pt-5'}`}>
+                                {finalImgUrl === '' && (
+                                    <div className={`w-full flex flex-col px-5 md:p-0 ${finalProductName !== 'Polyvinyl Business Card' && 'pt-5'}`}>
                                         <h2 className='font-semibold'>Logo Style</h2>
                                         <div className='flex gap-1 mt-1 mb-3'>
                                             <button 
@@ -616,12 +661,12 @@ const ShowMoreInfo = ({ productName, productDesc, frontImg, backImg, variableBac
                                     <div className='flex flex-col items-start justify-center leading-5'>
                                         <h2 className='font-extrabold'>Total</h2>
                                         <span className='font-extrabold flex items-center'>
-                                        {price.ontap === 0 ? (
+                                        {finalPrice.ontap === 0 ? (
                                             <p className='text-2xl'>Upon Inquiry</p>
                                             ) : (
                                                 <>
                                                     <TbCurrencyPeso className='text-xl md:text-2xl'/>
-                                                    <p className='text-3xl md:text-4xl'>{(priceOption === 'ontap' ? price.ontap * quantity : price.custom! * quantity).toLocaleString('en-US', { minimumFractionDigits: 2,maximumFractionDigits: 2, })}</p>
+                                                    <p className='text-3xl md:text-4xl'>{(priceOption === 'ontap' ? finalPrice.ontap * quantity : finalPrice.custom! * quantity).toLocaleString('en-US', { minimumFractionDigits: 2,maximumFractionDigits: 2, })}</p>
                                                 </>
                                             )}
                                         </span>
@@ -713,7 +758,7 @@ const ShowMoreInfo = ({ productName, productDesc, frontImg, backImg, variableBac
             <div className='flex lg:hidden w-full flex-col h-max lg:min-h-3/4 shadow-[0px_-3px_14px_#00000099] lg:shadow-transparent sticky bottom-16 md:bottom-0 bg-neutral-100 md:bg-white ml-0 left-0 z-50'>
                         {showCustomize && (
                             <div ref={cartOptions} className='w-full grid grid-cols-4 mb-24'>
-                                {(variableBackImg && variableFrontImg) && (
+                                {(finalVariableBackImg && finalVariableFrontImg) && (
                                     <div className='w-full flex flex-col p-5'>
                                         <h2 className='font-semibold'>Variations</h2>
                                         <div className='flex gap-1 mt-1 mb-3'>
@@ -734,7 +779,7 @@ const ShowMoreInfo = ({ productName, productDesc, frontImg, backImg, variableBac
                                         </div>
                                     </div>
                                 )}
-                                {imgUrl === '' && (
+                                {finalImgUrl === '' && (
                                     <div className='w-full flex flex-col p-5'>
                                         <h2 className='font-semibold'>Logo Style</h2>
                                         <div className='flex gap-1 mt-1 mb-3'>
@@ -806,12 +851,12 @@ const ShowMoreInfo = ({ productName, productDesc, frontImg, backImg, variableBac
                                     <div className='flex flex-col items-start justify-center leading-5'>
                                         <h2 className='font-extrabold'>Total</h2>
                                         <span className='font-extrabold flex items-center'>
-                                        {price.ontap === 0 ? (
+                                        {finalPrice.ontap === 0 ? (
                                             <p className='text-2xl'>Upon Inquiry</p>
                                             ) : (
                                                 <>
                                                     <TbCurrencyPeso className='text-xl md:text-2xl'/>
-                                                    <p className='text-3xl md:text-4xl'>{(priceOption === 'ontap' ? price.ontap * quantity : price.custom! * quantity).toLocaleString('en-US', { minimumFractionDigits: 2,maximumFractionDigits: 2, })}</p>
+                                                    <p className='text-3xl md:text-4xl'>{(priceOption === 'ontap' ? finalPrice.ontap * quantity : finalPrice.custom! * quantity).toLocaleString('en-US', { minimumFractionDigits: 2,maximumFractionDigits: 2, })}</p>
                                                 </>
                                             )}
                                         </span>

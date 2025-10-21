@@ -1,32 +1,42 @@
-import { JSX } from "react";
-
 export interface HeaderProps {
     setPage: (page: number) => void;
 };
 
-export interface ProductProps {
-    setInquireItem: (inquire: boolean) => void;
-    inquire: boolean;
+export interface Product {
+  productID: number;
+  name: string;
+  price: number;
+  customPrice?: number | null;
+  description: string;
+  frontUrl?: string | null;
+  backUrl?: string | null;
+  imgUrl?: string | null;
+  variableFrontImg?: string | null;
+  variableBackImg?: string | null;
+  category?: string;
+  dateAdded: Date;
+}
+
+// Keep your existing interfaces for backward compatibility
+export interface ProductProps extends Product {
+  // This extends the Product interface for component props
 }
 
 export interface ProductCardProps {
-    imgUrl: string;
-    productName: string;
-    productDesc: JSX.Element;
-    size: string;
-    hoverable: boolean;
-    setClickedItem?: (clickedItem: { imgUrl?: string; front?: string; back?: string; varFront?: string; varBack?: string; name: string; desc: JSX.Element, price: {ontap: number; custom?: number; }, ratings: number, sold: number }) => void;
-    frontImg: string;
-    backImg: string;
-    tags: string[];
-    price: {
-      ontap: number;
-      custom?: number;
-    },
-    ratings: number;
-    sold: number;
-    variableBackImg?: string;
-    variableFrontImg?: string;
+  product?: Product;
+  imgUrl?: string;
+  productName?: string;
+  productDesc?: React.ReactNode;
+  size?: string;
+  setInquireItem?: (inquire: boolean) => void;
+  hoverable?: boolean;
+  setClickedItem?: (item: any) => void;
+  frontImg?: string;
+  backImg?: string;
+  price?: { ontap: number; custom?: number };
+  variableBackImg?: string;
+  variableFrontImg?: string;
+  inquire?: boolean;
 }
 
 export interface ObserverProps { isInView: boolean; }

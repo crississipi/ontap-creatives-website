@@ -71,7 +71,6 @@ const ReceiptTemplate = ({ orderID, customerName, items }: ReceiptProps) => {
   return (
     <div 
                 style={{
-                  display: 'none',
                   flexDirection: 'column',
                   gap: '16px',
                   padding: '16px',
@@ -113,16 +112,16 @@ const ReceiptTemplate = ({ orderID, customerName, items }: ReceiptProps) => {
                       flexDirection: 'column', 
                       alignItems: 'center', 
                       justifyContent: 'center', 
-                      gap: '16px', // Reduced gap
+                      gap: 0, // Reduced gap
                       margin: 0,
                       padding: 0
                     }}>
                       {/* Main Receipt Container */}
                       <div style={{ 
-                        display: 'flex', 
+                        display: 'flex',
                         flexDirection: 'column', 
                         width: '100%', 
-                        maxWidth: '500px', 
+                        maxWidth: '100%', 
                         border: '1px solid #d1d5db',
                         margin: 0,
                         padding: 0
@@ -134,7 +133,7 @@ const ReceiptTemplate = ({ orderID, customerName, items }: ReceiptProps) => {
                           justifyContent: 'space-between',
                           width: '100%', 
                           gap: '12px', 
-                          padding: '16px', // Reduced padding
+                          padding: '8px', // Reduced padding
                           margin: 0,
                         }}>
                           <a href="https://ontap.ph" style={{ margin: 0, padding: 0 }}>
@@ -144,8 +143,8 @@ const ReceiptTemplate = ({ orderID, customerName, items }: ReceiptProps) => {
                               alt='website logo'
                               src='/images/ontap-logo.png'
                               style={{ 
-                                height: '60px',
-                                width: '80px', // Slightly smaller
+                                height: '50px',
+                                width: '60px', // Slightly smaller
                                 objectFit: 'cover', 
                                 objectPosition: 'center',
                                 margin: 0
@@ -158,11 +157,11 @@ const ReceiptTemplate = ({ orderID, customerName, items }: ReceiptProps) => {
                             display: 'flex', 
                             flexDirection: 'column', 
                             alignItems: 'flex-end', 
-                            fontSize: '12px', // Smaller font
+                            fontSize: '10px', // Smaller font
                             fontWeight: 'bold', 
                             color: '#1e40af',
                             lineHeight: '1.1',
-                            margin: 0,
+                            marginTop: '-18px',
                             padding: 0,
                           }}>
                             <a href="mailto:ontapcreatives@gmail.com" style={{ margin: 0, padding: 0 }}>ontapcreatives@gmail.com</a>
@@ -194,11 +193,11 @@ const ReceiptTemplate = ({ orderID, customerName, items }: ReceiptProps) => {
                           display: 'flex', 
                           alignItems: 'center', 
                           justifyContent: 'space-around', 
-                          padding: '12px 0', // Reduced padding
+                          padding: '6px 0px 10px 0px', // Reduced padding
                           borderBottom: '1px solid #d1d5db', 
                           color: '#1e40af',
-                          fontSize: '12px', // Smaller font
-                          margin: 0
+                          fontSize: '10px', // Smaller font
+                          marginTop: '-10px'
                         }}>
                           <a href="tel:+639177008364" style={{ fontWeight: 'bold', margin: 0, padding: 0 }}>+63 9177008364</a>•
                           <a href="tel:+639764183188" style={{ fontWeight: 'bold', margin: 0, padding: 0 }}>+63 9764183188</a>•
@@ -208,7 +207,7 @@ const ReceiptTemplate = ({ orderID, customerName, items }: ReceiptProps) => {
                         {/* Order Details */}
                         <div style={{ 
                           width: '100%', 
-                          padding: '16px', // Reduced padding
+                          padding: '16px 8px 8px 8px', // Reduced padding
                           gap: '12px', // Reduced gap
                           display: 'flex', 
                           flexDirection: 'column', 
@@ -221,11 +220,11 @@ const ReceiptTemplate = ({ orderID, customerName, items }: ReceiptProps) => {
                             display: 'flex', 
                             alignItems: 'center', 
                             justifyContent: 'space-between',
-                            margin: 0,
+                            marginTop: '-10px',
                             padding: 0
                           }}>
                             <h2 style={{ 
-                              fontSize: '18px', // Slightly smaller
+                              fontSize: '14px', // Slightly smaller
                               fontWeight: 'bold',
                               margin: 0,
                               padding: 0
@@ -234,7 +233,7 @@ const ReceiptTemplate = ({ orderID, customerName, items }: ReceiptProps) => {
                               display: 'flex', 
                               flexDirection: 'column', 
                               alignItems: 'flex-end', 
-                              fontSize: '10px', // Smaller font
+                              fontSize: '8px', // Smaller font
                               color: '#6b7280', 
                               fontWeight: '600', 
                               textTransform: 'uppercase',
@@ -250,7 +249,7 @@ const ReceiptTemplate = ({ orderID, customerName, items }: ReceiptProps) => {
                             width: '100%', 
                             display: 'grid', 
                             gridTemplateColumns: 'repeat(2, 1fr)', 
-                            gap: '12px', // Reduced gap
+                            gap: '6px', // Reduced gap
                             columnGap: '6px',
                             margin: 0,
                             padding: 0
@@ -264,19 +263,18 @@ const ReceiptTemplate = ({ orderID, customerName, items }: ReceiptProps) => {
                                 padding: 0
                               }}>
                                 <p style={{ 
-                                  fontSize: '10px', // Smaller font
+                                  fontSize: '8px', // Smaller font
                                   textTransform: 'uppercase', 
                                   fontWeight: 'bold', 
                                   color: '#6b7280',
                                   margin: '0 0 2px 0', // Tight margin
-                                  paddingBottom: 10
+                                  paddingBottom: 5
                                 }}>{label}</p>
                                 <span style={{ 
-                                  padding: '6px 8px', // Reduced padding
-                                  borderRadius: '4px', 
+                                  padding: '0px 8px 6px 8px', // Reduced padding
                                   backgroundColor: '#f9fafb', 
                                   fontWeight: 'bold',
-                                  fontSize: '12px',
+                                  fontSize: '10px',
                                   margin: 0
                                 }}>Juan Dela Cruz</span>
                               </span>
@@ -290,7 +288,7 @@ const ReceiptTemplate = ({ orderID, customerName, items }: ReceiptProps) => {
                               padding: 0
                             }}>
                               <p style={{ 
-                                fontSize: '10px', // Smaller font
+                                fontSize: '8px', // Smaller font
                                 textTransform: 'uppercase', 
                                 fontWeight: 'bold', 
                                 color: '#6b7280',
@@ -298,11 +296,11 @@ const ReceiptTemplate = ({ orderID, customerName, items }: ReceiptProps) => {
                                 paddingBottom: 10
                               }}>Delivery Address</p>
                               <span style={{ 
-                                padding: '6px 8px', // Reduced padding
+                                padding: '0px 8px 6px 8px', // Reduced padding
                                 borderRadius: '4px', 
                                 backgroundColor: '#f9fafb', 
                                 fontWeight: 'bold',
-                                fontSize: '12px',
+                                fontSize: '10px',
                                 margin: 0
                               }}>Blk 123 Lot 14 Madrigal Street, Las Pinas, Metro Manila, 1103</span>
                             </span>
@@ -312,16 +310,16 @@ const ReceiptTemplate = ({ orderID, customerName, items }: ReceiptProps) => {
                         {/* Order Tracking */}
                         <div style={{ 
                           height: 'max-content', 
-                          padding: '16px', // Reduced padding
+                          padding: '8px', // Reduced padding
                           gap: '8px', // Reduced gap
                           display: 'flex', 
                           flexDirection: 'column',
                           margin: 0
                         }}>
                           <span style={{ 
-                            fontSize: '16px', 
+                            fontSize: '12px', 
                             fontWeight: 'bold',
-                            margin: 0,
+                            marginTop: '-10px',
                             padding: 0
                           }}>Order Tracking</span>
                           <div style={{ 
@@ -364,7 +362,7 @@ const ReceiptTemplate = ({ orderID, customerName, items }: ReceiptProps) => {
                               <strong style={{ 
                                 textTransform: 'uppercase', 
                                 fontWeight: '800', 
-                                fontSize: '10px', // Smaller font
+                                fontSize: '8px', // Smaller font
                                 color: '#6b7280', 
                                 margin: '0 0 4px 0', // Tight margin
                                 padding: 0
@@ -377,7 +375,7 @@ const ReceiptTemplate = ({ orderID, customerName, items }: ReceiptProps) => {
                                 padding: 0
                               }}>
                                 <strong style={{ 
-                                  fontSize: '12px', // Smaller font
+                                  fontSize: '10px', // Smaller font
                                   fontWeight: '800', 
                                   color: '#1e40af',
                                   lineHeight: '1.1',
@@ -387,7 +385,7 @@ const ReceiptTemplate = ({ orderID, customerName, items }: ReceiptProps) => {
                                   10:56 AM <span style={{ color: 'black', fontWeight: 'normal' }}> ● Mock Up Layout Approved</span>
                                 </strong>
                                 <strong style={{ 
-                                  fontSize: '12px', // Smaller font
+                                  fontSize: '10px', // Smaller font
                                   fontWeight: '800', 
                                   color: '#1e40af',
                                   lineHeight: '1.1',
@@ -432,7 +430,7 @@ const ReceiptTemplate = ({ orderID, customerName, items }: ReceiptProps) => {
                               <strong style={{ 
                                 textTransform: 'uppercase', 
                                 fontWeight: '800', 
-                                fontSize: '10px', 
+                                fontSize: '8px', 
                                 color: '#6b7280', 
                                 margin: '0 0 4px 0',
                                 padding: 0
@@ -445,7 +443,7 @@ const ReceiptTemplate = ({ orderID, customerName, items }: ReceiptProps) => {
                                 padding: 0
                               }}>
                                 <strong style={{ 
-                                  fontSize: '12px', 
+                                  fontSize: '10px', 
                                   fontWeight: '800', 
                                   color: '#1e40af',
                                   lineHeight: '1.1',
@@ -455,7 +453,7 @@ const ReceiptTemplate = ({ orderID, customerName, items }: ReceiptProps) => {
                                   05:28 PM <span style={{ color: 'black', fontWeight: 'normal' }}> ● Initial Layout Received</span>
                                 </strong>
                                 <strong style={{ 
-                                  fontSize: '12px', 
+                                  fontSize: '10px', 
                                   fontWeight: '800', 
                                   color: '#1e40af',
                                   lineHeight: '1.1',
@@ -473,11 +471,11 @@ const ReceiptTemplate = ({ orderID, customerName, items }: ReceiptProps) => {
                       {/* Items and Summary Section - Continue with similar compact styling */}
                       <div style={{ 
                         width: '100%', 
-                        maxWidth: '500px', 
+                        maxWidth: '100%', 
                         height: 'max-content', 
                         display: 'flex', 
                         flexDirection: 'column', 
-                        gap: '12px', // Reduced gap
+                        gap: 0, // Reduced gap
                         margin: 0,
                         padding: 0
                       }}>
@@ -492,10 +490,10 @@ const ReceiptTemplate = ({ orderID, customerName, items }: ReceiptProps) => {
                           margin: 0
                         }}>
                           <h2 style={{ 
-                            fontSize: '18px', 
+                            fontSize: '14px', 
                             color: '#1e40af', 
                             fontWeight: 'bold',
-                            margin: '0 0 8px 0', // Tight margin
+                            margin: '-10px 0px 16px 0px', // Tight margin
                             padding: 0
                           }}>Items</h2>
                           <div style={{ 
@@ -516,12 +514,11 @@ const ReceiptTemplate = ({ orderID, customerName, items }: ReceiptProps) => {
                                 alignItems: 'center', 
                                 gap: '8px', // Reduced gap
                                 borderBottom: '1px solid #f3f4f6',
-                                margin: 0
+                                marginBottom: 5
                               }}>
                                 <span style={{ 
-                                  height: '60px', // Smaller
-                                  aspectRatio: '1/1', 
-                                  borderRadius: '4px', 
+                                  height: '40px', // Smaller
+                                  aspectRatio: '1/1',  
                                   backgroundColor: '#dbeafe' 
                                 }}></span>
                                 <span style={{ 
@@ -538,19 +535,19 @@ const ReceiptTemplate = ({ orderID, customerName, items }: ReceiptProps) => {
                                     whiteSpace: 'nowrap', 
                                     width: '100%', 
                                     overflow: 'hidden',
-                                    fontSize: '12px', // Smaller font
+                                    fontSize: '10px', // Smaller font
                                     margin: 0,
                                     paddingBottom: 10
                                   }}>Carbon Fiber Digital Business Card</h3>
                                   <p style={{ 
-                                    fontSize: '10px', // Smaller font
+                                    fontSize: '8px', // Smaller font
                                     fontWeight: 'bold', 
                                     textTransform: 'uppercase', 
                                     margin: '2px 0 0 0', // Tight margin
                                     padding: 0
                                   }}>Logo: <strong style={{ color: '#1e40af', fontWeight: 'bold' }}>OnTap</strong></p>
                                   <p style={{ 
-                                    fontSize: '10px', // Smaller font
+                                    fontSize: '8px', // Smaller font
                                     fontWeight: 'bold', 
                                     textTransform: 'uppercase', 
                                     margin: '0 0 4px 0', // Tight margin
@@ -567,24 +564,24 @@ const ReceiptTemplate = ({ orderID, customerName, items }: ReceiptProps) => {
                                   padding: 0
                                 }}>
                                   <p style={{ 
-                                    fontSize: '10px', // Smaller font
+                                    fontSize: '8px', // Smaller font
                                     display: 'flex', 
                                     alignItems: 'center', 
                                     gap: '2px', 
                                     color: '#6b7280',
                                     margin: 0,
                                     padding: 0
-                                  }}>₱ <strong style={{ fontSize: '14px' }}>999.00</strong></p>
-                                  <strong style={{ color: '#6b7280', fontSize: '12px', margin: 0, padding: 0 }}>99</strong>
+                                  }}>₱ <strong style={{ fontSize: '9px', marginTop: '-3px' }}>999.00</strong></p>
+                                  <strong style={{ color: '#6b7280', fontSize: '10px', margin: 0, padding: 0 }}>99</strong>
                                   <p style={{ 
-                                    fontSize: '10px', // Smaller font
+                                    fontSize: '8px', // Smaller font
                                     display: 'flex', 
                                     alignItems: 'center', 
                                     gap: '2px', 
                                     color: '#1e40af',
                                     margin: 0,
                                     padding: 0
-                                  }}>₱ <strong style={{ fontSize: '14px' }}>98,901.00</strong></p>
+                                  }}>₱ <strong style={{ fontSize: '11px', marginTop: '-3px' }}>98,901.00</strong></p>
                                 </span>
                               </div>
                             ))}
@@ -616,10 +613,10 @@ const ReceiptTemplate = ({ orderID, customerName, items }: ReceiptProps) => {
                             margin: 0
                           }}>
                             <span style={{ 
-                              fontSize: '14px', // Smaller font
+                              fontSize: '11px', // Smaller font
                               fontWeight: 'bold', 
                               paddingLeft: '8px', // Reduced padding
-                              margin: '0 0 4px 0', // Tight margin
+                              margin: '0 0 12px 0', // Tight margin
                               padding: 0
                             }}>Shipping Method</span>
                             <span style={{ 
@@ -632,7 +629,7 @@ const ReceiptTemplate = ({ orderID, customerName, items }: ReceiptProps) => {
                               padding: 0
                             }}>
                               <span style={{ 
-                                height: '36px', // Smaller
+                                height: '24px', // Smaller
                                 aspectRatio: '1/1', 
                                 borderRadius: '6px', 
                                 backgroundColor: '#1e40af', 
@@ -640,28 +637,28 @@ const ReceiptTemplate = ({ orderID, customerName, items }: ReceiptProps) => {
                                 alignItems: 'center', 
                                 justifyContent: 'center', 
                                 display: 'flex', 
-                                fontSize: '18px', // Smaller
+                                fontSize: '14px', // Smaller
                                 margin: 0
                               }}>
                                 <RiTruckLine />
                               </span>
                               <span style={{ 
                                 width: '100%', 
-                                fontSize: '12px', // Smaller font
+                                fontSize: '10px', // Smaller font
                                 display: 'flex', 
                                 alignItems: 'center', 
                                 justifyContent: 'space-between',
-                                margin: 0,
+                                marginTop: '-5px',
                                 padding: 0
                               }}>
-                                <strong style={{ fontWeight: '800', color: '#374151' }}>Door-to-door</strong>
+                                <strong style={{ fontWeight: '800', color: '#374151' }}>Door-to-door Delivery</strong>
                                 <span style={{ 
-                                  fontSize: '10px', // Smaller font
+                                  fontSize: '8px', // Smaller font
                                   display: 'flex', 
                                   alignItems: 'center', 
                                   gap: '2px', 
                                   marginLeft: 'auto'
-                                }}>₱<strong style={{ fontSize: '14px', fontWeight: '800' }}>250.00</strong></span>
+                                }}>₱<strong style={{ fontSize: '11px', fontWeight: '800' }}>250.00</strong></span>
                               </span>
                             </span>
                           </div>
@@ -686,10 +683,10 @@ const ReceiptTemplate = ({ orderID, customerName, items }: ReceiptProps) => {
                               margin: 0
                             }}>
                               <span style={{ 
-                                fontSize: '14px', // Smaller font
+                                fontSize: '11px', // Smaller font
                                 fontWeight: 'bold',
                                 margin: 0,
-                                paddingBottom: 10
+                                paddingBottom: 5
                               }}>Mode of Payment</span>
                               {payment[modeOfPayment].image}
                             </span>
@@ -710,20 +707,20 @@ const ReceiptTemplate = ({ orderID, customerName, items }: ReceiptProps) => {
                                   textTransform: 'uppercase', 
                                   fontWeight: 'bold', 
                                   display: 'flex', 
-                                  fontSize: '10px', // Smaller font
+                                  fontSize: '8px', // Smaller font
                                   gap: '4px', // Reduced gap
                                   alignItems: 'center',
                                   margin: 0,
                                   padding: 0
-                                }}><TbTruckDelivery style={{ fontSize: '18px' }}/>cash on delivery</span>
+                                }}><TbTruckDelivery style={{ fontSize: '14px' }}/>cash on delivery</span>
                                 <p style={{ 
                                   display: 'flex', 
                                   alignItems: 'center', 
                                   gap: '2px', 
-                                  fontSize: '10px', // Smaller font
+                                  fontSize: '8px', // Smaller font
                                   margin: 0,
                                   padding: 0
-                                }}>₱<span style={{ fontWeight: 'bold', fontSize: '14px' }}>999.00</span></p>
+                                }}>₱<span style={{ fontWeight: 'bold', fontSize: '11px' }}>999.00</span></p>
                               </span>
                             ) : (
                               <span style={{ 
@@ -746,10 +743,10 @@ const ReceiptTemplate = ({ orderID, customerName, items }: ReceiptProps) => {
                                 }}>
                                   <p style={{ 
                                     textTransform: 'uppercase', 
-                                    fontSize: '12px', // Smaller font
+                                    fontSize: '7px', // Smaller font
                                     fontWeight: 'bold', 
                                     letterSpacing: '0.05em',
-                                    margin: 0,
+                                    marginTop: '-2px',
                                     padding: 0
                                   }}>{payment[modeOfPayment].title}</p>
                                 </span>
@@ -774,19 +771,19 @@ const ReceiptTemplate = ({ orderID, customerName, items }: ReceiptProps) => {
                                       alignItems: 'center', 
                                       gap: '1px',
                                       margin: 0,
-                                      padding: 0
+                                      paddingBottom: 5
                                     }}>
-                                      <strong style={{ fontWeight: '800', fontSize: '12px' }}><span style={{ fontSize: '10px' }}>+63</span> 912 345 6789</strong>
+                                      <strong style={{ fontWeight: '800', fontSize: '10px' }}><span style={{ fontSize: '7px', marginTop: 2 }}>+63</span> 912 345 6789</strong>
                                     </span>
                                   </span>
                                   <p style={{ 
                                     display: 'flex', 
                                     alignItems: 'center', 
                                     gap: '2px', 
-                                    fontSize: '10px', // Smaller font
+                                    fontSize: '8px', // Smaller font
                                     margin: 0,
-                                    padding: 0
-                                  }}>₱<span style={{ fontWeight: 'bold', fontSize: '14px' }}>999.00</span></p>
+                                    paddingBottom: 5
+                                  }}>₱<span style={{ fontWeight: 'bold', fontSize: '11px', marginTop: '-5px' }}>999.00</span></p>
                                 </span>
                               </span>
                             )}
@@ -804,7 +801,7 @@ const ReceiptTemplate = ({ orderID, customerName, items }: ReceiptProps) => {
                           margin: 0
                         }}>
                           <span style={{ 
-                            fontSize: '14px', // Smaller font
+                            fontSize: '12px', // Smaller font
                             fontWeight: 'bold', 
                             paddingLeft: '8px', // Reduced padding
                             margin: '0 0 8px 0', // Tight margin
@@ -829,16 +826,17 @@ const ReceiptTemplate = ({ orderID, customerName, items }: ReceiptProps) => {
                                 alignItems: 'center', 
                                 justifyContent: 'space-between', 
                                 padding: '2px 12px', // Reduced padding
-                                margin: 0
+                                margin: 0,
+                                gap: 3
                               }}>
-                                <strong style={{ fontWeight: '800', fontSize: '12px' }}>{item.label}</strong>
-                                {item.note && <strong style={{ marginRight: 'auto', fontWeight: '600', fontSize: '10px' }}>{item.note}</strong>}
+                                <strong style={{ fontWeight: '800', fontSize: '10px' }}>{item.label}</strong>
+                                {item.note && <strong style={{ marginRight: 'auto', fontWeight: '600', fontSize: '8px', marginTop: 2 }}>{item.note}</strong>}
                                 <span style={{ 
-                                  fontSize: '12px', // Smaller font
+                                  fontSize: '8px', // Smaller font
                                   display: 'flex', 
                                   alignItems: 'center', 
                                   gap: '2px'
-                                }}>₱<strong style={{ fontWeight: '800', fontSize: '14px' }}>{item.value}</strong></span>
+                                }}>₱<strong style={{ fontWeight: '800', fontSize: '11px', marginTop: '-3px' }}>{item.value}</strong></span>
                               </span>
                             ))}
                             <span style={{ 
@@ -846,14 +844,14 @@ const ReceiptTemplate = ({ orderID, customerName, items }: ReceiptProps) => {
                               display: 'flex', 
                               alignItems: 'center', 
                               justifyContent: 'space-between', 
-                              padding: '0px 6px 20px', // Reduced padding
+                              padding: '0px 10px 20px 10px', // Reduced padding
                               backgroundColor: '#1e40af', 
                               color: 'white',
                               marginTop: 10
                             }}>
-                              <strong style={{ fontWeight: '800', fontSize: '12px' }}>Total</strong>
+                              <strong style={{ fontWeight: '800', fontSize: '14px' }}>Total</strong>
                               <span style={{ 
-                                fontSize: '12px', // Smaller font
+                                fontSize: '10px', // Smaller font
                                 display: 'flex', 
                                 alignItems: 'center', 
                                 gap: '2px'

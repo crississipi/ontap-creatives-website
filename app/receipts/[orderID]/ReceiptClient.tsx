@@ -71,7 +71,6 @@ const payment: Record<string, PaymentInfo> = {
 export default function ReceiptClient({ orderID }: { orderID: string }) {
   const [data, setData] = useState<any>(null);
   const receiptRef = useRef<HTMLDivElement>(null);
-  const [modeOfPayment, setModeOfPayment] = useState('ewallet');
 
   useEffect(() => {
     fetch(`/api/receipts/${orderID}`)
@@ -106,11 +105,11 @@ export default function ReceiptClient({ orderID }: { orderID: string }) {
     element.style.display = "block";
 
     const opt = {
-        margin: 0.5,
+        margin: 0,
         filename: `receipt-${orderID}.pdf`,
         image: { type: "jpeg" as const, quality: 1 },
-        html2canvas: { scale: 1 },
-        jsPDF: { unit: "in", format: "a4", orientation: "portrait" as const },
+        html2canvas: { scale: 2 },
+        jsPDF: { unit: "in", format: "a5", orientation: "portrait" as const },
     };
 
     html2pdf().set(opt).from(element).save();

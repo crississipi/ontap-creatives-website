@@ -1,0 +1,135 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model activity {
+  activityID  Int      @id @default(autoincrement())
+  activity    String   @db.VarChar(255)
+  dateVisited DateTime @db.DateTime(0)
+  dateLeft    DateTime @db.DateTime(0)
+  geolocation String   @db.VarChar(255)
+  clients     client[]
+}
+
+model cart {
+  cartID       Int           @id @default(autoincrement())
+  clientID     Int
+  productID    Int
+  quantity     Int
+  subtotal     Float         @db.Float
+  status       String        @db.VarChar(100)
+  dateAdded    DateTime      @default(now()) @map("dateAdded")
+  client       client        @relation(fields: [clientID], references: [clientID])
+  product      products      @relation(fields: [productID], references: [productID])
+  transactions transaction[]
+
+  @@index([clientID], map: "cart_clientID_fkey")
+  @@index([productID], map: "cart_productID_fkey")
+}
+
+model client {
+  clientID      Int           @id @default(autoincrement())
+  clientName    String?       @db.VarChar(100)
+  email         String        @unique(map: "email") @db.VarChar(50)
+  contactNumber String?       @db.VarChar(20)
+  address       String?       @db.VarChar(255)
+  timeAvailFrom DateTime?     @db.Time(0)
+  timeAvailTo   DateTime?     @db.Time(0)
+  password      String        @db.VarChar(255)
+  activityID    Int?
+  cartID        Int?
+  transactionID Int?
+  voucherID     Int?
+  adsAgree      Boolean
+  dateCreated   DateTime      @default(now()) @map("dateCreated")
+  carts         cart[]
+  activity      activity?     @relation(fields: [activityID], references: [activityID])
+  feedbacks     feedback[]
+  transactions  transaction[]
+  vouchers      voucher[]
+
+  @@index([activityID], map: "client_activityID_fkey")
+}
+
+model transaction {
+  orderID       Int      @id @default(autoincrement())
+  transactionID String   @unique(map: "transactionID") @db.VarChar(255)
+  cartID        Int
+  billingID     Int
+  voucherID     Int
+  trackingID    Int
+  shipMethod    String   @db.VarChar(100)
+  subtotal      Float    @db.Float
+  total         Float    @db.Float
+  dateOrdered   DateTime @default(now()) @map("dateOrdered")
+  billing       billing  @relation(fields: [billingID], references: [billingID])
+  cart          cart     @relation(fields: [cartID], references: [cartID])
+  client        client   @relation(fields: [trackingID], references: [clientID])
+  voucher       voucher  @relation(fields: [voucherID], references: [voucherID])
+
+  @@index([billingID], map: "transaction_billingID_fkey")
+  @@index([cartID], map: "transaction_cartID_fkey")
+  @@index([trackingID], map: "transaction_trackingID_fkey")
+  @@index([voucherID], map: "transaction_voucherID_fkey")
+}
+
+model voucher {
+  voucherID    Int           @id @default(autoincrement())
+  voucherLabel String        @db.VarChar(255)
+  discount     Int
+  clientID     Int
+  isUsed       Boolean
+  dateAdded    DateTime      @default(now()) @map("dateAdded")
+  expiration   DateTime      @db.DateTime(0)
+  transactions transaction[]
+  client       client        @relation(fields: [clientID], references: [clientID])
+
+  @@index([clientID], map: "voucher_clientID_fkey")
+}
+
+model billing {
+  billingID    Int           @id @default(autoincrement())
+  mode         String        @db.VarChar(255)
+  referenceNo  String        @unique(map: "referenceNo") @db.VarChar(100)
+  sender       String        @db.VarChar(100)
+  receiver     String        @db.VarChar(100)
+  amount       Float         @db.Float
+  dateAdded    DateTime      @db.DateTime(0)
+  transactions transaction[]
+}
+
+model feedback {
+  feedbackID Int      @id @default(autoincrement())
+  clientID   Int
+  productID  Int
+  rate       Float    @db.Float
+  comment    String?  @db.Text
+  dateAdded  DateTime @default(now()) @map("dateAdded")
+  client     client   @relation(fields: [clientID], references: [clientID])
+  product    products @relation(fields: [productID], references: [productID])
+
+  @@index([clientID], map: "feedback_clientID_fkey")
+  @@index([productID], map: "feedback_productID_fkey")
+}
+
+model products {
+  productID        Int        @id @default(autoincrement())
+  name             String     @db.VarChar(255)
+  price            Float      @db.Float
+  description      String     @db.Text
+  frontUrl         String?    @db.Text
+  backUrl          String?    @db.Text
+  imgUrl           String?    @db.Text
+  dateAdded        DateTime   @default(now()) @map("dateAdded")
+  category         String     @default("Business Cards") @db.VarChar(100)
+  customPrice      Float?     @db.Float
+  variableBackImg  String?    @db.Text
+  variableFrontImg String?    @db.Text
+  carts            cart[]
+  feedbacks        feedback[]
+}

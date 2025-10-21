@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { UserProvider } from "@/contexts/UserContext";
 
 export const metadata: Metadata = {
   title: "OnTap Creatives",
@@ -13,13 +14,13 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body
-        className={`antialiased h-[100vh] w-[100vw] md:overflow-x-hidden scroll-smooth motion-reduce:scroll-auto`}
-      >
-        {children}
+      <body>
+        <UserProvider>
+          {children}
+        </UserProvider>
       </body>
     </html>
-  );
+  )
 }
 
 

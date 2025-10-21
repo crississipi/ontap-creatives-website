@@ -3,19 +3,96 @@
 import React from 'react'
 import Image from 'next/image'
 import { ProductCardProps, ProductProps } from '@/types';
-import { RiStarFill, RiStarHalfFill, RiStarLine } from 'react-icons/ri';
 import { TbCurrencyPeso } from 'react-icons/tb';
 
-type ProdCard = ProductCardProps & ProductProps;
+interface ProductCardComponentProps {
+  // Accept either individual props OR a product object
+  product?: ProductProps;
+  // Individual props (for backward compatibility)
+  imgUrl?: string;
+  productName?: string;
+  productDesc?: React.ReactNode;
+  size?: string;
+  setInquireItem?: (inquire: boolean) => void;
+  hoverable?: boolean;
+  setClickedItem?: (item: any) => void;
+  frontImg?: string;
+  backImg?: string;
+  price?: { ontap: number; custom?: number };
+  variableBackImg?: string;
+  variableFrontImg?: string;
+  inquire?: boolean; // Add the missing inquire prop
+}
 
-const ProductCard = ({ imgUrl, productName, productDesc, size, setInquireItem, hoverable, setClickedItem, frontImg, backImg, price, ratings, sold, variableBackImg, variableFrontImg }: ProdCard ) => {
+const ProductCard = ({ 
+  product,
+  // Individual props (fallbacks)
+  imgUrl,
+  productName,
+  productDesc,
+  size,
+  setInquireItem,
+  hoverable,
+  setClickedItem,
+  frontImg,
+  backImg,
+  price,
+  variableBackImg,
+  variableFrontImg,
+  inquire // Add the inquire prop
+}: ProductCardComponentProps) => {
+  
+  // Use product object if provided, otherwise use individual props
+  const finalImgUrl = product?.imgUrl || imgUrl || '';
+  const finalProductName = product?.name || productName || '';
+  const finalFrontImg = product?.frontUrl || frontImg || '';
+  const finalBackImg = product?.backUrl || backImg || '';
+  
+  // Handle price - if product has customPrice, use it, otherwise use the individual price prop
+  const finalPrice = product ? {
+    ontap: product.price,
+    custom: product.customPrice || product.price
+  } : price || { ontap: 0 };
+  
+  // // Parse tags if they exist in the product
+  // const tags = product?.tags ? 
+  //   (typeof product.tags === 'string' ? JSON.parse(product.tags) : product.tags) : 
+  //   [];
+
+  const handleClick = () => {
+    const clickedItemData = product ? {
+      imgUrl: product.imgUrl,
+      name: product.name,
+      desc: product.description ? <p>{product.description}</p> : '',
+      front: product.frontUrl,
+      back: product.backUrl,
+      price: {
+        ontap: product.price,
+        custom: product.customPrice || product.price
+      },
+      varBack: product.variableBackImg,
+      varFront: product.variableFrontImg,
+      // tags: tags
+    } : {
+      imgUrl,
+      name: productName,
+      desc: productDesc,
+      frontUrl: frontImg,
+      backUrl: backImg,
+      price,
+      varBack: variableBackImg,
+      varFront: variableFrontImg
+    };
+    
+    setClickedItem!(clickedItemData);
+    setInquireItem?.(true);
+        console.log(clickedItemData);
+  };
+
   return (
     <button 
       className={`relative flex flex-col items-center ${hoverable ? `${size} border border-neutral-200 group hover:shadow-lg hover:scale-101 hover:border-transparent ease-out duration-500` : 'w-full h-1/2 md:h-full md:w-2/5 md:bg-light-blue'}`}
-      onClick={() => {
-        setClickedItem?.({ imgUrl, name: productName, desc: productDesc, front:frontImg, back:backImg, price, ratings, sold, varBack:variableBackImg!, varFront:variableFrontImg! });
-        setInquireItem(true);
-      }}
+      onClick={handleClick}
     >
         <div className='h-1/2 w-full mt-10 flex items-center justify-center relative'>
           {size === 'w-full aspect-[9/10] aspect-[3/4]' && (
@@ -30,17 +107,17 @@ const ProductCard = ({ imgUrl, productName, productDesc, size, setInquireItem, h
                 <div className="relative w-full h-full transition-transform duration-700 transform-3d shadow-md shadow-neutral-300 rounded-md">
                   <div className="absolute inset-0 rotate-y-180">
                     <Image
-                      src={frontImg !== '/images/card-4/front-card.png' ? frontImg! : backImg}
+                      src={finalFrontImg !== '/images/card-4/front-card.png' ? finalFrontImg : finalBackImg}
                       alt="Front"
                       fill
                       className="object-cover rounded-md shadow-lg backface-hidden"
                       draggable={false}
                     />
                   </div>
-                  {frontImg !== '/images/card-4/front-card.png' && (
+                  {finalFrontImg !== '/images/card-4/front-card.png' && (
                     <div className="absolute inset-0">
                       <Image
-                        src={backImg!}
+                        src={finalBackImg}
                         alt="Back"
                         fill
                         className="object-cover rounded-md shadow-lg backface-hidden"
@@ -56,10 +133,10 @@ const ProductCard = ({ imgUrl, productName, productDesc, size, setInquireItem, h
                 before:h-2/3 before:w-full before:absolute before:-z-20 before:top-0 before:-left-0 before:bg-black/20 before:rounded-xl group-hover:before:top-15 group-hover:before:-left-5 group-hover:before:rotate-x-5 group-hover:before:-rotate-y-50 group-hover:before:-rotate-z-15 before:duration-500'
               >
                 <div className="relative w-full h-full transition-transform duration-700 transform-3d shadow-md rounded-2xl xl:rounded-lg">
-                  {frontImg !== '/images/card-4/front-card.png' && (
+                  {finalFrontImg !== '/images/card-4/front-card.png' && (
                     <div className="absolute inset-0 rotate-y-180">
                       <Image
-                        src={backImg!}
+                        src={finalBackImg}
                         alt="Back"
                         fill
                         className="object-cover rounded-md shadow-lg backface-hidden"
@@ -69,7 +146,7 @@ const ProductCard = ({ imgUrl, productName, productDesc, size, setInquireItem, h
                   )}
                   <div className="absolute inset-0">
                     <Image
-                      src={frontImg!}
+                      src={finalFrontImg}
                       alt="Front"
                       fill
                       className="object-cover rounded-md shadow-lg backface-hidden"
@@ -92,17 +169,17 @@ const ProductCard = ({ imgUrl, productName, productDesc, size, setInquireItem, h
                 <div className="relative w-full h-full transition-transform duration-700 transform-3d shadow-xl shadow-neutral-500 rounded-2xl xl:rounded-lg">
                   <div className="absolute inset-0 rotate-y-180">
                     <Image
-                      src={frontImg !== '/images/card-4/front-card.png' ? frontImg! : backImg}
+                      src={finalFrontImg !== '/images/card-4/front-card.png' ? finalFrontImg : finalBackImg}
                       alt="Front"
                       fill
                       className="object-cover rounded-xl xl:rounded-lg shadow-lg backface-hidden"
                       draggable={false}
                     />
                   </div>
-                  {frontImg !== '/images/card-4/front-card.png' && (
+                  {finalFrontImg !== '/images/card-4/front-card.png' && (
                     <div className="absolute inset-0">
                       <Image
-                        src={backImg!}
+                        src={finalBackImg}
                         alt="Back"
                         fill
                         className="object-cover rounded-xl xl:rounded-lg shadow-lg backface-hidden"
@@ -118,10 +195,10 @@ const ProductCard = ({ imgUrl, productName, productDesc, size, setInquireItem, h
                 before:h-2/3 before:w-66/100 before:absolute before:-z-20 before:top-0 before:-left-0 before:bg-black/20 before:rounded-xl group-hover:before:top-17 group-hover:before:-left-5 group-hover:before:rotate-x-5 group-hover:before:-rotate-y-50 group-hover:before:-rotate-z-15 before:duration-500'
               >
                 <div className="relative w-full h-full transition-transform duration-700 transform-3d shadow-md rounded-2xl xl:rounded-lg">
-                  {frontImg !== '/images/card-4/front-card.png' && (
+                  {finalFrontImg !== '/images/card-4/front-card.png' && (
                     <div className="absolute inset-0 rotate-y-180">
                       <Image
-                        src={backImg!}
+                        src={finalBackImg}
                         alt="Back"
                         fill
                         className="object-cover rounded-xl xl:rounded-lg shadow-lg backface-hidden"
@@ -131,7 +208,7 @@ const ProductCard = ({ imgUrl, productName, productDesc, size, setInquireItem, h
                   )}
                   <div className="absolute inset-0">
                     <Image
-                      src={frontImg!}
+                      src={finalFrontImg}
                       alt="Front"
                       fill
                       className="object-cover rounded-xl xl:rounded-lg shadow-lg backface-hidden"
@@ -147,7 +224,7 @@ const ProductCard = ({ imgUrl, productName, productDesc, size, setInquireItem, h
                 height={500}
                 width={500}
                 alt='ontap creatives cards'
-                src={imgUrl}
+                src={finalImgUrl}
                 className={`w-64 aspect-square object-contain md:pt-5 object-center mx-auto -mt-10 md:-mt-16 scale-115 ${hoverable ? 'group-hover:scale-125' : 'scale-135 group-hover:scale-150'} ease-out duration-500`}
                 draggable={false}
               />
@@ -155,29 +232,19 @@ const ProductCard = ({ imgUrl, productName, productDesc, size, setInquireItem, h
           )}
           
         </div>
-        <h2 className={`font-bold mt-auto ${hoverable ? 'pt-3 md:pt-16 md:text-xl' : 'pt-16 md:pt-0 text-xl'} text-left px-5 w-full`}>{productName}</h2>
+        <h2 className={`font-bold mt-auto ${hoverable ? 'pt-3 md:pt-16 md:text-xl' : 'pt-16 md:pt-0 text-xl'} text-left px-5 w-full`}>{finalProductName}</h2>
         <div className='w-full flex flex-col-reverse md:flex-row justify-between px-5 my-3 mt-2 md:mt-0 md:my-5'>
           <div className='text-left flex font-extrabold items-center'>
-            {price.ontap === 0 ? (
+            {finalPrice.ontap === 0 ? (
               <p className='text-xl'>Upon Inquiry</p>
             ) : (
               <>
                 <TbCurrencyPeso className='text-lg md:text-2xl lg:text-xl'/>
-                <p className='text-2xl md:text-3xl lg:text-2xl mt-0.5 md:mt-0'>{price.ontap.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                <p className='text-2xl md:text-3xl lg:text-2xl mt-0.5 md:mt-0'>{finalPrice.ontap.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
               </>
             )}
           </div>
-          <div className='flex flex-row md:flex-col justify-between md:justify-normal items-end leading-5 mb-3 md:mb-0'>
-            <span className='flex items-center gap-1 text-amber-500'>
-              {ratings > 4.5 && <RiStarFill className='mb-1 text-lg'/>}
-              {ratings <= 4.5 && <RiStarHalfFill className='mb-1 text-lg'/>}
-              {ratings < 3 && <RiStarLine className='mb-1 text-lg'/>}
-              
-              <strong>{ratings}</strong>
-              <p className='text-neutral-500 text-sm text-nowrap hidden md:block xl:text-xs'>({sold - 20} reviews)</p>
-            </span>
-            <p className='text-sm text-nowrap'><strong className='font-extrabold'>{sold.toLocaleString()}</strong> sold</p>
-          </div>
+          {/* Ratings and sold section has been removed */}
         </div>
     </button>
   )

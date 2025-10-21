@@ -7,8 +7,8 @@ import { TbTruckDelivery } from 'react-icons/tb';
 import Image from 'next/image';
 import { LuEye, LuEyeClosed } from 'react-icons/lu';
 import { MdOutlineSaveAlt } from 'react-icons/md';
-import Receipt from './Receipt';
 import { HiOutlineX } from 'react-icons/hi';
+import ReceiptTemplate from './ReceiptTemplate';
 
   type PaymentInfo = {
     title: string;
@@ -94,10 +94,10 @@ const OrderPage: React.FC<ReceiptProps> = ({ orderID, customerName, items }) => 
         image: { type: "jpeg" as const, quality: 1 },
         html2canvas: { scale: 1 },
         jsPDF: { unit: "in", format: "a4", orientation: "portrait" as const },
-  };
+    };
 
     html2pdf().set(opt).from(element).save();
-    };
+  };
 
   return (
     <div className='h-[100vh] w-full flex flex-col items-center relative overflow-x-hidden p-3 lg:p-10 lg:pt-20 lg:pr-5 gap-5 select-none lg:overflow-hidden bg-gradient-to-t from-violet via-light-blue to-white before:absolute before:top-0 before:left-0 before:h-full before:w-full before:z-30 before:bg-white/70 before:backdrop-blur-xl'>
@@ -411,12 +411,8 @@ const OrderPage: React.FC<ReceiptProps> = ({ orderID, customerName, items }) => 
                 {showCustomerService ? (<RiCloseLine />) : (<RiCustomerService2Fill />)}
             </motion.button>
         </div>
-        <div 
-            ref={receiptRef}
-            className="h-full w-full flex"
-            style={{ display: "none" }}
-        >
-            <Receipt orderID={'123456'} customerName={''} items={[]}/>
+        <div ref={receiptRef} className="h-full w-full flex absolute z-9999" style={{display:'none'}}>
+            <ReceiptTemplate orderID={'123456'} customerName={''} items={[]}/>
         </div>
     </div>
   )
