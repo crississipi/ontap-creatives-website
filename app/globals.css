@@ -190,3 +190,33 @@ body {
   cursor: not-allowed !important;
   pointer-events: not-allowed !important;
 }
+
+@media (width >= 600px) {
+  .card-size {
+    width: 40%;
+  };
+}
+
+@media (width >= 64rem) {
+  .card-size {
+    width: 90%;
+  };
+}
+
+@media (width >= 80rem /* 1280px */) {
+  .card-size {
+    width: 80%;
+  };
+}
+
+@media (width >= 1500px) {
+  .card-size {
+    width: 60%;
+  };
+}
+
+@media (width >= 2000px) {
+  .card-size {
+    width: 55%;
+  };
+}

@@ -4,7 +4,7 @@ import React, { useRef, useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { IoTriangle } from "react-icons/io5";
 import Image from "next/image";
-import { useClickOutside } from "@/hooks";
+import { RiArrowRightLine } from "react-icons/ri";
 
 // Define types for better TypeScript support
 type Rarity = "very-common" | "common" | "ultra" | "rare" | "very-rare" | "ultra-rare";
@@ -29,14 +29,19 @@ const rarityColors: Record<Rarity, string> = {
   "ultra-rare": "#6366F1" // Soft Indigo Violet — complements the warm tones
 };
 
-export default function VoucherRoulette({setRoulette}: VoucherRouletteProps) {
+ const Discounts: Record<string, string> = {
+  "5% Discount" : "/icons/5-off.png",
+  "10% Discount" : "/icons/10-off.png",
+  "15% Discount" : "/icons/15-off.png",
+  "20% Discount" : "/icons/20-off.png"
+ }
 
-  const outsideClickRef = useClickOutside<HTMLDivElement>(() => setRoulette(false));
+export default function VoucherRoulette({setRoulette}: VoucherRouletteProps) {
 
   // 🎁 Base voucher list - no color property, only rarity
   const baseVouchers: Voucher[] = [
     { id: 1, label: "Better Luck Next Time", rarity: "very-common" },
-    { id: 2, label: "Free Ship", rarity: "common" },
+    //    { id: 2, label: "Free Ship", rarity: "common" },
     { id: 3, label: "5% Discount", rarity: "ultra" },
     { id: 4, label: "10% Discount", rarity: "rare" },
     { id: 5, label: "15% Discount", rarity: "very-rare" },
@@ -45,12 +50,12 @@ export default function VoucherRoulette({setRoulette}: VoucherRouletteProps) {
 
   // ⚖️ Rarity weights with proper typing
   const rarityWeights: Record<Rarity, number> = {
-    "very-common": 10,
-    "common": 7,
-    "ultra": 4,
-    "rare": 2,
-    "very-rare": 1,
-    "ultra-rare": 1,
+    "very-common": 100,
+    "common": 25,
+    "ultra": 20,
+    "rare": 15,
+    "very-rare": 10,
+    "ultra-rare": 5,
   };
 
   // 🧮 Group vouchers by label and calculate combined weights
@@ -82,6 +87,7 @@ export default function VoucherRoulette({setRoulette}: VoucherRouletteProps) {
   const [showResult, setShowResult] = useState(false);
   const [bounce, setBounce] = useState(false);
   const [pinRotation, setPinRotation] = useState(0);
+  const [wonVouchers, setWonVouchers] = useState<(Voucher | null)[]>([]);
 
   // 🔧 Refs
   const rotRef = useRef(0);
@@ -89,6 +95,16 @@ export default function VoucherRoulette({setRoulette}: VoucherRouletteProps) {
   const rafRef = useRef<number | null>(null);
   const pinPhaseRef = useRef(0);
   const lastRotationRef = useRef(0);
+
+  useEffect(() => {
+    if(showResult) {
+      const selectedVoucher = getSelectedVoucher();
+      if (selectedVoucher) {
+        setWonVouchers((prev) => 
+        [...prev, selectedVoucher]);
+      }
+    }
+  },[showResult])
 
   // 🎨 Create expanded voucher array for the wheel (with combined slices)
   const wheelVouchers = useMemo(() => {
@@ -140,7 +156,6 @@ export default function VoucherRoulette({setRoulette}: VoucherRouletteProps) {
     return index % wheelVouchers.length;
   };
 
-  // 🌀 Spin animation
   const startSpin = () => {
     if (isSpinning) return;
 
@@ -152,14 +167,14 @@ export default function VoucherRoulette({setRoulette}: VoucherRouletteProps) {
     pinPhaseRef.current = 0;
     lastRotationRef.current = 0;
 
-    // 🎯 Weighted random selection by rarity
+    // 🎯 Weighted random selection by rarity - FIXED PROBABILITIES
     const rarityChances: Record<Rarity, number> = {
-      "ultra-rare": 1 / 9999,
-      "very-rare": 1 / 4499,
-      "rare": 1 / 1999,
-      "ultra": 1 / 1499,
-      "common": 1 / 599,
-      "very-common": 1 / 1,
+      "very-common": 100,  // Highest probability for "Better Luck Next Time"
+      "common": 10,
+      "ultra": 5,
+      "rare": 3,
+      "very-rare": 2,
+      "ultra-rare": 1,     // Lowest probability for rarest vouchers
     };
 
     // Convert rarities to a weighted list
@@ -179,6 +194,7 @@ export default function VoucherRoulette({setRoulette}: VoucherRouletteProps) {
     const rand = Math.random();
     let cumulative = 0;
     let chosenGroup = normalized[0];
+    
     for (const v of normalized) {
       cumulative += v.probability;
       if (rand <= cumulative) {
@@ -261,8 +277,8 @@ export default function VoucherRoulette({setRoulette}: VoucherRouletteProps) {
         setSelectedIndex(finalIndex);
 
         setTimeout(() => setBounce(true), 100);
-        setTimeout(() => setShowResult(true), 800);
-
+        setTimeout(() => { setShowResult(true); }, 800);
+        
         if (rafRef.current) cancelAnimationFrame(rafRef.current);
         return;
       }
@@ -328,11 +344,11 @@ export default function VoucherRoulette({setRoulette}: VoucherRouletteProps) {
           key={group.voucher.id}
           className="absolute left-1/2 top-1/2 pointer-events-none origin-center flex items-center justify-center z-999"
           style={{
-            transform: `translate(-50%, -50%) rotate(${sliceCenterAngle + 12}deg)`,
+            transform: `translate(-50%, -50%) rotate(${sliceCenterAngle + 14}deg)`,
           }}
         >
           <div
-            className="absolute text-sm font-semibold text-white w-24 text-right drop-shadow-md"
+            className="absolute text-lg font-extrabold text-white mb-16 w-30 text-left drop-shadow-md"
             style={{
               transform: `translateY(-${radius}px) rotate(90deg)`,
             }}
@@ -359,12 +375,10 @@ export default function VoucherRoulette({setRoulette}: VoucherRouletteProps) {
     return baseVouchers.find(v => v.label === wheelVoucher.label) || wheelVoucher;
   };
 
-  const selectedVoucher = getSelectedVoucher();
-
   const image = ['/icons/truck.png', '/icons/percent.png', '/icons/gift.png']
 
   return (
-    <div className="h-[100vh] bg-gradient-to-t from-violet via-light-blue to-white before:absolute before:top-0 before:left-0 before:h-full before:w-full before:z-30 before:bg-white/30 before:backdrop-blur-md p-6 flex flex-col items-center justify-center gap-6 select-none fixed top-1/2 left-1/2 -translate-1/2 w-full z-999">
+    <div className="h-[100vh] bg-gradient-to-t from-0% from-[#e8e6e5] via-15% via-[#f3f1ee] to-25% to-[#f8f5f4] p-6 flex flex-col items-center justify-center gap-6 select-none fixed top-1/2 left-1/2 -translate-1/2 w-full z-999">
       <motion.h1 
         initial={{scale:0.6, opacity:0}}
         animate={{scale:1, opacity:1}}
@@ -379,20 +393,29 @@ export default function VoucherRoulette({setRoulette}: VoucherRouletteProps) {
         transition={{type:'spring', stiffness:100, damping:20}}
         className="-mt-3 text-xl mb-10 z-50"
       >Try your luck in claiming best discounts!</motion.p>
-      <div className="flex gap-20 z-50">
+      <div className="flex gap-20 z-50 ml-52">
+          <div className="h-2/5 absolute z-20 top-1/2 left-0">
+            <Image 
+              height={2048}
+              width={2048}
+              alt="robot animation"
+              src={isSpinning ? '/video/robot-animation.gif' : getSelectedVoucher()?.label === 'Better Luck Next Time' ? '/video/sad-animation.gif' : '/video/happy-animation.gif'}
+              className="h-full w-auto object-contain object-center"
+            />
+          </div>
         <motion.div 
           initial={{y:150, opacity:0}}
           animate={{y:0, opacity:1}}
           exit={{y:150, opacity:0}}
           transition={{type:'spring', stiffness:100, damping:20}}
-          className="flex flex-col relative"
+          className="flex flex-col relative ml-36 z-40"
         >
           {/* 🎡 Roulette Container */}
           <div className="relative">
             {/* 📍 Pin */}
             <motion.div
               animate={bounce ? { 
-                rotateZ: [0, -4, 2, -2, 1, 0],
+                rotateZ: [0, 4, -2, 3, 1, 0],
                 scale: [1, 1.05, 1, 1.02, 1, 1]
               } : {}}
               transition={{ duration: 0.8, ease: "easeOut" }}
@@ -410,7 +433,7 @@ export default function VoucherRoulette({setRoulette}: VoucherRouletteProps) {
             </motion.div>
 
             {/* 🎡 Wheel */}
-            <div className="relative w-80 h-80">
+            <div className="relative w-120 h-120">
               <div
                 className="w-full h-full rounded-full border-8 border-white shadow-2xl relative overflow-hidden"
                 style={{
@@ -429,8 +452,8 @@ export default function VoucherRoulette({setRoulette}: VoucherRouletteProps) {
             
             {/* Center Spin Button */}
             <button
-              onClick={startSpin}
-              disabled={isSpinning}
+              onClick={() => wonVouchers.length < 2 && startSpin()}
+              disabled={isSpinning || wonVouchers.length > 2}
               className={`absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 rounded-full shadow-lg font-bold transition-all duration-200 border-4 ${
                 isSpinning
                   ? 'bg-white border-violet-400 cursor-not-allowed'
@@ -447,93 +470,141 @@ export default function VoucherRoulette({setRoulette}: VoucherRouletteProps) {
               />
             </button>
           </div>
-
-          {/* 🎉 Results */}
-          <AnimatePresence>
-            {showResult && selectedVoucher && (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.8, y: 20 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.8, y: 20 }}
-                ref={outsideClickRef}
-                className="mt-6 bg-white p-6 rounded-2xl shadow-xl w-80 text-center border-2 border-violet-200"
-              >
-                {selectedVoucher.label !== 'Better Luck Next Time' ? (
-                  <>
-                    <div className="text-lg text-gray-600 mb-2">🎉 Congratulations!</div>
-                    <div className="text-sm text-gray-500 mb-3">You won</div>
-                    <div 
-                      className="text-2xl font-bold mb-4 p-3 rounded-lg"
-                      style={{ 
-                        backgroundColor: `${rarityColors[selectedVoucher.rarity]}20`,
-                        color: rarityColors[selectedVoucher.rarity]
-                      }}
-                    >
-                      {selectedVoucher.label}
-                    </div>
-                    <div className="text-xs text-gray-500 bg-gray-50 p-3 rounded-lg border">
-                      Voucher code:{" "}
-                      <span className="font-mono font-bold text-violet-600">
-                        VCHR-{getOriginalId(selectedVoucher.id) * 239}
-                      </span>
-                    </div>
-                  </>
-                ) : (
-                  <div className="text-lg text-gray-600">😞 Better Luck Next Time!</div>
-                )}
-                
-              </motion.div>
-            )}
-          </AnimatePresence>
         </motion.div>
-        {selectedVoucher?.label !== 'Better Luck Next Time' && (
-          <AnimatePresence>
-            {showResult && selectedVoucher && (
-              <motion.div 
-                initial={{ opacity: 0, scale: 0.8, x: -100 }}
-                animate={{ opacity: 1, scale: 1, x: 0 }}
-                exit={{ opacity: 0, scale: 0.8, x: -100 }}
-                transition={{ duration: 0.5, delay: 0.7 }}
-                className="h-full w-[40vw] grid grid-cols-3 gap-3"
-              >
-                {Array.from({ length: 3 }).map((_, i) => (
-                  <button key={i} type="button" className="col-span-1 w-full aspect-[2/3] rounded-xl flex flex-col bg-gradient-to-bl from-footer-bg via-violet to-dark-blue">
-                    <span className="w-full aspect-square rounded-sm border-b-2 border-dashed border-white/40 p-3 flex items-center justify-center">
-                      <span className="w-full h-full rounded-sm">
+        <div className="h-full w-auto grid grid-cols-3 gap-3 items-center">
+          {Array.from({length: 2}).map((_,i) => (
+            <div key={i} className="col-span-1 w-full h-full relative flex">  
+              <div className="w-full h-full flex flex-col overflow-hidden absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 -z-10">
+              <div className={`w-full aspect-square rounded-xl rounded-b-none ${wonVouchers[i] && wonVouchers[i]?.label === 'Better Luck Next Time' ? 'border-8 border-b-0 border-[#bb1d1c]' : 'border-4 border-b-0 border-dashed  border-black/30'}`}></div>
+                <div className={`h-8 w-full flex items-center justify-between ${wonVouchers[i] && wonVouchers[i]?.label === 'Better Luck Next Time' && 'border-x-8 border-[#bb1d1c]'}`}>
+                  {wonVouchers[i]?.label !== 'Better Luck Next Time' && (
+                    <>
+                      <span className="h-8 w-8 rounded-full border-4 border-dashed -ml-4  border-black/30"></span>
+                      <span className="h-8 w-8 rounded-full border-4 border-dashed -mr-4  border-black/30"></span>
+                    </>
+                  )}
+                </div>
+                <div className={`w-full h-full rounded-xl rounded-t-none ${wonVouchers[i] && wonVouchers[i]?.label === 'Better Luck Next Time' ? 'border-8 border-t-0 border-[#bb1d1c]' : 'border-4 border-t-0 border-dashed  border-black/30'}`}></div>
+              </div>
+
+              <AnimatePresence>
+                {wonVouchers[i] ? (
+                  <>
+                    {wonVouchers[i]?.label !== 'Better Luck Next Time' ? (
+                      <motion.div 
+                        initial={{ opacity: 0, scale: 0.8, x: -100 }}
+                        animate={{ opacity: 1, scale: 1, x: 0 }}
+                        exit={{ opacity: 0, scale: 0.8, x: -100 }}
+                        transition={{ duration: 0.5, delay: 0.7 }}
+                        className="h-full w-full z-50"
+                      >
+                        <div className="h-full w-full rounded-xl z-50 flex flex-col bg-gradient-to-bl from-footer-bg via-violet to-dark-blue">
+                          <span className="w-full aspect-square rounded-sm border-b-2 border-dashed border-white/40 p-1 flex items-center justify-center ">
+                            <span className="w-full h-full rounded-lg overflow-hidden">
+                              <Image
+                                height={2048}
+                                width={2048}
+                                alt="voucher icon"
+                                src={Discounts[wonVouchers[i].label]}
+                                className="w-full h-full object-contain object-center"
+                              />
+                            </span>
+                          </span>
+                          <div className="min-h-10 w-full relative overflow-hidden -mt-4">
+                            <span className="h-7 w-7 rounded-full bg-[#f8f5f4] absolute -left-3 shadow-[inset_0_2px_5px_rgba(0,0,0,1)]"></span>
+                            <span className="h-7 w-7 rounded-full bg-[#f8f5f4] absolute -right-3 shadow-[inset_0_2px_5px_rgba(0,0,0,1)]"></span>
+                          </div>
+                          <span className="w-full flex flex-col items-center justify-center -mt-3 text-white">
+                            <h3 className="text-lg font-extrabold uppercase">{wonVouchers[i].label}</h3>
+                            <p className="text-sm -mt-1">in all items</p>
+                          </span>
+                          <div className="mt-auto h-auto w-full shadow-md rounded-b-xl flex flex-col p-3 gap-1">
+                            <div className="flex w-full items-center gap-1 text-neutral-50 text-left text-sm">
+                              <span className="bg-neutral-50 h-3 aspect-square rounded-full shadow-[inset_0_2px_5px_rgba(0,0,0,1)]"></span>
+                              <p>This voucher is <strong className="font-extrabold">one-time use only</strong></p>
+                            </div>
+                            <div className="flex w-full items-center gap-1 text-neutral-50 text-left text-sm">
+                              <span className="bg-neutral-50 h-3 aspect-square rounded-full shadow-[inset_0_2px_5px_rgba(0,0,0,1)]"></span>
+                              <p>
+                                Expires in{" "}
+                                <strong>
+                                  {(() => {
+                                    const d = new Date();
+                                    d.setMonth(d.getMonth() + 1);
+                                    return d.toLocaleString("default", { month: "long", year: "numeric" });
+                                  })()}
+                                </strong>
+                              </p>
+                            </div>
+                            <div className="flex w-full items-center gap-1 text-neutral-50 text-left text-sm">
+                              <span className="bg-neutral-50 h-3 aspect-square rounded-full shadow-[inset_0_2px_5px_rgba(0,0,0,1)]"></span>
+                              <p>You can only use <strong className="font-extrabold">1 voucher</strong> in every purchase</p>
+                            </div>
+                          </div>
+                        </div>
+                      </motion.div>
+                  ): (
+                      <motion.div 
+                      initial={{opacity: 0, scale: 1.3}}
+                      animate={{opacity: 1, scale: 1}}
+                      transition={{duration: 0.7}}
+                      className="h-full w-full aspect-square p-3 flex items-center justify-center"
+                      >
                         <Image
                           height={2048}
                           width={2048}
-                          alt="voucher icon"
-                          src={image[i]}
-                          className="w-full h-full object-contain object-center"
+                          alt="better luck next time icon"
+                          src='/icons/better-luck-next-time.png'
+                          className="w-full aspect-square object-center object-contain"
                         />
-                      </span>
-                    </span>
-                    <div className="min-h-10 w-full relative overflow-hidden -mt-4">
-                      <span className="h-7 w-7 rounded-full bg-gradient-to-l from-white via-10% via-white to-70% to-neutral-50 absolute -left-3 shadow-[inset_0_2px_3px_rgba(0,0,0,1)]"></span>
-                      <span className="h-7 w-7 rounded-full bg-gradient-to-r from-white via-10% via-white to-70% to-neutral-50 absolute -right-3 shadow-[inset_0_2px_3px_rgba(0,0,0,1)]"></span>
-                    </div>
-                    <div className="h-32 w-full shadow-md rounded-b-xl flex flex-col p-3 gap-3">
-                      <div className="flex w-full items-center gap-1 text-neutral-50 text-left text-sm">
-                        <span className="bg-neutral-50 h-3 w-3 rounded-full shadow-[inset_0_2px_5px_rgba(0,0,0,1)]"></span>
-                        <p><strong>10% OFF</strong> on your first purchase</p>
-                      </div>
-                      <div className="flex w-full items-center gap-1 text-neutral-50 text-left text-sm">
-                        <span className="bg-neutral-50 h-3 w-3 rounded-full shadow-[inset_0_2px_5px_rgba(0,0,0,1)]"></span>
-                        <p><strong>Free Shipping</strong> for <strong>&gt;100</strong> qty </p>
-                      </div>
-                      <div className="flex w-full items-center gap-1 text-neutral-50 text-left text-sm">
-                        <span className="bg-neutral-50 h-3 w-3 rounded-full shadow-[inset_0_2px_5px_rgba(0,0,0,1)]"></span>
-                        <p><strong>₱50 OFF</strong> on every 75 items</p>
-                      </div>
-                    </div>
-                  </button>
-                ))}
-              </motion.div>
-            )}
-          </AnimatePresence>
-        )}
-        
+                      </motion.div>
+                  )}
+                  </>
+                ) : (
+                  <div className="border-4 border-dashed border-black/10 m-auto mt-20 w-3/4 text-2xl font-extrabold text-black/10 text-center p-3 rounded-md">
+                    Your voucher goes here
+                  </div>
+                )}
+              </AnimatePresence>
+            </div>
+          ))}
+          {/** voucher 1 */}
+
+          {wonVouchers.length === 2 && (
+            <div className="flex items-end h-full w-full ml-10 mb-20">
+              <motion.button 
+              animate={{ 
+                boxShadow: [
+                  '0 0 0 0px #C5D9E7',
+                  '0 0 0 5px #5A5CA8',
+                  '0 0 0 3px #C5D9E7',
+                  '0 0 0 5px #2C4594',
+                  '0 0 0 0px #5A5CA8',
+                ],
+              }}
+              transition={{
+                  duration: 1.5,
+                  ease: 'easeOut',
+                  repeat: Infinity,
+                  repeatType: 'loop',
+                }}
+              type="button" className="px-5 pr-3 py-3 rounded-md flex items-center gap-3 bg-blue font-bold text-white ring-4 hover:bg-violet focus:bg-dark-blue ease-out duration-200 z-50" onClick={() => setRoulette(false)}>GO BACK
+                <motion.span 
+                animate={{x: [-20,0,-10,0,-15,0]}}
+                transition={{
+                  duration: 0.5,
+                  ease: 'easeOut',
+                  repeat: Infinity,
+                  repeatType: 'loop',
+                  repeatDelay: 2
+                }}
+                className="text-2xl">
+                  <RiArrowRightLine />
+                </motion.span>
+              </motion.button>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

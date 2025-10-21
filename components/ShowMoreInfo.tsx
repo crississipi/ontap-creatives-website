@@ -86,7 +86,7 @@ const ShowMoreInfo = ({ productName, productDesc, frontImg, backImg, variableBac
                 className='md:hidden absolute text-2xl z-50 right-5 top-5 hover:text-rose-300 focus:text-rose-500 focus:scale-125 ease-out duration-200' onClick={() => setInquireItem(false)}
             ><HiOutlineX /></button>
             <div className='col-span-1 md:col-span-3 h-full w-full flex lg:flex-col gap-2 [perspective:1000px] '>
-                <div className="w-full h-[40vh] lg:h-2/3 flex flex-col items-center rounded-lg justify-center relative perspective-[1000px]">
+                <div className="w-full h-[40vh] lg:h-2/3 flex lg:flex-col gap-3 px-3 flex-row items-center rounded-lg justify-center relative perspective-[1000px]">
                     {imgUrl !== '' ? 
                         <Image
                             height={500}
@@ -111,7 +111,7 @@ const ShowMoreInfo = ({ productName, productDesc, frontImg, backImg, variableBac
                                         repeat: Infinity,
                                         repeatType: 'loop',
                                     }}
-                                    className="w-2/3 md:w-3/5 lg:w-5/6 2xl:w-3/5 aspect-[3/2] rounded-xl z-30 relative mt-10"
+                                    className="w-1/2 md:w-1/3 card-size lg:w-5/6 xl:w-4/5 2xl:w-3/5 aspect-[3/2] rounded-xl z-30 relative mt-10"
                                     style={{
                                         transformStyle: 'preserve-3d',
                                         perspective: '1000px',
@@ -209,7 +209,7 @@ const ShowMoreInfo = ({ productName, productDesc, frontImg, backImg, variableBac
                                     </div>
                                 </motion.div> : 
                                 <>
-                                    <div className="w-3/5 aspect-[3/2] md:w-1/2 lg:w-4/5 xl:w-3/4 2xl:w-3/5 rounded-xl z-30 relative">
+                                    <div className="w-3/5 aspect-[3/2] md:w-1/3 lg:w-4/5 xl:w-3/4 2xl:w-3/5 rounded-xl z-30 relative">
                                         <div
                                             className="absolute inset-0"
                                             style={{
@@ -260,7 +260,7 @@ const ShowMoreInfo = ({ productName, productDesc, frontImg, backImg, variableBac
                                             )}
                                         </div>
                                     </div>
-                                    <div className="w-3/5 aspect-[3/2] md:w-1/2 lg:w-4/5 xl:w-3/4 2xl:w-3/5 rounded-xl z-30 relative mt-3">
+                                    <div className="w-3/5 aspect-[3/2] md:w-1/3 lg:w-4/5 xl:w-3/4 2xl:w-3/5 rounded-xl z-30 relative mt-3">
                                         <div
                                             className="absolute inset-0"
                                             style={{
@@ -397,10 +397,11 @@ const ShowMoreInfo = ({ productName, productDesc, frontImg, backImg, variableBac
                     </div>
                 </div>
             </div>
-            <div className='col-span-7 h-full grid grid-cols-5 p-5 pb-0 pr-0 pl-0 lg:pl-5 lg:pt-3 gap-y-5 lg:overflow-x-hidden lg:overflow-y-scroll items-start'>
-                <h1 className='col-span-full text-2xl md:text-4xl font-extrabold text-black px-5 lg:px-0'>{productName}</h1>
-                <span className='col-span-full leading-5 text-lg px-5 lg:px-0'>{productDesc}</span>
-                <div className='col-span-full lg:col-span-2 w-full h-full flex flex-col justify-start px-5 lg:px-0 relative'>
+            <div className='col-span-7 h-full grid grid-cols-5 p-5 pb-0 pr-0 pl-0 lg:pl-5 lg:pt-3 gap-y-5 lg:overflow-x-hidden items-start'>
+                
+                <div className='col-span-full lg:col-span-3 w-full h-full flex flex-col justify-start px-5 lg:px-0 relative'>
+                    <h1 className='col-span-full text-2xl lg:text-4xl font-extrabold text-black px-5 lg:px-0'>{productName}</h1>
+                    <span className='col-span-full leading-5 text-lg px-5 lg:px-0'>{productDesc}</span>
                     <div className='mb-3 text-sm flex gap-20'>
                         <span><strong className='font-extrabold'>{sold}</strong> sold</span>
                         <span className='flex items-center gap-1'><RiStarFill className='text-amber-500'/><strong className='font-extrabold'>{ratings}</strong> (199 reviews)</span>
@@ -643,7 +644,7 @@ const ShowMoreInfo = ({ productName, productDesc, frontImg, backImg, variableBac
                         </div>
                     </div>
                 </div>
-                <div className='col-span-full lg:col-span-3 w-full h-full lg:max-h-100 md:rounded-lg flex flex-col p-3 shadow-[inset_0_4px_6px_rgba(0,0,0,0.1)] overflow-hidden mb-32 md:mb-0'>
+                <div className='col-span-full lg:col-span-2 w-full h-full lg:max-h-140 md:rounded-lg flex flex-col p-3 shadow-[inset_0_4px_6px_rgba(0,0,0,0.1)] overflow-hidden mb-32 md:mb-0'>
                     <div className='w-full flex items-center justify-between'>
                         <p className='md:text-sm font-extrabold pl-2'>Feedbacks</p>
                         <div className='relative'>

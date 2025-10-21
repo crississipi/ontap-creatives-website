@@ -5,8 +5,10 @@ import { HiOutlineArrowNarrowLeft } from 'react-icons/hi'
 import ContactNum from './ContactNum'
 import Image from 'next/image'
 import { FaHandHoldingDollar, FaTruckRampBox } from 'react-icons/fa6'
-import { RiDiscountPercentFill, RiMapPin2Fill, RiStore2Line, RiTruckLine } from 'react-icons/ri'
+import { RiMapPin2Fill, RiStore2Line, RiTruckLine } from 'react-icons/ri'
 import { AnimatePresence, motion } from 'framer-motion'
+import VoucherRoulette from './VoucherRoullete'
+import { label } from 'framer-motion/client'
 
 function useTimeout(callback: () => void, delay: number | null) {
   useEffect(() => {
@@ -21,12 +23,13 @@ interface CheckOutProps {
 }
 
 const CheckOut = ({setGotoCheckout}: CheckOutProps) => {
-  const [modeOfPayment, setModeOfPayment] = React.useState<'cod' | 'card' | 'ewallet'>('cod');
+  const [modeOfPayment, setModeOfPayment] = React.useState<'cod' | 'card' | 'ewallet' | 'bank'>('cod');
   const [shippingMethod, setShippingMethod] = React.useState<'pickup' | 'delivery' | null>(null);
   const [showGif, setShowGif] = useState<"pickup" | "delivery" | null>(null);
   const [doubleCheck, setDoubleCheck] = useState(false);
   const [agreeTerms, setAgreeTerms] = useState(false);
   const [confirmDetails, setConfirmDetails] = useState(false);
+  const [showVoucher, setShowVoucher] = useState(false);
 
   // Hide GIF after 3 seconds
   useTimeout(() => setShowGif(null), showGif ? 2000 : null);
@@ -37,7 +40,8 @@ const CheckOut = ({setGotoCheckout}: CheckOutProps) => {
   };
 
   return (
-    <div className='h-full w-full flex flex-col pb-0 pl-0 pr-5 gap-5 select-none overflow-hidden z-50 pt-16'>
+    <div className='h-full w-full flex flex-col pb-0 pl-0 pr-5 gap-5 select-none overflow-hidden z-50 pt-16 relative'>
+        {showVoucher && <VoucherRoulette setRoulette={setShowVoucher} />}
         <motion.div 
             initial={{x:-200, opacity:0}}
             animate={{x:0, opacity:1}}
@@ -157,8 +161,8 @@ const CheckOut = ({setGotoCheckout}: CheckOutProps) => {
                             transition={{ duration: 0.3 }}
                             className="flex items-center gap-3 px-3"
                             >
-                            <RiTruckLine className="text-xl" />
-                            <p className="font-extrabold text-sm">Door-to-Door Delivery</p>
+                                <RiTruckLine className="text-xl" />
+                                <p className="font-extrabold text-sm">Door-to-Door Delivery</p>
                             </motion.div>
                         )}
                         </AnimatePresence>
@@ -235,6 +239,27 @@ const CheckOut = ({setGotoCheckout}: CheckOutProps) => {
                         className='h-7 w-auto object-contain object-center'
                     />
                 </button>
+                <button type="button" className={`col-span-1 px-3 py-2 rounded-md border ${modeOfPayment === 'bank' ? 'bg-violet text-white border-light-blue' : 'border-black/30 hover:border-black focus:border-dark-blue focus:bg-sky-100 ease-out duration-200'} flex items-center justify-between font-bold`}  onClick={() => setModeOfPayment('bank')}>
+                    Bank Transfer
+                    <span className='ml-auto p-1 bg-[#004ea8]'>
+                        <Image
+                            height={2048}
+                            width={2048}
+                            alt='BDO Logo'
+                            src="/icons/bdo.png"
+                            className='h-3 w-auto object-contain object-center'
+                        />
+                    </span>
+                    <span className='p-1 bg-white'>
+                        <Image
+                            height={2048}
+                            width={2048}
+                            alt='PNB Logo'
+                            src="/icons/pnb.png"
+                            className='h-3 w-auto object-contain object-center'
+                        />
+                    </span>
+                </button>
             </motion.div>
             <motion.div 
                 initial={{y:500, opacity:0}}
@@ -267,12 +292,21 @@ const CheckOut = ({setGotoCheckout}: CheckOutProps) => {
                     ))}
                 </div>
                 <div className='flex flex-col h-full w-full'>
-                    <span className='flex gap-3 items-center text-sm'>
-                        <span className='ml-auto w-2/5 px-3 py-2 rounded-md border border-black/30 flex items-center gap-3 hover:border-blue ease-out duration-200'>
-                            <RiDiscountPercentFill className='text-2xl text-violet'/>
-                            <input type="text" placeholder='VOUCHER CODE' className='w-full uppercase tracking-widest placeholder:tracking-normal'/>
+                    <span className='flex gap-3 items-center text-base'>
+                        <span className='w-full flex items-center justify-between'>
+                            <p className='font-bold text-neutral-700'>Vouchers</p>
+                            <button type="button" className='flex items-center gap-3 px-3 py-1 text-sm rounded-md border border-black/20' onClick={() => setShowVoucher(true)}>
+                                <Image
+                                    height={2048}
+                                    width={2048}
+                                    alt='Voucher Icon'
+                                    src="/icons/roulette.gif"
+                                    className='h-8 w-8 object-cover object-center'
+                                />
+                                Spin & Win
+                            </button>
                         </span>
-                        <button type="button" className='px-5 py-2.5 rounded-md bg-blue text-white hover:bg-violet focus:bg-dark-blue ease-out duration-200'>Apply</button>
+
                     </span>
                     <div className='w-full flex flex-col gap-3 mt-10'>
                         <span className='flex items-center justify-between'>

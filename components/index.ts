@@ -20,6 +20,7 @@ import VoucherRoullete from "./VoucherRoullete";
 import CartPage from "./CartPage";
 import CheckOut from "./CheckOut";
 import ContactNum from "./ContactNum";
+import OrderPage from "./OrderPage";
 
 export {
     Header, 
@@ -43,5 +44,6 @@ export {
     VoucherRoullete,
     CartPage,
     CheckOut,
-    ContactNum
+    ContactNum,
+    OrderPage
 }
