@@ -6,30 +6,24 @@ import { ProductCardProps, ProductProps } from '@/types';
 import { TbCurrencyPeso } from 'react-icons/tb';
 
 interface ProductCardComponentProps {
-  // Accept either individual props OR a product object
   product?: ProductProps;
-  // Individual props (for backward compatibility)
   imgUrl?: string;
   productName?: string;
-  productDesc?: React.ReactNode;
   size?: string;
-  setInquireItem?: (inquire: boolean) => void;
+  setInquireItem: (inquire: boolean) => void;
   hoverable?: boolean;
-  setClickedItem?: (item: any) => void;
+  setClickedItem?: (productID: number) => void; // Updated to accept only ID
   frontImg?: string;
   backImg?: string;
   price?: { ontap: number; custom?: number };
-  variableBackImg?: string;
-  variableFrontImg?: string;
-  inquire?: boolean; // Add the missing inquire prop
+  inquire?: boolean;
+  productID?: number; // Add productID prop
 }
 
 const ProductCard = ({ 
   product,
-  // Individual props (fallbacks)
   imgUrl,
   productName,
-  productDesc,
   size,
   setInquireItem,
   hoverable,
@@ -37,56 +31,21 @@ const ProductCard = ({
   frontImg,
   backImg,
   price,
-  variableBackImg,
-  variableFrontImg,
-  inquire // Add the inquire prop
+  inquire,
+  productID // Get productID
 }: ProductCardComponentProps) => {
   
-  // Use product object if provided, otherwise use individual props
+  const finalProductID = product?.productID || productID || 0;
   const finalImgUrl = product?.imgUrl || imgUrl || '';
   const finalProductName = product?.name || productName || '';
   const finalFrontImg = product?.frontUrl || frontImg || '';
   const finalBackImg = product?.backUrl || backImg || '';
-  
-  // Handle price - if product has customPrice, use it, otherwise use the individual price prop
-  const finalPrice = product ? {
-    ontap: product.price,
-    custom: product.customPrice || product.price
-  } : price || { ontap: 0 };
-  
-  // // Parse tags if they exist in the product
-  // const tags = product?.tags ? 
-  //   (typeof product.tags === 'string' ? JSON.parse(product.tags) : product.tags) : 
-  //   [];
 
   const handleClick = () => {
-    const clickedItemData = product ? {
-      imgUrl: product.imgUrl,
-      name: product.name,
-      desc: product.description ? <p>{product.description}</p> : '',
-      front: product.frontUrl,
-      back: product.backUrl,
-      price: {
-        ontap: product.price,
-        custom: product.customPrice || product.price
-      },
-      varBack: product.variableBackImg,
-      varFront: product.variableFrontImg,
-      // tags: tags
-    } : {
-      imgUrl,
-      name: productName,
-      desc: productDesc,
-      frontUrl: frontImg,
-      backUrl: backImg,
-      price,
-      varBack: variableBackImg,
-      varFront: variableFrontImg
-    };
-    
-    setClickedItem!(clickedItemData);
-    setInquireItem?.(true);
-        console.log(clickedItemData);
+    if (finalProductID) {
+      setClickedItem!(finalProductID);
+      setInquireItem(true);
+    }
   };
 
   return (
@@ -235,12 +194,12 @@ const ProductCard = ({
         <h2 className={`font-bold mt-auto ${hoverable ? 'pt-3 md:pt-16 md:text-xl' : 'pt-16 md:pt-0 text-xl'} text-left px-5 w-full`}>{finalProductName}</h2>
         <div className='w-full flex flex-col-reverse md:flex-row justify-between px-5 my-3 mt-2 md:mt-0 md:my-5'>
           <div className='text-left flex font-extrabold items-center'>
-            {finalPrice.ontap === 0 ? (
+            {product?.price.ontap === 0 ? (
               <p className='text-xl'>Upon Inquiry</p>
             ) : (
               <>
                 <TbCurrencyPeso className='text-lg md:text-2xl lg:text-xl'/>
-                <p className='text-2xl md:text-3xl lg:text-2xl mt-0.5 md:mt-0'>{finalPrice.ontap.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                <p className='text-2xl md:text-3xl lg:text-2xl mt-0.5 md:mt-0'>{product?.price.ontap.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
               </>
             )}
           </div>

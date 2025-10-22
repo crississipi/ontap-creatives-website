@@ -22,6 +22,7 @@ model cart {
   productID    Int
   quantity     Int
   subtotal     Float         @db.Float
+  logo         String        @default("Default") @db.VarChar(100)
   status       String        @db.VarChar(100)
   dateAdded    DateTime      @default(now()) @map("dateAdded")
   client       client        @relation(fields: [clientID], references: [clientID])

@@ -14,6 +14,7 @@ export default function Home() {
       if (event.ctrlKey && event.shiftKey && event.key.toLowerCase() === 'a') {
         event.preventDefault();
         showAdminLogin(true);
+        
       }
     };
 

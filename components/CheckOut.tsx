@@ -8,8 +8,38 @@ import { FaHandHoldingDollar, FaTruckRampBox } from 'react-icons/fa6'
 import { RiMapPin2Fill, RiStore2Line, RiTruckLine } from 'react-icons/ri'
 import { AnimatePresence, motion } from 'framer-motion'
 import VoucherRoulette from './VoucherRoullete'
-import { label } from 'framer-motion/client'
 
+interface CartItem {
+  cartID: number;
+  productID: number;
+  clientID: number;
+  quantity: number;
+  subtotal: number;
+  status: string;
+  dateAdded: string;
+  product: {
+    name: string;
+    price: number;
+    imgUrl?: string;
+    description?: string;
+  };
+}
+
+interface User {
+  clientID: number;
+  clientName: string;
+  email: string;
+  contactNumber: string;
+  address: string;
+}
+
+// Update the CheckOutProps interface in CheckOut component
+interface CheckOutProps {
+    setGotoCheckout: React.Dispatch<React.SetStateAction<boolean>>;
+    selectedItems: number[];
+    cartItems: CartItem[];
+    user: User; // Add user prop
+}
 function useTimeout(callback: () => void, delay: number | null) {
   useEffect(() => {
     if (delay === null) return;
@@ -18,11 +48,7 @@ function useTimeout(callback: () => void, delay: number | null) {
   }, [callback, delay]);
 }
 
-interface CheckOutProps {
-    setGotoCheckout: React.Dispatch<React.SetStateAction<boolean>>;
-}
-
-const CheckOut = ({setGotoCheckout}: CheckOutProps) => {
+const CheckOut = ({setGotoCheckout, selectedItems, cartItems}: CheckOutProps) => {
   const [modeOfPayment, setModeOfPayment] = React.useState<'cod' | 'card' | 'ewallet' | 'bank'>('cod');
   const [shippingMethod, setShippingMethod] = React.useState<'pickup' | 'delivery' | null>(null);
   const [showGif, setShowGif] = useState<"pickup" | "delivery" | null>(null);
@@ -30,6 +56,25 @@ const CheckOut = ({setGotoCheckout}: CheckOutProps) => {
   const [agreeTerms, setAgreeTerms] = useState(false);
   const [confirmDetails, setConfirmDetails] = useState(false);
   const [showVoucher, setShowVoucher] = useState(false);
+  const [filteredCartItems, setFilteredCartItems] = useState<CartItem[]>([]);
+
+  // Filter cart items based on selected items
+  useEffect(() => {
+    if (selectedItems.length > 0) {
+      const filtered = cartItems.filter(item => selectedItems.includes(item.cartID));
+      setFilteredCartItems(filtered);
+    } else {
+      setFilteredCartItems(cartItems);
+    }
+  }, [selectedItems, cartItems]);
+
+  // Calculate order totals
+  const subtotal = filteredCartItems.reduce((sum, item) => sum + item.subtotal, 0);
+  const shippingFee = shippingMethod === 'delivery' ? 150 : 0; // ₱150 for delivery, free for pickup
+  const discount = 0; // You can add voucher discount logic here
+  const total = subtotal + shippingFee - discount;
+
+  const totalQuantity = filteredCartItems.reduce((sum, item) => sum + item.quantity, 0);
 
   // Hide GIF after 3 seconds
   useTimeout(() => setShowGif(null), showGif ? 2000 : null);
@@ -37,6 +82,18 @@ const CheckOut = ({setGotoCheckout}: CheckOutProps) => {
   const handleClick = (method: "pickup" | "delivery") => {
     setShippingMethod(method);
     setShowGif(method);
+  };
+
+  const handleCompletePurchase = () => {
+    if (!doubleCheck) {
+      setDoubleCheck(true);
+    } else if (agreeTerms && confirmDetails) {
+      // Here you would typically send the order to your backend
+      alert('Purchase Completed!');
+      // You can add API call here to create the order
+    } else {
+      alert('Please agree to the terms and confirm your details.');
+    }
   };
 
   return (
@@ -50,8 +107,7 @@ const CheckOut = ({setGotoCheckout}: CheckOutProps) => {
             className='flex gap-3 items-center'
         >
             <button type="button" className='text-2xl p-2 py-1 rounded-md border border-transparent hover:border-light-blue focus:bg-dark-blue focus:text-white ease-out duration-200' onClick={() => setGotoCheckout(false)}><HiOutlineArrowNarrowLeft /></button>
-            <h1 
-            className='w-full text-left text-4xl font-bold'>Checkout</h1>
+            <h1 className='w-full text-left text-4xl font-bold'>Checkout</h1>
         </motion.div>
         <div className='h-full max-h-[95%] w-full flex gap-3 pl-20 pb-10'>
             <motion.div 
@@ -193,8 +249,8 @@ const CheckOut = ({setGotoCheckout}: CheckOutProps) => {
                         </span>
                         <span className='grid grid-cols-2 col-span-3 gap-1'>
                             <label htmlFor="" className='col-span-full uppercase tracking-wide text-xs font-extrabold text-dark-blue'>time availability</label>
-                            <input type="time" placeholder='Company Name' className='col-span-1 px-3 py-2.5 rounded-md border border-black/30 hover:border-black focus:border-dark-blue focus:bg-sky-100 ease-out duration-200'/>
-                            <input type="time" placeholder='Company Name' className='col-span-1 px-3 py-2.5 rounded-md border border-black/30 hover:border-black focus:border-dark-blue focus:bg-sky-100 ease-out duration-200'/>
+                            <input type="time" placeholder='From' className='col-span-1 px-3 py-2.5 rounded-md border border-black/30 hover:border-black focus:border-dark-blue focus:bg-sky-100 ease-out duration-200'/>
+                            <input type="time" placeholder='To' className='col-span-1 px-3 py-2.5 rounded-md border border-black/30 hover:border-black focus:border-dark-blue focus:bg-sky-100 ease-out duration-200'/>
                         </span>
                     </div>
                 )}
@@ -269,27 +325,33 @@ const CheckOut = ({setGotoCheckout}: CheckOutProps) => {
             className='h-full w-1/3 border border-black/20 rounded-xl shadow-lg shadow-transparent p-5 ml-32 flex flex-col gap-3 hover:shadow-black/30 ease-out duration-200'
             >
                 <h2 className='text-xl font-extrabold'>Order Summary</h2>
-                <div className='w-full min-h-2/5 max-h-3/5 flex flex-col items-center overflow-x-hidden border border-black/10 rounded-lg'>
-                    {Array.from({length: 3}).map((_,i) => (
-                        <div key={i} className='h-24 w-full p-3 flex items-center gap-3 z-50 border-b border-black/10 last:border-0'>
-                            <Image
-                                height={2048}
-                                width={2048}
-                                alt='Item Image'
-                                src={'/images/card-2/front.png'}
-                                className='h-4/5 w-auto aspect-[3/2] rounded-md object-cover object-center'
-                            />
-                            <span className='flex flex-col w-auto'>
-                                <p className='font-extrabold'>Carbon Fiber Digital Business Card</p>
-                                <p className='text-xs px-2 py-1 rounded-full bg-dark-blue text-white w-max'>OnTap Logo</p>
-                            </span>
-                            <span className='flex flex-col ml-auto items-end justify-center'>
-                                <h4 className='text-xs font-semibold text-neutral-700'>₱ <span className='text-sm'>999.00</span></h4>
-                                <p className='text-sm text-neutral-700'>x <strong>99</strong></p>
-                                <h3 className='text-xs text-dark-blue'>₱ <span className='text-base font-extrabold'>98,901.00</span></h3>
-                            </span>
+                <div className='w-full min-h-2/5 max-h-3/5 flex flex-col items-center overflow-x-hidden overflow-y-auto border border-black/10 rounded-lg'>
+                    {filteredCartItems.length > 0 ? (
+                        filteredCartItems.map((item) => (
+                            <div key={item.cartID} className='h-24 w-full p-3 flex items-center gap-3 z-50 border-b border-black/10 last:border-0'>
+                                <Image
+                                    height={2048}
+                                    width={2048}
+                                    alt='Item Image'
+                                    src={item.product.imgUrl || '/images/default-product.png'}
+                                    className='h-4/5 w-auto aspect-[3/2] rounded-md object-cover object-center'
+                                />
+                                <span className='flex flex-col w-auto'>
+                                    <p className='font-extrabold text-sm'>{item.product.name}</p>
+                                    <p className='text-xs px-2 py-1 rounded-full bg-dark-blue text-white w-max'>₱{item.product.price.toFixed(2)}</p>
+                                </span>
+                                <span className='flex flex-col ml-auto items-end justify-center'>
+                                    <h4 className='text-xs font-semibold text-neutral-700'>₱ <span className='text-sm'>{item.product.price.toFixed(2)}</span></h4>
+                                    <p className='text-sm text-neutral-700'>x <strong>{item.quantity}</strong></p>
+                                    <h3 className='text-xs text-dark-blue'>₱ <span className='text-base font-extrabold'>{item.subtotal.toFixed(2)}</span></h3>
+                                </span>
+                            </div>
+                        ))
+                    ) : (
+                        <div className='h-24 w-full flex items-center justify-center text-neutral-500'>
+                            No items in cart
                         </div>
-                    ))}
+                    )}
                 </div>
                 <div className='flex flex-col h-full w-full'>
                     <span className='flex gap-3 items-center text-base'>
@@ -306,24 +368,25 @@ const CheckOut = ({setGotoCheckout}: CheckOutProps) => {
                                 Spin & Win
                             </button>
                         </span>
-
                     </span>
                     <div className='w-full flex flex-col gap-3 mt-10'>
                         <span className='flex items-center justify-between'>
-                            <p className='font-bold text-neutral-700'>Subtotal</p>
-                            <h5 className='font-black text-dark-blue'>₱ <span className='text-lg'>296,703.00</span></h5>
+                            <p className='font-bold text-neutral-700'>Subtotal ({totalQuantity} items)</p>
+                            <h5 className='font-black text-dark-blue'>₱ <span className='text-lg'>{subtotal.toFixed(2)}</span></h5>
                         </span>
                         <span className='flex items-center justify-between'>
                             <p className='font-bold text-neutral-700'>Shipping Fee</p>
-                            <h5 className='font-black text-dark-blue'>₱ <span className='text-lg'>150.00</span></h5>
+                            <h5 className='font-black text-dark-blue'>₱ <span className='text-lg'>{shippingFee.toFixed(2)}</span></h5>
                         </span>
-                        <span className='flex items-center justify-between'>
-                            <p className='font-bold text-neutral-700'>Discount <strong className='font-black'>(-10%)</strong></p>
-                            <h5 className='font-black text-dark-blue'>-₱ <span className='text-lg'>29,670.30</span></h5>
-                        </span>
-                        <span className='flex items-center justify-between'>
+                        {discount > 0 && (
+                            <span className='flex items-center justify-between'>
+                                <p className='font-bold text-neutral-700'>Discount</p>
+                                <h5 className='font-black text-dark-blue'>-₱ <span className='text-lg'>{discount.toFixed(2)}</span></h5>
+                            </span>
+                        )}
+                        <span className='flex items-center justify-between border-t border-black/20 pt-3'>
                             <p className='font-extrabold text-neutral-700 text-lg'><strong>Total</strong></p>
-                            <h5 className='font-black text-dark-blue text-xl'>₱ <span className='text-2xl'>267,182.70</span></h5>
+                            <h5 className='font-black text-dark-blue text-xl'>₱ <span className='text-2xl'>{total.toFixed(2)}</span></h5>
                         </span>
                     </div>
                 </div>
@@ -332,20 +395,12 @@ const CheckOut = ({setGotoCheckout}: CheckOutProps) => {
                 className={`py-3 rounded-md w-full ${
                     !doubleCheck || (agreeTerms && confirmDetails)
                     ? 'bg-dark-blue text-white hover:bg-blue focus:bg-violet ease-out duration-200'
-                    : 'bg-neutral-400 text-neutral-600 no-cursor'
+                    : 'bg-neutral-400 text-neutral-600 cursor-not-allowed'
                 }`}
-                disabled={doubleCheck && (!agreeTerms || !confirmDetails)}
-                onClick={() => {
-                    if (!doubleCheck) {
-                    setDoubleCheck(true);
-                    } else if (agreeTerms && confirmDetails) {
-                    alert('Purchase Completed!');
-                    } else {
-                    alert('Please agree to the terms and confirm your details.');
-                    }
-                }}
+                disabled={doubleCheck && (!agreeTerms || !confirmDetails) || filteredCartItems.length === 0}
+                onClick={handleCompletePurchase}
                 >
-                Complete Purchase
+                {filteredCartItems.length === 0 ? 'Cart is Empty' : 'Complete Purchase'}
                 </button>
 
                 {doubleCheck && (

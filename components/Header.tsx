@@ -10,7 +10,7 @@ import { useClickOutside } from '@/hooks';
 import { TiUser } from 'react-icons/ti';
 import { MdLogout } from 'react-icons/md';
 import { useUser } from '@/contexts/UserContext';
-import AccountSignIn from './AccountSignIn'; // Adjust import path as needed
+import AccountSignIn from './AccountSignIn';
 
 const Header = ({ setPage }: HeaderProps) => {
   const [showNav, isNavShown] = useState(false);
@@ -37,11 +37,25 @@ const Header = ({ setPage }: HeaderProps) => {
     isNavShown(false);
   };
 
+  // Add this function to handle successful login
+  const handleLoginSuccess = () => {
+    setShowLogin(false);
+    // The UserContext will automatically update and trigger re-render
+  };
+
   if (loading) {
     return (
       <div className='h-16 w-full bg-white flex fixed top-0 font-semibold z-9999 items-center left-0'>
         <div className='w-full flex justify-center'>
-          <div className='animate-pulse'>Loading...</div>
+          <div className='animate-pulse'>
+            <Image
+              height={2048}
+              width={2048}
+              alt='animated logo'
+              src='/icons/animated-logo.gif'
+              className='h-12 object-contain object-center'
+            />
+          </div>
         </div>
       </div>
     );
@@ -240,6 +254,7 @@ const Header = ({ setPage }: HeaderProps) => {
       {showLogin && (
         <AccountSignIn 
           setShowLogin={setShowLogin} 
+          onSuccess={handleLoginSuccess} // Add this prop
         />
       )}
     </>
