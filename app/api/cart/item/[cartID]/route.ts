@@ -5,13 +5,15 @@ const prisma = new PrismaClient()
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { cartID: string } }
+  { params }: { params: Promise<{ cartID: string }> }
 ) {
   try {
-    const cartID = parseInt(params.cartID)
+    // Await the params Promise
+    const { cartID } = await params
+    const cartIdNumber = parseInt(cartID)
 
     // Validate cartID
-    if (isNaN(cartID)) {
+    if (isNaN(cartIdNumber)) {
       return NextResponse.json(
         { error: 'Invalid cart ID' },
         { status: 400 }
@@ -20,7 +22,7 @@ export async function DELETE(
 
     // Check if cart item exists
     const existingCartItem = await prisma.cart.findUnique({
-      where: { cartID }
+      where: { cartID: cartIdNumber }
     })
 
     if (!existingCartItem) {
@@ -32,7 +34,7 @@ export async function DELETE(
 
     // Delete the cart item
     await prisma.cart.delete({
-      where: { cartID }
+      where: { cartID: cartIdNumber }
     })
 
     return NextResponse.json(
@@ -51,12 +53,14 @@ export async function DELETE(
 // Optional: GET for individual cart items
 export async function GET(
   request: NextRequest,
-  { params }: { params: { cartID: string } }
+  { params }: { params: Promise<{ cartID: string }> }
 ) {
   try {
-    const cartID = parseInt(params.cartID)
+    // Await the params Promise
+    const { cartID } = await params
+    const cartIdNumber = parseInt(cartID)
 
-    if (isNaN(cartID)) {
+    if (isNaN(cartIdNumber)) {
       return NextResponse.json(
         { error: 'Invalid cart ID' },
         { status: 400 }
@@ -64,7 +68,7 @@ export async function GET(
     }
 
     const cartItem = await prisma.cart.findUnique({
-      where: { cartID },
+      where: { cartID: cartIdNumber },
       include: {
         product: {
           select: {
