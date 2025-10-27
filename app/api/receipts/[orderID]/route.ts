@@ -5,24 +5,25 @@ const prisma = new PrismaClient()
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { orderID: string } }
+  { params }: { params: Promise<{ orderID: string }> }
 ) {
   try {
-    let orderID = params.orderID;
+    const {orderID} = await params
+    let orderid = orderID;
 
-    console.log('🔍 Fetching receipt for:', orderID);
+    console.log('🔍 Fetching receipt for:', orderid);
 
     // Handle both formats: "receipt-TXN-..." and "TXN-..."
-    if (orderID.startsWith('receipt-')) {
-      orderID = orderID.replace('receipt-', '');
+    if (orderid.startsWith('receipt-')) {
+      orderid = orderid.replace('receipt-', '');
     }
 
-    console.log('🔍 Processing transaction ID:', orderID);
+    console.log('🔍 Processing transaction ID:', orderid);
 
     // Fetch transaction data
     const transactions = await prisma.transaction.findMany({
       where: {
-        transactionID: orderID
+        transactionID: orderid
       },
       include: {
         cart: {
@@ -39,7 +40,7 @@ export async function GET(
     console.log('🔍 Found transactions:', transactions.length);
 
     if (!transactions || transactions.length === 0) {
-      console.log('❌ No transactions found for ID:', orderID);
+      console.log('❌ No transactions found for ID:', orderid);
       return NextResponse.json({ error: 'Receipt not found' }, { status: 404 });
     }
 
@@ -61,7 +62,7 @@ export async function GET(
 
     // Format receipt data for the client
     const receiptData = {
-      orderID: orderID,
+      orderID: orderid,
       customerName: firstTransaction.client.clientName || 'Customer',
       companyName: firstTransaction.client.clientName || '', // You might want to add company name to your schema
       contactNumber: firstTransaction.client.contactNumber || '',
@@ -87,7 +88,7 @@ export async function GET(
       orderDate: firstTransaction.dateOrdered.toISOString()
     };
 
-    console.log('✅ Receipt data prepared for:', orderID);
+    console.log('✅ Receipt data prepared for:', orderid);
 
     return NextResponse.json(receiptData);
   } catch (error) {
