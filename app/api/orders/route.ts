@@ -152,6 +152,27 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
 
+    // Validate voucher exists before transaction
+    if (body.voucher?.id) {
+      const existingVoucher = await prisma.voucher.findUnique({
+        where: { voucherID: body.voucher.id }
+      });
+      
+      if (!existingVoucher) {
+        return NextResponse.json(
+          { error: 'Invalid voucher' },
+          { status: 400 }
+        );
+      }
+      
+      if (existingVoucher.isUsed) {
+        return NextResponse.json(
+          { error: 'Voucher has already been used' },
+          { status: 400 }
+        );
+      }
+    }
+
     // Generate a single transaction ID for all items
     const sharedTransactionID = `TXN-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
