@@ -135,6 +135,8 @@ function validateOrderData(data: any): { isValid: boolean; errors: string[] } {
 }
 
 export async function POST(request: NextRequest) {
+  let orderData: any = null;
+  
   try {
     const user = await getAuthenticatedUser();
     if (!user) {
@@ -152,31 +154,17 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
 
-    // Validate voucher exists before transaction
-    if (body.voucher?.id) {
-      const existingVoucher = await prisma.voucher.findUnique({
-        where: { voucherID: body.voucher.id }
-      });
-      
-      if (!existingVoucher) {
-        return NextResponse.json(
-          { error: 'Invalid voucher' },
-          { status: 400 }
-        );
-      }
-      
-      if (existingVoucher.isUsed) {
-        return NextResponse.json(
-          { error: 'Voucher has already been used' },
-          { status: 400 }
-        );
-      }
-    }
-
     // Generate a single transaction ID for all items
     const sharedTransactionID = `TXN-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
-    // Start transaction
+    // Store order data for later use (outside transaction)
+    orderData = {
+      body,
+      user,
+      sharedTransactionID
+    };
+
+    // Start transaction - ONLY for database operations
     const result = await prisma.$transaction(async (tx) => {
       try {
         // 1. Create billing record
@@ -194,12 +182,23 @@ export async function POST(request: NextRequest) {
         console.log('Billing created:', billing.billingID);
 
         // 2. Mark voucher as used if applicable
-        if (body.voucher) {
-          await tx.voucher.update({
-            where: { voucherID: body.voucher.id },
-            data: { isUsed: true }
+        if (body.voucher?.id) {
+          // First check if the voucher exists
+          const existingVoucher = await tx.voucher.findUnique({
+            where: { voucherID: body.voucher.id }
           });
-          console.log('Voucher marked as used:', body.voucher.id);
+
+          if (existingVoucher && !existingVoucher.isUsed) {
+            await tx.voucher.update({
+              where: { voucherID: body.voucher.id },
+              data: { isUsed: true }
+            });
+            console.log('Voucher marked as used:', body.voucher.id);
+          } else if (existingVoucher?.isUsed) {
+            console.warn('Voucher already used:', body.voucher.id);
+          } else {
+            console.warn('Voucher not found:', body.voucher.id);
+          }
         }
 
         // 3. Create tracking record for the order
@@ -217,7 +216,7 @@ export async function POST(request: NextRequest) {
 
         // 4. Create MULTIPLE transaction records
         console.log('Creating transactions for items:', body.items.length);
-
+        
         const transactions = [];
         for (const item of body.items) {
           const itemSubtotal = item.product.price * item.quantity;
@@ -258,7 +257,7 @@ export async function POST(request: NextRequest) {
           console.log('Transaction created:', transaction.orderID);
         }
 
-        // 4. Update cart items status to 'ordered'
+        // 5. Update cart items status to 'ordered'
         await tx.cart.updateMany({
           where: {
             cartID: {
@@ -275,6 +274,7 @@ export async function POST(request: NextRequest) {
         return {
           transactions,
           billing,
+          tracking,
           transactionId: sharedTransactionID,
           firstOrderId: transactions[0]?.orderID
         }
@@ -283,7 +283,14 @@ export async function POST(request: NextRequest) {
         console.error('Database error in transaction:', dbError);
         throw dbError;
       }
+    }, {
+      // Increase transaction timeout to 10 seconds
+      maxWait: 10000,
+      timeout: 10000,
     });
+
+    // ✅ SUCCESS: Database operations completed
+    // Now perform time-consuming tasks OUTSIDE the transaction
 
     // Generate receipt data for PDF and email
     const receiptData = {
@@ -310,7 +317,7 @@ export async function POST(request: NextRequest) {
       orderDate: new Date().toISOString()
     };
 
-    // Generate PDF receipt
+    // Generate PDF receipt (outside transaction)
     let receiptBuffer: Buffer;
     try {
       receiptBuffer = await generateReceiptPDF(receiptData);
@@ -321,7 +328,7 @@ export async function POST(request: NextRequest) {
       receiptBuffer = Buffer.from(''); // Empty buffer as fallback
     }
 
-    // Send confirmation email
+    // Send confirmation email (outside transaction)
     try {
       const receiptUrl = `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/receipts/${result.transactionId}`;
       
@@ -362,6 +369,8 @@ export async function POST(request: NextRequest) {
         errorMessage = 'Duplicate transaction detected. Please try again.';
       } else if (error.message.includes('Foreign key constraint')) {
         errorMessage = 'Invalid data reference. Please check your cart items.';
+      } else if (error.message.includes('Transaction already closed')) {
+        errorMessage = 'Order processing took too long. Please try again.';
       }
     }
     
