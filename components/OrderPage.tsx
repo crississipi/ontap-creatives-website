@@ -166,64 +166,72 @@ const OrderPage: React.FC = () => {
 
   const fetchOrders = async () => {
     try {
-      setLoading(true);
-      setError(null);
-      const response = await fetch('/api/transaction');
-      
-      if (!response.ok) {
-        throw new Error('Failed to fetch orders');
-      }
-      
-      const data = await response.json();
-      
-      // Validate and sanitize the data with proper date handling
-      const validatedOrders = (data.orders || []).map((order: any) => {
+        setLoading(true);
+        setError(null);
+        console.log('🔄 Fetching orders...');
+        
+        const response = await fetch('/api/transaction');
+        
+        if (!response.ok) {
+        throw new Error(`Failed to fetch orders: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        console.log('📦 API response:', data);
+        
+        if (!data.success) {
+        throw new Error(data.error || 'Failed to fetch orders');
+        }
+        
+        // Validate and sanitize the data with proper date handling
+        const validatedOrders = (data.orders || []).map((order: any) => {
         // Ensure orderDate is valid
         const validOrderDate = isValidDate(order.orderDate) 
-          ? order.orderDate 
-          : new Date().toISOString();
+            ? order.orderDate 
+            : new Date().toISOString();
 
         // Validate and sanitize tracking events
         const validTrackingEvents = (order.trackingEvents || []).map((event: any) => ({
-          timestamp: isValidDate(event.timestamp) ? event.timestamp : validOrderDate,
-          title: event.title || 'Status Update',
-          description: event.description
+            timestamp: isValidDate(event.timestamp) ? event.timestamp : validOrderDate,
+            title: event.title || 'Status Update',
+            description: event.description
         }));
 
         // If no tracking events, create a default one
         const trackingEvents = validTrackingEvents.length > 0 
-          ? validTrackingEvents 
-          : [{
-              timestamp: validOrderDate,
-              title: 'Order Placed',
-              description: 'Your order has been received and is being processed'
+            ? validTrackingEvents 
+            : [{
+                timestamp: validOrderDate,
+                title: 'Order Placed',
+                description: 'Your order has been received and is being processed'
             }];
 
         return {
-          ...order,
-          orderDate: validOrderDate,
-          items: Array.isArray(order.items) ? order.items : [],
-          trackingEvents: trackingEvents,
-          customerName: order.customerName || 'Unknown Customer',
-          contactNumber: order.contactNumber || 'N/A',
-          email: order.email || 'N/A',
-          deliveryAddress: order.deliveryAddress || 'N/A',
-          shippingMethod: order.shippingMethod || 'pickup',
-          paymentMethod: order.paymentMethod || 'cod',
-          subtotal: Number(order.subtotal) || 0,
-          shippingFee: Number(order.shippingFee) || 0,
-          discount: Number(order.discount) || 0,
-          total: Number(order.total) || 0,
-          status: order.status || 'pending'
+            ...order,
+            orderDate: validOrderDate,
+            items: Array.isArray(order.items) ? order.items : [],
+            trackingEvents: trackingEvents,
+            customerName: order.customerName || 'Unknown Customer',
+            contactNumber: order.contactNumber || 'N/A',
+            email: order.email || 'N/A',
+            deliveryAddress: order.deliveryAddress || 'N/A',
+            shippingMethod: order.shippingMethod || 'pickup',
+            paymentMethod: order.paymentMethod || 'cod',
+            subtotal: Number(order.subtotal) || 0,
+            shippingFee: Number(order.shippingFee) || 0,
+            discount: Number(order.discount) || 0,
+            total: Number(order.total) || 0,
+            status: order.status || 'pending'
         };
-      });
-      
-      setOrders(validatedOrders);
+        });
+        
+        console.log(`✅ Loaded ${validatedOrders.length} orders`);
+        setOrders(validatedOrders);
     } catch (error) {
-      console.error('Failed to fetch orders:', error);
-      setError('Failed to load orders. Please try again.');
+        console.error('❌ Failed to fetch orders:', error);
+        setError('Failed to load orders. Please try again.');
     } finally {
-      setLoading(false);
+        setLoading(false);
     }
   };
 

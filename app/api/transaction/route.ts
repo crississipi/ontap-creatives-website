@@ -1,3 +1,4 @@
+// app/api/transaction/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 import { headers } from 'next/headers'
@@ -14,6 +15,12 @@ interface OrderItem {
   logo: string;
   imgUrl: string;
   frontImg: string;
+}
+
+interface TrackingEvent {
+  timestamp: string;
+  title: string;
+  description?: string;
 }
 
 interface Order {
@@ -33,12 +40,6 @@ interface Order {
   orderDate: string;
   status: 'pending' | 'approved' | 'in_progress' | 'completed' | 'cancelled';
   trackingEvents: TrackingEvent[];
-}
-
-interface TrackingEvent {
-  timestamp: string;
-  title: string;
-  description?: string;
 }
 
 // Helper function to get authenticated user
@@ -90,6 +91,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    console.log('🔍 Fetching orders for user:', user.clientID);
+
     // Fetch transactions with tracking data
     const transactions = await prisma.transaction.findMany({
       where: { clientID: user.clientID },
@@ -109,36 +112,108 @@ export async function GET(request: NextRequest) {
       }
     });
 
-    // Transform data to include tracking events
-    const orders = transactions.map(transaction => ({
-      // ... other order data ...
-      trackingEvents: transaction.tracking ? [
+    console.log(`✅ Found ${transactions.length} transactions for user ${user.clientID}`);
+
+    // Group transactions by transactionID to combine items from the same order
+    const transactionGroups = new Map();
+    
+    transactions.forEach(transaction => {
+      const group = transactionGroups.get(transaction.transactionID) || [];
+      group.push(transaction);
+      transactionGroups.set(transaction.transactionID, group);
+    });
+
+    // Transform data into order format
+    const orders: Order[] = Array.from(transactionGroups.entries()).map(([transactionID, transactionGroup]) => {
+      const firstTransaction = transactionGroup[0];
+      
+      // Calculate totals
+      const itemsSubtotal = transactionGroup.reduce((sum: number, t: any) => sum + t.subtotal, 0);
+      const discountAmount = firstTransaction.voucher ? (itemsSubtotal * firstTransaction.voucher.discount / 100) : 0;
+      const shippingFee = firstTransaction.shipMethod === 'delivery' ? 250 : 0;
+      const totalAmount = itemsSubtotal - discountAmount + shippingFee;
+
+      // Determine status
+      const status = determineOrderStatus(firstTransaction);
+
+      // Get tracking events from database or generate default ones
+      const trackingEvents = firstTransaction.tracking ? [
         {
-          timestamp: transaction.tracking.date.toISOString(),
-          title: transaction.tracking.status,
-          description: transaction.tracking.info
+          timestamp: firstTransaction.tracking.date.toISOString(),
+          title: firstTransaction.tracking.status,
+          description: firstTransaction.tracking.info
         }
       ] : [
         {
-          timestamp: transaction.dateOrdered.toISOString(),
+          timestamp: firstTransaction.dateOrdered.toISOString(),
           title: 'Order Placed',
           description: 'Your order has been received'
         }
-      ]
-    }));
+      ];
 
-    return NextResponse.json({ orders });
+      // Transform items
+      const items: OrderItem[] = transactionGroup.map((t: any) => ({
+        name: t.cart?.product?.name || 'Unknown Product',
+        qty: t.cart?.quantity || 1,
+        price: t.cart?.product?.price || 0,
+        subtotal: t.subtotal || 0,
+        logo: t.cart?.logo || 'Standard',
+        imgUrl: t.cart?.product?.imgUrl || '',
+        frontImg: t.cart?.product?.frontUrl || ''
+      }));
+
+      return {
+        orderID: transactionID,
+        customerName: firstTransaction.client?.clientName || 'Customer',
+        companyName: firstTransaction.client?.companyName || '',
+        contactNumber: firstTransaction.client?.contactNumber || '',
+        email: firstTransaction.client?.email || '',
+        deliveryAddress: firstTransaction.shipMethod === 'delivery' 
+          ? (firstTransaction.client?.address || 'Address not specified')
+          : 'Store Pickup - 17 Vatican City Dr, Las Piñas, 1740 Metro Manila',
+        items: items,
+        shippingMethod: firstTransaction.shipMethod,
+        shippingFee: shippingFee,
+        paymentMethod: firstTransaction.billing?.mode?.toLowerCase() || 'cod',
+        discount: discountAmount,
+        subtotal: itemsSubtotal,
+        total: totalAmount,
+        orderDate: firstTransaction.dateOrdered.toISOString(),
+        status: status,
+        trackingEvents: trackingEvents
+      };
+    });
+
+    console.log(`✅ Transformed ${orders.length} orders for user ${user.clientID}`);
+
+    return NextResponse.json({ 
+      success: true,
+      orders 
+    }, {
+      headers: corsHeaders
+    });
+
   } catch (error) {
-    console.error('Error fetching orders:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    console.error('❌ Failed to fetch orders:', error);
+    return NextResponse.json(
+      { 
+        error: 'Failed to fetch orders',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      },
+      { 
+        status: 500,
+        headers: corsHeaders
+      }
+    );
+  } finally {
+    await prisma.$disconnect();
   }
 }
 
 // Helper function to determine order status
 function determineOrderStatus(transaction: any): Order['status'] {
-  // You'll need to implement your actual status logic here
-  // This is a simplified example - adjust based on your business logic
-  
+  // You can implement your actual status logic here
+  // For now, using a simple time-based approach
   const orderDate = new Date(transaction.dateOrdered);
   const now = new Date();
   const daysSinceOrder = Math.floor((now.getTime() - orderDate.getTime()) / (1000 * 60 * 60 * 24));
