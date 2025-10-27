@@ -4,7 +4,7 @@ import bcrypt from 'bcryptjs'
 import { PrismaClient } from '@prisma/client'
 import { corsHeaders } from '@/lib/corsHeaders'
 
-export const prisma = new PrismaClient()
+const prisma = new PrismaClient()
 
 export async function OPTIONS() {
   return new Response(null, {

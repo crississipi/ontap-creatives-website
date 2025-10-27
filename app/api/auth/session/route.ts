@@ -4,7 +4,7 @@ import { headers } from 'next/headers'
 import jwt from 'jsonwebtoken'
 import { PrismaClient } from '@prisma/client'
 
-export const prisma = new PrismaClient()
+const prisma = new PrismaClient()
 
 export async function GET(request: NextRequest) {
   try {
