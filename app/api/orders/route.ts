@@ -202,22 +202,33 @@ export async function POST(request: NextRequest) {
           console.log('Voucher marked as used:', body.voucher.id);
         }
 
-        // 3. Create MULTIPLE transaction records
+        // 3. Create tracking record for the order
+        const totalItems = body.items.reduce((sum, item) => sum + item.quantity, 0);
+        const tracking = await tx.tracking.create({
+          data: {
+            status: 'Order Placed',
+            info: `You purchased ${totalItems} ${totalItems === 1 ? 'item' : 'items'}`,
+            time: new Date(),
+            date: new Date()
+          }
+        });
+
+        console.log('Tracking record created:', tracking.trackingID);
+
+        // 4. Create MULTIPLE transaction records
         console.log('Creating transactions for items:', body.items.length);
-        
+
         const transactions = [];
         for (const item of body.items) {
           const itemSubtotal = item.product.price * item.quantity;
           
           console.log('Creating transaction for cartID:', item.cartID, 'subtotal:', itemSubtotal);
           
-          // Fix: Use connect for relations and handle voucherID properly
           const transactionData: any = {
             transactionID: sharedTransactionID,
             shipMethod: body.shippingInfo.method,
             subtotal: itemSubtotal,
             dateOrdered: new Date(),
-            // Use connect for relations instead of IDs
             cart: {
               connect: { cartID: item.cartID }
             },
@@ -226,6 +237,9 @@ export async function POST(request: NextRequest) {
             },
             client: {
               connect: { clientID: user.clientID }
+            },
+            tracking: {
+              connect: { trackingID: tracking.trackingID }
             }
           };
 

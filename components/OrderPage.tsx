@@ -2,7 +2,7 @@
 
 import { AnimatePresence, motion } from 'framer-motion';
 import React, { JSX, useRef, useState, useEffect } from 'react';
-import { RiCloseLine, RiCustomerService2Fill, RiStore3Fill, RiTruckLine } from 'react-icons/ri';
+import { RiStore3Fill, RiTruckLine } from 'react-icons/ri';
 import { TbTruckDelivery } from 'react-icons/tb';
 import Image from 'next/image';
 import { LuEye, LuEyeClosed } from 'react-icons/lu';
@@ -28,6 +28,12 @@ interface OrderItem {
   frontImg: string;
 }
 
+interface TrackingEvent {
+  timestamp: string;
+  title: string;
+  description?: string;
+}
+
 interface Order {
   orderID: string;
   customerName: string;
@@ -44,11 +50,7 @@ interface Order {
   total: number;
   orderDate: string;
   status: 'pending' | 'approved' | 'in_progress' | 'completed' | 'cancelled';
-  trackingEvents: Array<{
-    timestamp: string;
-    title: string;
-    description?: string;
-  }>;
+  trackingEvents: TrackingEvent[];
 }
 
 const payment: Record<string, PaymentInfo> = {
@@ -349,28 +351,42 @@ const OrderPage: React.FC = () => {
                                     </div>
                                 </div>
                                 
-                                {/* Order Tracking */}
+                                {/* Order Tracking Section - Updated with real data */}
                                 <div className='h-max lg:h-full lg:max-h-[33vh] xl:max-h-[31vh] w-full lg:w-1/2 rounded-xl bg-neutral-100 shadow-md shadow-black/20 p-3 gap-3 flex flex-col xl:overflow-hidden'>
-                                    <span className='text-base font-bold'>Order Tracking</span>
-                                    <div className='h-max xl:h-full w-full flex flex-col xl:overflow-y-auto overflow-x-hidden pr-2'>
-                                        {selectedOrder.trackingEvents.map((event, index) => (
-                                            <div key={index} className='h-max w-full flex flex-col pl-5 py-3 relative 
-                                                before:h-3 before:w-3 before:bg-blue before:rounded-xs before:absolute before:z-20 before:left-0 before:top-4
-                                                after:h-full after:w-0.5 after:bg-neutral-300 after:absolute after:left-1.5 after:top-7'>
-                                                <strong className='uppercase font-extrabold text-xs text-neutral-500 mb-3'>
-                                                    {formatDate(event.timestamp)}
-                                                </strong>
-                                                <span className='flex flex-col gap-2'>
-                                                    <strong className='text-sm font-extrabold text-dark-blue'>
-                                                        {formatTime(event.timestamp)} <span className='text-black font-normal'> ● {event.title}</span>
-                                                    </strong>
-                                                    {event.description && (
-                                                        <p className='text-xs text-neutral-600'>{event.description}</p>
-                                                    )}
-                                                </span>
-                                            </div>
-                                        ))}
+                                <span className='text-base font-bold'>Order Tracking</span>
+                                <div className='h-max xl:h-full w-full flex flex-col xl:overflow-y-auto overflow-x-hidden pr-2'>
+                                    {selectedOrder?.trackingEvents?.map((event, index) => (
+                                    <div key={index} className='h-max w-full flex flex-col pl-5 py-3 relative 
+                                        before:h-3 before:w-3 before:bg-blue before:rounded-xs before:absolute before:z-20 before:left-0 before:top-4
+                                        after:h-full after:w-0.5 after:bg-neutral-300 after:absolute after:left-1.5 after:top-7'>
+                                        <strong className='uppercase font-extrabold text-xs text-neutral-500 mb-3'>
+                                        {formatDate(event.timestamp)}
+                                        </strong>
+                                        <span className='flex flex-col gap-2'>
+                                        <strong className='text-sm font-extrabold text-dark-blue'>
+                                            {formatTime(event.timestamp)} <span className='text-black font-normal'> ● {event.title}</span>
+                                        </strong>
+                                        {event.description && (
+                                            <p className='text-xs text-neutral-600'>{event.description}</p>
+                                        )}
+                                        </span>
                                     </div>
+                                    ))}
+                                    {(!selectedOrder?.trackingEvents || selectedOrder.trackingEvents.length === 0) && (
+                                    <div className='h-max w-full flex flex-col pl-5 py-3 relative 
+                                        before:h-3 before:w-3 before:bg-blue before:rounded-xs before:absolute before:z-20 before:left-0 before:top-4'>
+                                        <strong className='uppercase font-extrabold text-xs text-neutral-500 mb-3'>
+                                        {formatDate(selectedOrder?.orderDate || new Date().toISOString())}
+                                        </strong>
+                                        <span className='flex flex-col gap-2'>
+                                        <strong className='text-sm font-extrabold text-dark-blue'>
+                                            {formatTime(selectedOrder?.orderDate || new Date().toISOString())} <span className='text-black font-normal'> ● Order Placed</span>
+                                        </strong>
+                                        <p className='text-xs text-neutral-600'>Your order has been received and is being processed</p>
+                                        </span>
+                                    </div>
+                                    )}
+                                </div>
                                 </div>
                             </div>
                         </div>

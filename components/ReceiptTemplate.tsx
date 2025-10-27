@@ -26,8 +26,12 @@ interface ReceiptProps {
   subtotal: number;
   total: number;
   orderDate: string;
+  trackingEvents?: Array<{
+    timestamp: string;
+    title: string;
+    description?: string;
+  }>;
 }
-
 
 type PaymentInfo = {
   title: string;
@@ -98,7 +102,8 @@ const ReceiptTemplate = ({
   discount, 
   subtotal, 
   total, 
-  orderDate 
+  orderDate,
+  trackingEvents = []
 }: ReceiptProps) => {
   
   // Format date for display
@@ -132,6 +137,20 @@ const ReceiptTemplate = ({
 
   // Calculate discount percentage for display
   const discountPercentage = discount > 0 ? Math.round((discount / subtotal) * 100) : 0;
+
+  // Generate default tracking events if none provided
+  const defaultTrackingEvents = trackingEvents.length > 0 ? trackingEvents : [
+    {
+      timestamp: orderDate,
+      title: 'Order Placed Successfully',
+      description: 'Your order has been received and is being processed'
+    },
+    {
+      timestamp: new Date(new Date(orderDate).getTime() + 30 * 60 * 1000).toISOString(), // 30 minutes later
+      title: 'Payment Confirmed',
+      description: 'Your payment has been confirmed'
+    }
+  ];
 
   return (
     <div 
@@ -439,7 +458,7 @@ const ReceiptTemplate = ({
                 </div>
               </div>
 
-              {/* Order Tracking */}
+              {/* Order Tracking Section */}
               <div style={{ 
                 height: 'max-content', 
                 padding: '8px',
@@ -462,139 +481,73 @@ const ReceiptTemplate = ({
                   paddingRight: '4px',
                   margin: 0
                 }}>
-                  <span style={{ 
-                    height: 'max-content', 
-                    width: '100%', 
-                    display: 'flex', 
-                    flexDirection: 'column', 
-                    paddingLeft: '16px',
-                    paddingTop: '8px',
-                    paddingBottom: '8px',
-                    position: 'relative',
-                    margin: 0
-                  }}>
-                    <div style={{ 
-                      height: '8px',
-                      width: '8px',
-                      backgroundColor: '#2563eb', 
-                      borderRadius: '1px', 
-                      position: 'absolute', 
-                      zIndex: 20, 
-                      left: 0, 
-                      top: '2px'
-                    }}></div>
-                    <div style={{ 
-                      height: '100%', 
-                      width: '1px',
-                      backgroundColor: '#d1d5db', 
-                      position: 'absolute', 
-                      left: '3px',
-                      top: '10px'
-                    }}></div>
-                    <strong style={{ 
-                      textTransform: 'uppercase', 
-                      fontWeight: '800', 
-                      fontSize: '8px',
-                      color: '#6b7280', 
-                      margin: '0 0 4px 0',
-                      padding: 0
-                    }}>today</strong>
-                    <span style={{ 
+                  {defaultTrackingEvents.slice(0, 4).map((event, index) => (
+                    <span key={index} style={{ 
+                      height: 'max-content', 
+                      width: '100%', 
                       display: 'flex', 
                       flexDirection: 'column', 
-                      gap: '2px',
-                      margin: 0,
-                      padding: 0
+                      paddingLeft: '16px',
+                      paddingTop: '8px',
+                      paddingBottom: '8px',
+                      position: 'relative',
+                      margin: 0
                     }}>
+                      <div style={{ 
+                        height: '8px',
+                        width: '8px',
+                        backgroundColor: '#2563eb', 
+                        borderRadius: index === 0 ? '1px' : '50%', 
+                        position: 'absolute', 
+                        zIndex: 20, 
+                        left: 0, 
+                        top: index === 0 ? '2px' : '6px'
+                      }}></div>
+                      <div style={{ 
+                        height: '100%', 
+                        width: '1px',
+                        backgroundColor: '#d1d5db', 
+                        position: 'absolute', 
+                        left: '3px',
+                        top: index === 0 ? '10px' : '14px'
+                      }}></div>
                       <strong style={{ 
-                        fontSize: '10px',
+                        textTransform: 'uppercase', 
                         fontWeight: '800', 
-                        color: '#1e40af',
-                        lineHeight: '1.1',
+                        fontSize: '8px',
+                        color: '#6b7280', 
+                        margin: '0 0 4px 0',
+                        padding: 0
+                      }}>{index === 0 ? 'today' : 'next steps'}</strong>
+                      <span style={{ 
+                        display: 'flex', 
+                        flexDirection: 'column', 
+                        gap: '2px',
                         margin: 0,
                         padding: 0
                       }}>
-                        {formattedDate.time} <span style={{ color: 'black', fontWeight: 'normal' }}> ● Order Placed Successfully</span>
-                      </strong>
-                      <strong style={{ 
-                        fontSize: '10px',
-                        fontWeight: '800', 
-                        color: '#1e40af',
-                        lineHeight: '1.1',
-                        margin: 0,
-                        padding: 0
-                      }}>
-                        09:00 AM <span style={{ color: 'black', fontWeight: 'normal' }}> ● Payment Confirmed</span>
-                      </strong>
+                        <strong style={{ 
+                          fontSize: '10px',
+                          fontWeight: '800', 
+                          color: '#1e40af',
+                          lineHeight: '1.1',
+                          margin: 0,
+                          padding: 0
+                        }}>
+                          {formatDate(event.timestamp).time} <span style={{ color: 'black', fontWeight: 'normal' }}> ● {event.title}</span>
+                        </strong>
+                        {event.description && (
+                          <p style={{ 
+                            fontSize: '8px',
+                            color: '#6b7280',
+                            margin: 0,
+                            padding: 0,
+                            lineHeight: '1.2'
+                          }}>{event.description}</p>
+                        )}
+                      </span>
                     </span>
-                  </span>
-                  
-                  <span style={{ 
-                    height: 'max-content', 
-                    width: '100%', 
-                    display: 'flex', 
-                    flexDirection: 'column', 
-                    paddingLeft: '16px', 
-                    paddingTop: '8px', 
-                    paddingBottom: '8px', 
-                    position: 'relative',
-                    margin: 0
-                  }}>
-                    <div style={{ 
-                      height: '8px', 
-                      width: '8px', 
-                      backgroundColor: '#2563eb', 
-                      borderRadius: '50%', 
-                      position: 'absolute', 
-                      zIndex: 20, 
-                      left: 0, 
-                      top: '6px' 
-                    }}></div>
-                    <div style={{ 
-                      height: '100%', 
-                      width: '1px', 
-                      backgroundColor: '#d1d5db', 
-                      position: 'absolute', 
-                      left: '3px', 
-                      top: '14px' 
-                    }}></div>
-                    <strong style={{ 
-                      textTransform: 'uppercase', 
-                      fontWeight: '800', 
-                      fontSize: '8px', 
-                      color: '#6b7280', 
-                      margin: '0 0 4px 0',
-                      padding: 0
-                    }}>next steps</strong>
-                    <span style={{ 
-                      display: 'flex', 
-                      flexDirection: 'column', 
-                      gap: '0px',
-                      margin: 0,
-                      padding: 0
-                    }}>
-                      <strong style={{ 
-                        fontSize: '10px', 
-                        fontWeight: '800', 
-                        color: '#1e40af',
-                        lineHeight: '1.1',
-                        margin: 0,
-                        padding: 0
-                      }}>
-                        Processing <span style={{ color: 'black', fontWeight: 'normal' }}> ● Order Being Processed</span>
-                      </strong>
-                      <strong style={{ 
-                        fontSize: '10px', 
-                        fontWeight: '800', 
-                        color: '#1e40af',
-                        lineHeight: '1.1',
-                        margin: 0,
-                        padding: 0
-                      }}>
-                        Pending <span style={{ color: 'black', fontWeight: 'normal' }}> ● Ready for {shippingMethod === 'delivery' ? 'Delivery' : 'Pickup'}</span>
-                      </strong>
-                    </span>
-                  </span>
+                  ))}
                 </div>
               </div>
             </div>

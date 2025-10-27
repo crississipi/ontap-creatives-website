@@ -85,38 +85,14 @@ export async function OPTIONS() {
 
 export async function GET(request: NextRequest) {
   try {
-    // Get authenticated user
     const user = await getAuthenticatedUser();
-    
     if (!user) {
-      return NextResponse.json(
-        { error: 'Unauthorized. Please log in to view your orders.' },
-        { 
-          status: 401,
-          headers: corsHeaders
-        }
-      );
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { searchParams } = new URL(request.url);
-    const status = searchParams.get('status');
-    const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '10');
-
-    console.log('🔍 Fetching orders for user:', user.clientID, 'with filters:', { status, page, limit });
-
-    // Build where clause based on status filter AND user ID
-    const whereClause: any = {
-      clientID: user.clientID // Only fetch orders for the authenticated user
-    };
-    
-    if (status && status !== 'all') {
-      whereClause.status = status;
-    }
-
-    // Fetch transactions with related data for the authenticated user only
+    // Fetch transactions with tracking data
     const transactions = await prisma.transaction.findMany({
-      where: whereClause,
+      where: { clientID: user.clientID },
       include: {
         cart: {
           include: {
@@ -125,103 +101,36 @@ export async function GET(request: NextRequest) {
         },
         client: true,
         billing: true,
-        voucher: true
+        voucher: true,
+        tracking: true // Include tracking data
       },
       orderBy: {
         dateOrdered: 'desc'
-      },
-      skip: (page - 1) * limit,
-      take: limit
-    });
-
-    console.log(`✅ Found ${transactions.length} transactions for user ${user.clientID}`);
-
-    // Group transactions by transactionID
-    const transactionGroups = new Map();
-    
-    transactions.forEach(transaction => {
-      const group = transactionGroups.get(transaction.transactionID) || [];
-      group.push(transaction);
-      transactionGroups.set(transaction.transactionID, group);
-    });
-
-    // Transform data into order format
-    const orders: Order[] = Array.from(transactionGroups.entries()).map(([transactionID, transactionGroup]) => {
-      const firstTransaction = transactionGroup[0];
-      
-      // Calculate totals
-      const itemsSubtotal = transactionGroup.reduce((sum: number, t: any) => sum + t.subtotal, 0);
-      const discountAmount = firstTransaction.voucher ? (itemsSubtotal * firstTransaction.voucher.discount / 100) : 0;
-      const shippingFee = firstTransaction.shipMethod === 'delivery' ? 250 : 0;
-      const totalAmount = itemsSubtotal - discountAmount + shippingFee;
-
-      // Determine status (you might want to add this field to your Transaction model)
-      const status = determineOrderStatus(firstTransaction);
-
-      // Generate tracking events based on status and dates
-      const trackingEvents = generateTrackingEvents(firstTransaction, status);
-
-      return {
-        orderID: transactionID,
-        customerName: firstTransaction.client.clientName || 'Customer',
-        companyName: firstTransaction.client.clientName || '',
-        contactNumber: firstTransaction.client.contactNumber || '',
-        email: firstTransaction.client.email,
-        deliveryAddress: firstTransaction.shipMethod === 'delivery' 
-          ? (firstTransaction.client.address || 'Address not specified')
-          : 'Store Pickup - 17 Vatican City Dr, Las Piñas, 1740 Metro Manila',
-        items: transactionGroup.map((t: any) => ({
-          name: t.cart.product.name,
-          qty: t.cart.quantity,
-          price: t.cart.product.price,
-          subtotal: t.subtotal,
-          logo: t.cart.logo,
-          imgUrl: t.cart.product.imgUrl || '',
-          frontImg: t.cart.product.frontUrl || ''
-        })),
-        shippingMethod: firstTransaction.shipMethod,
-        shippingFee: shippingFee,
-        paymentMethod: firstTransaction.billing.mode.toLowerCase(),
-        discount: discountAmount,
-        subtotal: itemsSubtotal,
-        total: totalAmount,
-        orderDate: firstTransaction.dateOrdered.toISOString(),
-        status: status,
-        trackingEvents: trackingEvents
-      };
-    });
-
-    // Get total count for pagination (only count user's orders)
-    const totalCount = await prisma.transaction.count({
-      where: {
-        clientID: user.clientID,
-        ...(status && status !== 'all' && { status: status })
       }
     });
 
-    return NextResponse.json({
-      orders,
-      pagination: {
-        page,
-        limit,
-        totalCount,
-        totalPages: Math.ceil(totalCount / limit)
-      }
-    }, {
-      headers: corsHeaders
-    });
+    // Transform data to include tracking events
+    const orders = transactions.map(transaction => ({
+      // ... other order data ...
+      trackingEvents: transaction.tracking ? [
+        {
+          timestamp: transaction.tracking.date.toISOString(),
+          title: transaction.tracking.status,
+          description: transaction.tracking.info
+        }
+      ] : [
+        {
+          timestamp: transaction.dateOrdered.toISOString(),
+          title: 'Order Placed',
+          description: 'Your order has been received'
+        }
+      ]
+    }));
 
+    return NextResponse.json({ orders });
   } catch (error) {
-    console.error('❌ Failed to fetch orders:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch orders' },
-      { 
-        status: 500,
-        headers: corsHeaders
-      }
-    );
-  } finally {
-    await prisma.$disconnect();
+    console.error('Error fetching orders:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
 
