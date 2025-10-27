@@ -2,6 +2,8 @@
 
 import { AnimatePresence, motion } from 'framer-motion';
 import React, { JSX, useRef, useState, useEffect } from 'react';
+import { RiStore3Fill, RiTruckLine } from 'react-icons/ri';
+import { TbTruckDelivery } from 'react-icons/tb';
 import Image from 'next/image';
 import { LuEye, LuEyeClosed } from 'react-icons/lu';
 import { MdOutlineSaveAlt } from 'react-icons/md';
@@ -99,6 +101,53 @@ const payment: Record<string, PaymentInfo> = {
     }
 }
 
+// Date validation and formatting utilities
+const isValidDate = (dateString: string): boolean => {
+  if (!dateString) return false;
+  const date = new Date(dateString);
+  return !isNaN(date.getTime());
+};
+
+const safeFormatDate = (dateString: string): string => {
+  if (!isValidDate(dateString)) {
+    return 'Invalid Date';
+  }
+  try {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      month: 'long',
+      day: 'numeric',
+      year: 'numeric'
+    });
+  } catch {
+    return 'Invalid Date';
+  }
+};
+
+const safeFormatTime = (dateString: string): string => {
+  if (!isValidDate(dateString)) {
+    return 'Invalid Time';
+  }
+  try {
+    return new Date(dateString).toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  } catch {
+    return 'Invalid Time';
+  }
+};
+
+const safeToISOString = (dateString: string): string => {
+  if (!isValidDate(dateString)) {
+    return new Date().toISOString(); // Fallback to current date
+  }
+  try {
+    return new Date(dateString).toISOString();
+  } catch {
+    return new Date().toISOString(); // Fallback to current date
+  }
+};
+
 const OrderPage: React.FC = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
@@ -127,23 +176,47 @@ const OrderPage: React.FC = () => {
       
       const data = await response.json();
       
-      // Validate and sanitize the data
-      const validatedOrders = (data.orders || []).map((order: any) => ({
-        ...order,
-        items: Array.isArray(order.items) ? order.items : [],
-        trackingEvents: Array.isArray(order.trackingEvents) ? order.trackingEvents : [],
-        customerName: order.customerName || 'Unknown Customer',
-        contactNumber: order.contactNumber || 'N/A',
-        email: order.email || 'N/A',
-        deliveryAddress: order.deliveryAddress || 'N/A',
-        shippingMethod: order.shippingMethod || 'pickup',
-        paymentMethod: order.paymentMethod || 'cod',
-        subtotal: Number(order.subtotal) || 0,
-        shippingFee: Number(order.shippingFee) || 0,
-        discount: Number(order.discount) || 0,
-        total: Number(order.total) || 0,
-        status: order.status || 'pending'
-      }));
+      // Validate and sanitize the data with proper date handling
+      const validatedOrders = (data.orders || []).map((order: any) => {
+        // Ensure orderDate is valid
+        const validOrderDate = isValidDate(order.orderDate) 
+          ? order.orderDate 
+          : new Date().toISOString();
+
+        // Validate and sanitize tracking events
+        const validTrackingEvents = (order.trackingEvents || []).map((event: any) => ({
+          timestamp: isValidDate(event.timestamp) ? event.timestamp : validOrderDate,
+          title: event.title || 'Status Update',
+          description: event.description
+        }));
+
+        // If no tracking events, create a default one
+        const trackingEvents = validTrackingEvents.length > 0 
+          ? validTrackingEvents 
+          : [{
+              timestamp: validOrderDate,
+              title: 'Order Placed',
+              description: 'Your order has been received and is being processed'
+            }];
+
+        return {
+          ...order,
+          orderDate: validOrderDate,
+          items: Array.isArray(order.items) ? order.items : [],
+          trackingEvents: trackingEvents,
+          customerName: order.customerName || 'Unknown Customer',
+          contactNumber: order.contactNumber || 'N/A',
+          email: order.email || 'N/A',
+          deliveryAddress: order.deliveryAddress || 'N/A',
+          shippingMethod: order.shippingMethod || 'pickup',
+          paymentMethod: order.paymentMethod || 'cod',
+          subtotal: Number(order.subtotal) || 0,
+          shippingFee: Number(order.shippingFee) || 0,
+          discount: Number(order.discount) || 0,
+          total: Number(order.total) || 0,
+          status: order.status || 'pending'
+        };
+      });
       
       setOrders(validatedOrders);
     } catch (error) {
@@ -202,29 +275,6 @@ const OrderPage: React.FC = () => {
       case 'completed': return 'Completed';
       case 'cancelled': return 'Cancelled';
       default: return status;
-    }
-  };
-
-  const formatDate = (dateString: string) => {
-    try {
-      return new Date(dateString).toLocaleDateString('en-US', {
-        month: 'long',
-        day: 'numeric',
-        year: 'numeric'
-      });
-    } catch {
-      return 'Invalid Date';
-    }
-  };
-
-  const formatTime = (dateString: string) => {
-    try {
-      return new Date(dateString).toLocaleTimeString('en-US', {
-        hour: '2-digit',
-        minute: '2-digit'
-      });
-    } catch {
-      return 'Invalid Time';
     }
   };
 
@@ -299,7 +349,7 @@ const OrderPage: React.FC = () => {
               </span>
               <span className='py-2 flex flex-col items-start justify-center leading-4'>
                 <h3 className='font-extrabold w-full flex items-center text-left'>#{order.orderID}</h3>
-                <p className='text-sm'>{formatDate(order.orderDate)}</p>
+                <p className='text-sm'>{safeFormatDate(order.orderDate)}</p>
               </span>
               <span className='ml-auto flex flex-col items-end leading-5 justify-center'>
                 <p className={`text-[10px] px-3 rounded-full text-nowrap ${getStatusColor(order.status)} text-white font-bold uppercase`}>
@@ -323,7 +373,7 @@ const OrderPage: React.FC = () => {
               </span>
               <span className='py-2 flex flex-col items-start justify-center leading-4'>
                 <h3 className='font-extrabold w-full flex items-center justify-between'>#{order.orderID}</h3>
-                <p className='text-sm'>{formatDate(order.orderDate)}</p>
+                <p className='text-sm'>{safeFormatDate(order.orderDate)}</p>
               </span>
               <span className='ml-auto flex flex-col items-end leading-5 justify-center'>
                 <p className={`text-[10px] px-3 rounded-full ${getStatusColor(order.status)} text-white font-bold uppercase`}>
@@ -352,7 +402,7 @@ const OrderPage: React.FC = () => {
                 <span className='flex flex-col'>
                   <h2 className='capitalize font-extrabold text-xl'>Order #{selectedOrder.orderID}</h2>
                   <p className='font-bold text-sm text-neutral-500'>
-                    {formatDate(selectedOrder.orderDate)} at {formatTime(selectedOrder.orderDate)}
+                    {safeFormatDate(selectedOrder.orderDate)} at {safeFormatTime(selectedOrder.orderDate)}
                   </p>
                 </span>
                 <button type="button" className='py-2 px-2 lg:px-3 rounded-xl border border-dark-blue flex items-center gap-2 text-dark-blue font-bold hover:bg-dark-blue hover:text-white focus:text-white focus:bg-violet ease-out duration-200' onClick={handleDownload}>
@@ -428,11 +478,11 @@ const OrderPage: React.FC = () => {
                             before:h-3 before:w-3 before:bg-blue before:rounded-xs before:absolute before:z-20 before:left-0 before:top-4
                             after:h-full after:w-0.5 after:bg-neutral-300 after:absolute after:left-1.5 after:top-7'>
                             <strong className='uppercase font-extrabold text-xs text-neutral-500 mb-3'>
-                              {formatDate(event.timestamp)}
+                              {safeFormatDate(event.timestamp)}
                             </strong>
                             <span className='flex flex-col gap-2'>
                               <strong className='text-sm font-extrabold text-dark-blue'>
-                                {formatTime(event.timestamp)} <span className='text-black font-normal'> ● {event.title}</span>
+                                {safeFormatTime(event.timestamp)} <span className='text-black font-normal'> ● {event.title}</span>
                               </strong>
                               {event.description && (
                                 <p className='text-xs text-neutral-600'>{event.description}</p>
@@ -444,11 +494,11 @@ const OrderPage: React.FC = () => {
                           <div className='h-max w-full flex flex-col pl-5 py-3 relative 
                             before:h-3 before:w-3 before:bg-blue before:rounded-xs before:absolute before:z-20 before:left-0 before:top-4'>
                             <strong className='uppercase font-extrabold text-xs text-neutral-500 mb-3'>
-                              {formatDate(selectedOrder.orderDate)}
+                              {safeFormatDate(selectedOrder.orderDate)}
                             </strong>
                             <span className='flex flex-col gap-2'>
                               <strong className='text-sm font-extrabold text-dark-blue'>
-                                {formatTime(selectedOrder.orderDate)} <span className='text-black font-normal'> ● Order Placed</span>
+                                {safeFormatTime(selectedOrder.orderDate)} <span className='text-black font-normal'> ● Order Placed</span>
                               </strong>
                               <p className='text-xs text-neutral-600'>Your order has been received and is being processed</p>
                             </span>
@@ -459,8 +509,109 @@ const OrderPage: React.FC = () => {
                   </div>
                 </div>
                 
-                {/* Right Sidebar - Rest of your code remains the same */}
-                {/* ... */}
+                 {/* Right Sidebar */}
+                        <div className='col-span-full xl:col-span-2 h-max w-full flex flex-col lg:grid lg:grid-cols-2 xl:flex xl:flex-col gap-3'>
+                            {/* Shipping Method */}
+                            <div className='rounded-xl bg-neutral-100 shadow-md shadow-black/20 pt-3 w-full flex flex-col overflow-hidden'>
+                                <span className='text-base font-bold pl-3'>Shipping Method</span>
+                                <span className='w-full p-4 flex items-center gap-2'>
+                                    {selectedOrder.shippingMethod === 'delivery' ? (
+                                        <>
+                                        <span className='h-12 aspect-square rounded-xl bg-dark-blue text-white items-center justify-center flex text-2xl'>
+                                            <RiTruckLine />
+                                        </span>
+                                        <span className='w-full text-sm flex items-center justify-between'>
+                                            <strong className='font-extrabold text-neutral-700'>Door-to-door Delivery</strong>
+                                            <span className='text-xs flex items-center gap-1 ml-auto'>₱<strong className='text-base font-extrabold'>{inPeso(selectedOrder.shippingFee)}</strong></span>
+                                        </span>
+                                        </>
+                                    ) : (
+                                        <>
+                                        <span className='h-12 aspect-square rounded-xl bg-dark-blue text-white items-center justify-center flex text-2xl'>
+                                            <RiStore3Fill />
+                                        </span>
+                                        <span className='text-sm flex flex-col'>
+                                            <strong className='font-extrabold text-neutral-700'>Pick up at Store</strong>
+                                            <a
+                                                href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent("BURNBOX PRINTING BFRV BRANCH")}`}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className='text-xs hover:text-dark-blue focus:underline ease-out duration-200'
+                                            >Check Address</a>
+                                        </span>
+                                        <span className='text-xs flex items-center gap-1 ml-auto'>₱<strong className='text-base font-extrabold'>0.00</strong></span>
+                                        </>
+                                    )}
+                                </span>
+                            </div>
+                            
+                            {/* Payment Method */}
+                            <div className='rounded-xl bg-neutral-100 shadow-md shadow-black/20 pt-3 p-3 w-full flex flex-col overflow-hidden'>
+                                <span className='text-base font-bold'>Mode of Payment</span>
+                                {selectedOrder.paymentMethod === 'cod' ? (
+                                    <span className='flex items-center justify-between w-full mt-3 py-2 px-3 text-white rounded-xl bg-dark-blue'>
+                                        <span className='uppercase font-bold flex text-xs gap-2 items-center'><TbTruckDelivery className='text-2xl'/>cash on delivery</span>
+                                        <p className='flex items-center gap-1 text-xs'>₱<span className='font-bold text-xl'>250.00</span></p>
+                                    </span>
+                                ) : (
+                                    <span className='flex flex-col justify-center w-full mt-3 py-2 px-3 gap-1 text-white rounded-xl bg-dark-blue'>
+                                        <span className='flex items-center justify-between'>
+                                            <p className='uppercase text-sm font-bold tracking-wide'>{payment[selectedOrder.paymentMethod]?.title || selectedOrder.paymentMethod}</p>
+                                            {payment[selectedOrder.paymentMethod]?.image}
+                                        </span>
+                                        <span className='flex items-end justify-between gap-5'>
+                                            <span className='w-full flex flex-col justify-start'>
+                                                <h5 className='text-xs'>{payment[selectedOrder.paymentMethod]?.label}</h5>
+                                                <span className='flex w-full items-center gap-0.5 '>
+                                                    {Array.from({ length: payment[selectedOrder.paymentMethod]?.digit || 4 }).map((_,i) => (
+                                                        <span key={i} className={`h-5 min-w-1 ${showBilling ? 'text-sm' : 'text-xs'} font-extrabold`}>
+                                                            {showBilling ? 
+                                                            selectedOrder.paymentMethod === 'credit' ? `${(i+1) % 5 === 0 ? ' ' : `${i%4 + 1}`}`: 
+                                                            `${i%4 + 1}`
+                                                            : selectedOrder.paymentMethod === 'credit' ? `${(i+1) % 5 === 0 ? ' ' : '●'}` : '●' 
+                                                        }
+                                                        </span>
+                                                    ))}
+                                                    <button type="button" className='ml-auto text-xl hover:text-blue focus:text-light-blue ease-out duration-200' onClick={() => setShowBilling(!showBilling)}>
+                                                        {!showBilling ? 
+                                                        <LuEye /> :
+                                                        <LuEyeClosed />
+                                                        }
+                                                    </button>
+                                                </span>
+                                            </span>
+                                            <p className='flex items-center gap-1 text-xs'>₱<span className='font-bold text-xl'>{inPeso(selectedOrder.total)}</span></p>
+                                        </span>
+                                    </span>
+                                )}
+                            </div>
+                            
+                            {/* Order Summary */}
+                            <div className='col-span-full rounded-xl bg-neutral-100 shadow-md shadow-black/20 pt-3 w-full flex flex-col overflow-hidden'>
+                                <span className='text-base font-bold pl-3'>Summary</span>
+                                <div className='w-full flex flex-col mt-5'>
+                                    <span className='w-full flex items-center justify-between px-5'>
+                                        <strong className='font-extrabold'>Subtotal</strong>
+                                        <span className='text-sm flex items-center gap-1'>₱<strong className='font-extrabold text-xl'>{inPeso(selectedOrder.subtotal)}</strong></span>
+                                    </span>
+                                    <span className='w-full flex items-center justify-between px-5'>
+                                        <strong className='font-extrabold'>Delivery Fee</strong>
+                                        <span className='text-sm flex items-center gap-1'>₱<strong className='font-extrabold text-xl'>{inPeso(selectedOrder.shippingFee)}</strong></span>
+                                    </span>
+                                    {selectedOrder.discount > 0 && (
+                                        <span className='w-full flex items-center justify-between gap-2 pb-5 px-5'>
+                                            <strong className='font-extrabold'>Discount</strong>
+                                            <strong className='mr-auto font-semibold text-sm'>({inPeso((selectedOrder.discount / selectedOrder.subtotal) * 100)}% less)</strong>
+                                            <span className='text-sm flex items-center gap-1'>₱<strong className='font-extrabold text-xl'>{inPeso(selectedOrder.discount)}</strong></span>
+                                        </span>
+                                    )}
+                                    <span className='w-full flex items-center justify-between py-2 px-5 bg-dark-blue text-white'>
+                                        <strong className='font-extrabold'>Total</strong>
+                                        <span className='text-sm flex items-center gap-1'>₱<strong className='font-extrabold text-xl'>{inPeso(selectedOrder.total)}</strong></span>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
               </div>
             </motion.div>
           )}
@@ -483,7 +634,7 @@ const OrderPage: React.FC = () => {
           discount={selectedOrder?.discount || 0}
           subtotal={selectedOrder?.subtotal || 0}
           total={selectedOrder?.total || 0}
-          orderDate={selectedOrder?.orderDate || ''}
+          orderDate={safeToISOString(selectedOrder?.orderDate || '')}
         />
       </div>
     </div>
