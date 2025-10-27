@@ -1,11 +1,12 @@
 import ReceiptClient from '@/components/ReceiptClient';
 
 interface PageProps {
-  params: {
+  params: Promise<{
     orderID: string;
-  };
+  }>;
 }
 
-export default function ReceiptPage({ params }: PageProps) {
-  return <ReceiptClient orderID={params.orderID} />;
+export default async function ReceiptPage({ params }: PageProps) {
+  const { orderID } = await params;
+  return <ReceiptClient orderID={orderID} />;
 }
