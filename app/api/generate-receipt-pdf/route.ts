@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import puppeteer from 'puppeteer';
+import chromium from '@sparticuz/chromium';
+import puppeteer from 'puppeteer-core';
 
 interface ReceiptData {
   orderID: string;
@@ -24,12 +25,13 @@ interface ReceiptData {
   orderDate: string;
 }
 
+export const maxDuration = 30;
+
 export async function POST(request: NextRequest) {
   let browser;
   
   try {
     const receiptData: ReceiptData = await request.json();
-
     console.log('🔍 Generating PDF for order:', receiptData.orderID);
 
     // Validate required fields
@@ -40,39 +42,35 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Generate PDF with Puppeteer
-    let pdfBuffer: Buffer;
-    let generationMethod = 'puppeteer';
+    let pdfBuffer: Uint8Array;
     
     try {
-      console.log('🔍 Launching Puppeteer for PDF generation...');
+      console.log('🔍 Launching Chromium for PDF generation...');
       
+      const executablePath = process.env.VERCEL
+        ? await chromium.executablePath()
+        : process.platform === 'win32'
+        ? 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe'
+        : process.platform === 'linux'
+        ? '/usr/bin/google-chrome'
+        : '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
+
       browser = await puppeteer.launch({
+        executablePath,
+        args: chromium.args,
         headless: true,
-        args: [
-          '--no-sandbox',
-          '--disable-setuid-sandbox',
-          '--disable-dev-shm-usage',
-          '--disable-accelerated-2d-canvas',
-          '--no-first-run',
-          '--no-zygote',
-          '--single-process',
-          '--disable-gpu'
-        ]
       });
 
       const page = await browser.newPage();
       
-      // Generate HTML for receipt
       const htmlContent = generateReceiptHTML(receiptData);
       
       await page.setContent(htmlContent, { 
-        waitUntil: ['networkidle0', 'domcontentloaded'] 
+        waitUntil: 'networkidle0'
       });
       
-      await page.emulateMediaType('screen');
+      await page.waitForFunction(() => document.readyState === 'complete');
 
-      // Generate PDF
       const pdf = await page.pdf({
         format: 'A4',
         printBackground: true,
@@ -83,34 +81,30 @@ export async function POST(request: NextRequest) {
           left: '0.5in'
         },
         displayHeaderFooter: false,
-        preferCSSPageSize: true
+        preferCSSPageSize: true,
+        timeout: 30000
       });
 
-      pdfBuffer = Buffer.from(pdf);
+      if (!pdf || pdf.length === 0) {
+        throw new Error('Generated PDF is empty');
+      }
+
+      // Use Uint8Array instead of Buffer to avoid type issues
+      pdfBuffer = pdf;
       console.log(`✅ PDF generated successfully, size: ${pdfBuffer.length} bytes`);
 
     } catch (puppeteerError) {
-      console.error('❌ Puppeteer PDF generation failed:', puppeteerError);
-      
-      // Fallback to simple HTML-based PDF
-      try {
-        console.log('🔍 Attempting HTML fallback...');
-        pdfBuffer = await generateFallbackPDF(receiptData);
-        generationMethod = 'html-fallback';
-      } catch (fallbackError) {
-        console.error('❌ HTML fallback failed:', fallbackError);
-        throw new Error('All PDF generation methods failed');
-      }
+      console.error('❌ PDF generation failed:', puppeteerError);
+      throw new Error(`PDF generation failed: ${puppeteerError instanceof Error ? puppeteerError.message : 'Unknown error'}`);
     }
 
-    // Return PDF as response
-    return new NextResponse(pdfBuffer as any, {
+    // Return PDF as response using Uint8Array
+    return new NextResponse(pdfBuffer as BodyInit, {
       status: 200,
       headers: {
         'Content-Type': 'application/pdf',
         'Content-Disposition': `attachment; filename="receipt-${receiptData.orderID}.pdf"`,
         'Content-Length': pdfBuffer.length.toString(),
-        'X-Generation-Method': generationMethod,
       },
     });
 
@@ -121,18 +115,22 @@ export async function POST(request: NextRequest) {
       { 
         error: 'Failed to generate PDF',
         details: error instanceof Error ? error.message : 'Unknown error',
-        suggestion: 'Please try the client-side fallback method'
+        suggestion: 'Please use the client-side download button instead'
       },
       { status: 500 }
     );
   } finally {
-    // Close browser if it was opened
     if (browser) {
-      await browser.close().catch(console.error);
+      try {
+        await browser.close();
+      } catch (closeError) {
+        console.error('Error closing browser:', closeError);
+      }
     }
   }
 }
 
+// Your existing generateReceiptHTML function remains the same
 function generateReceiptHTML(data: ReceiptData): string {
   const total = data.subtotal - (data.discount > 0 ? data.discount : 0) + data.shippingFee;
   
@@ -158,7 +156,7 @@ function generateReceiptHTML(data: ReceiptData): string {
         }
         .company-name {
           font-size: 24px;
-          font-weight: bold;
+          fontWeight: bold;
           color: #2563eb;
           margin-bottom: 8px;
         }
@@ -307,15 +305,6 @@ function generateReceiptHTML(data: ReceiptData): string {
     </body>
     </html>
   `;
-}
-
-// HTML-based fallback using the same receipt template
-async function generateFallbackPDF(receiptData: ReceiptData): Promise<Buffer> {
-  console.log('🔍 Using HTML fallback for:', receiptData.orderID);
-  
-  // This would use an alternative PDF library if Puppeteer fails
-  // For now, we'll throw an error to trigger client-side fallback
-  throw new Error('HTML fallback not implemented - use client-side generation');
 }
 
 export async function GET() {

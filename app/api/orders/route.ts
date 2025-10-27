@@ -319,13 +319,33 @@ export async function POST(request: NextRequest) {
 
     // Generate PDF receipt (outside transaction)
     let receiptBuffer: Buffer;
+    let pdfGenerationSuccess = false;
+
     try {
-      receiptBuffer = await generateReceiptPDF(receiptData);
-      console.log('PDF receipt generated successfully');
+      console.log('🔄 Attempting server-side PDF generation...');
+      const pdfResponse = await fetch(`${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/generate-receipt-pdf`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(receiptData)
+      });
+
+      if (pdfResponse.ok && pdfResponse.headers.get('content-type')?.includes('application/pdf')) {
+        const arrayBuffer = await pdfResponse.arrayBuffer();
+        // Convert ArrayBuffer to Buffer properly
+        receiptBuffer = Buffer.from(arrayBuffer);
+        console.log('✅ PDF receipt generated successfully via API');
+        pdfGenerationSuccess = true;
+      } else {
+        const errorText = await pdfResponse.text();
+        console.error('❌ PDF API returned error:', errorText);
+        throw new Error('PDF API returned non-PDF response');
+      }
     } catch (pdfError) {
-      console.error('PDF generation failed:', pdfError);
-      // Continue without PDF if generation fails
-      receiptBuffer = Buffer.from(''); // Empty buffer as fallback
+      console.error('❌ PDF generation failed:', pdfError);
+      receiptBuffer = Buffer.from('');
+      pdfGenerationSuccess = false;
     }
 
     // Send confirmation email (outside transaction)
