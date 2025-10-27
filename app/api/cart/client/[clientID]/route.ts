@@ -5,13 +5,15 @@ const prisma = new PrismaClient()
 
 export async function GET(
   request: NextRequest,
-  context: { params: { clientID: string } }
+  { params }: { params: Promise<{ clientID: string }> }
 ) {
   try {
-    const clientID = parseInt(context.params.clientID)
+    // Await the params Promise
+    const { clientID } = await params
+    const clientIdNumber = parseInt(clientID)
 
     // Validate clientID
-    if (isNaN(clientID)) {
+    if (isNaN(clientIdNumber)) {
       return NextResponse.json(
         { error: 'Invalid client ID' },
         { status: 400 }
@@ -20,7 +22,7 @@ export async function GET(
 
     const cartItems = await prisma.cart.findMany({
       where: {
-        clientID,
+        clientID: clientIdNumber,
         status: 'onCart'
       },
       include: {
