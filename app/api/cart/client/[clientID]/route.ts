@@ -5,10 +5,10 @@ const prisma = new PrismaClient()
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { clientID: string } }
+  context: { params: { clientID: string } }
 ) {
   try {
-    const clientID = parseInt(params.clientID)
+    const clientID = parseInt(context.params.clientID)
 
     // Validate clientID
     if (isNaN(clientID)) {
