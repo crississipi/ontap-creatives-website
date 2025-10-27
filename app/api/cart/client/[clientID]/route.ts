@@ -28,6 +28,7 @@ export async function GET(
           select: {
             name: true,
             price: true,
+            customPrice: true,
             imgUrl: true,
             frontUrl: true,
           }

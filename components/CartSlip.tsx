@@ -1,9 +1,8 @@
 "use client"
 
 import React, { useState } from 'react'
-import { HiCheck, HiMinus, HiOutlineTrash, HiPlus } from 'react-icons/hi'
+import { HiCheck, HiMinus, HiPlus } from 'react-icons/hi'
 import Image from 'next/image'
-import { motion, AnimatePresence } from 'framer-motion'
 
 interface CartItem {
   cartID: number;
@@ -17,6 +16,7 @@ interface CartItem {
   product: {
     name: string;
     price: number;
+    customPrice: number;
     imgUrl?: string;
     frontUrl?: string;
   };
@@ -32,8 +32,8 @@ interface CartSlipProps {
 
 const CartSlip = ({ item, selected, onSelect, onQuantityUpdate, onRemove }: CartSlipProps) => {
   const [qty, setQty] = useState(item.quantity);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
+  const officialPrice = item.logo === 'OnTap' ? item.product.price : item.product.customPrice;
 
   // Debounced quantity change handler
   const handleQuantityChange = (newQty: number) => {
@@ -46,11 +46,12 @@ const CartSlip = ({ item, selected, onSelect, onQuantityUpdate, onRemove }: Cart
     
     // Update quantity immediately for responsive UI
     setQty(newQty);
+    onQuantityUpdate(newQty);
     
     // Set timeout to prevent spam clicking (300ms buffer)
     setTimeout(() => {
       setIsUpdating(false);
-    }, 300);
+    }, 700);
   };
 
   // Input change handler with debouncing
@@ -70,25 +71,18 @@ const CartSlip = ({ item, selected, onSelect, onQuantityUpdate, onRemove }: Cart
     }, 500); // Slightly longer for input to account for typing
   };
 
-  const handleRemoveClick = () => {
-    setShowDeleteModal(true);
-  };
-
-  const confirmRemove = () => {
-    onRemove();
-    setShowDeleteModal(false);
-  };
-
-  const cancelRemove = () => {
-    setShowDeleteModal(false);
-  };
+  function inPeso(num: number, locale = 'en-US') {
+    return num.toLocaleString(locale, {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    });
+  }
 
   return (
     <>
-      <div className='h-max md:h-32 w-full p-3 gap-3 border-b border-black/10 grid grid-cols-2 md:grid-cols-6 relative'>
-        <div className='col-span-full md:col-span-4 flex pr-12'>
+      <div className='h-max md:min-h-32 md:max-h-32 w-full py-3 lg:p-3 gap-3 border-b border-black/10 grid grid-cols-2 md:grid-cols-6 relative'>
+        <div className='col-span-full md:col-span-4 flex xl:pr-12'>
           <span className='w-10 h-full flex items-center'>
-            {/** this button act as checkbox */}
             <button 
               type="button" 
               className={`w-6 aspect-square rounded-sm flex items-center justify-center border border-black/50 hover:bg-blue ${selected && 'bg-violet text-white'} ease-out duration-200`} 
@@ -128,13 +122,10 @@ const CartSlip = ({ item, selected, onSelect, onQuantityUpdate, onRemove }: Cart
             </span>
             <span className='flex flex-col w-full text-left'>
               <h2 className='text-base font-semibold mb-auto'>{item.product.name}</h2>
-              <p className='text-neutral-700 text-sm mt-1'>Price: <strong>{item.product.price === 0 ? 'Upon Inquiry' : `₱${item.product.price.toFixed(2)}`}</strong></p>
+              <p className='text-neutral-700 text-sm mt-1'>Price: <strong>{item.product.price === 0 ? 'Upon Inquiry' : `₱${inPeso(officialPrice)}`}</strong></p>
               <span className='text-neutral-700 text-sm -mt-1 truncate'>Logo: <strong>{item.logo}</strong></span>
             </span>
           </div>
-          <span className='hidden h-full md:flex items-center justify-center font-extrabold text-base text-dark-blue ml-auto'>
-            <p><span className='text-sm'>₱</span> {item.product.price.toFixed(2)}</p>
-          </span>
         </div>
         <span className='col-span-1 h-full relative flex items-center justify-end md:justify-center z-30 font-extrabold text-sm text-dark-blue'>
             {isUpdating && (
@@ -166,62 +157,10 @@ const CartSlip = ({ item, selected, onSelect, onQuantityUpdate, onRemove }: Cart
             </button>
             
         </span>
-        <span className='col-span-1 h-full flex items-center justify-end md:justify-center font-extrabold text-dark-blue'>
-          <p><span className='text-sm'>₱</span> {item.subtotal.toFixed(2)}</p>
+        <span className='col-span-1 h-full flex items-center justify-end md:justify-center font-extrabold text-dark-blue pr-5'>
+          <p><span className='text-sm'>₱</span> {inPeso(officialPrice * qty)}</p>
         </span>
-        <button 
-          type="button" 
-          className='p-1 md:h-[80%] z-30 ml-auto absolute md:top-1/2 md:-translate-y-1/2 right-0 text-2xl text-rose-600 border border-rose-50 hover:bg-rose-300 focus:bg-rose-500 focus:text-white ease-out duration-200'
-          onClick={handleRemoveClick}
-        >
-          <HiOutlineTrash />
-        </button>
       </div>
-
-      {/* Delete Confirmation Modal */}
-      <AnimatePresence>
-        {showDeleteModal && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
-            onClick={cancelRemove}
-          >
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-white rounded-xl p-6 max-w-md w-full"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <h3 className="text-lg font-bold text-gray-900 mb-2">
-                Remove Item
-              </h3>
-              <p className="text-gray-600 mb-6">
-                Are you sure you want to remove <strong>"{item.product.name}"</strong> from your cart?
-              </p>
-              <div className="flex gap-3 justify-end">
-                <button
-                  type="button"
-                  className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-                  onClick={cancelRemove}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  className="px-4 py-2 bg-rose-500 text-white rounded-lg hover:bg-rose-600 transition-colors flex items-center gap-2"
-                  onClick={confirmRemove}
-                >
-                  <HiOutlineTrash />
-                  Remove
-                </button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </>
   )
 }

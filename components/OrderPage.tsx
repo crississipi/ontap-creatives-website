@@ -1,7 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion } from 'framer-motion';
-import React, { JSX, useRef, useState } from 'react';
+import React, { JSX, useRef, useState, useEffect } from 'react';
 import { RiCloseLine, RiCustomerService2Fill, RiStore3Fill, RiTruckLine } from 'react-icons/ri';
 import { TbTruckDelivery } from 'react-icons/tb';
 import Image from 'next/image';
@@ -9,79 +9,136 @@ import { LuEye, LuEyeClosed } from 'react-icons/lu';
 import { MdOutlineSaveAlt } from 'react-icons/md';
 import { HiOutlineX } from 'react-icons/hi';
 import ReceiptTemplate from './ReceiptTemplate';
+import { inPeso } from '@/lib/utils';
 
-  type PaymentInfo = {
+type PaymentInfo = {
+  title: string;
+  image: JSX.Element;
+  label: string;
+  digit: number;
+};
+
+interface OrderItem {
+  name: string;
+  qty: number;
+  price: number;
+  subtotal: number;
+  logo: string;
+  imgUrl: string;
+  frontImg: string;
+}
+
+interface Order {
+  orderID: string;
+  customerName: string;
+  companyName: string;
+  contactNumber: string;
+  email: string;
+  deliveryAddress: string;
+  items: OrderItem[];
+  shippingMethod: string;
+  shippingFee: number;
+  paymentMethod: string;
+  discount: number;
+  subtotal: number;
+  total: number;
+  orderDate: string;
+  status: 'pending' | 'approved' | 'in_progress' | 'completed' | 'cancelled';
+  trackingEvents: Array<{
+    timestamp: string;
     title: string;
-    image: JSX.Element;
-    label: string;
-    digit: number;
-  };
-  
-  interface ReceiptProps {
-    orderID: string;
-    customerName: string;
-    items: { name: string; qty: number; price: number }[];
-  }
+    description?: string;
+  }>;
+}
 
-  const payment: Record<string, PaymentInfo> = {
-    "cod" : 
-        { title: '', 
-          image: <></>, 
-          label: '', 
-          digit: 0
-        },
-      "credit" : 
-          { title: 'credit/debit', 
-          image: 
-            <Image 
-              height={2048}
-              width={2048}
-              src='https://www.paypalobjects.com/webstatic/mktg/logo/pp_cc_mark_37x23.jpg' 
-              alt="PayPal Logo" 
-              className='h-7 w-auto object-cover'
-            />, 
-          label: 'Card Number', 
-          digit: 19 
-          },
-      "ewallet" :
-          { title: 'e-wallet',
-            image: 
-              <Image 
-                height={2048}
-                width={2048}
-                src='/icons/gcash-logo.png' 
-                alt="E-wallet Logo" 
-                className='w-12 aspect-video object-cover bg-white'
-              />,
-            label: 'Number',
-            digit: 11
-          },
-      "bank" : 
-          { title: 'bank transfer',
-            image: 
-              <Image 
-                height={2048}
-                width={2048}
-                src='/icons/bdo.png' 
-                alt="Bank Logo" 
-                className='h-3 w-auto object-cover'
-              />,
-            label: 'Account Number',
-            digit: 10
-          }
-  }
+const payment: Record<string, PaymentInfo> = {
+  "cod": 
+    { title: '', 
+      image: <></>, 
+      label: '', 
+      digit: 0
+    },
+  "credit": 
+    { title: 'credit/debit', 
+      image: 
+        <Image 
+          height={2048}
+          width={2048}
+          src='https://www.paypalobjects.com/webstatic/mktg/logo/pp_cc_mark_37x23.jpg' 
+          alt="PayPal Logo" 
+          className='h-7 w-auto object-cover'
+        />, 
+      label: 'Card Number', 
+      digit: 19 
+    },
+  "ewallet":
+    { title: 'e-wallet',
+      image: 
+        <Image 
+          height={2048}
+          width={2048}
+          src='/icons/gcash-logo.png' 
+          alt="E-wallet Logo" 
+          className='w-12 aspect-video object-cover bg-white'
+        />,
+      label: 'Number',
+      digit: 11
+    },
+  "bank": 
+    { title: 'bank transfer',
+      image: 
+        <Image 
+          height={2048}
+          width={2048}
+          src='/icons/bdo.png' 
+          alt="Bank Logo" 
+          className='h-3 w-auto object-cover'
+        />,
+      label: 'Account Number',
+      digit: 10
+    }
+}
 
-const OrderPage: React.FC<ReceiptProps> = ({ orderID, customerName, items }) => {
+const OrderPage: React.FC = () => {
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [showCustomerService, setShowCustomerService] = useState(false);
   const [showBilling, setShowBilling] = useState(false);
-  const [showOrderInfo, setShowOrderInfo] = useState(true);
+  const [showOrderInfo, setShowOrderInfo] = useState(false);
   
-  const [modeOfPayment, setModeOfPayment] = useState('ewallet');
-
   const receiptRef = useRef<HTMLDivElement>(null);
-  
+
+  // Fetch orders on component mount
+  useEffect(() => {
+    fetchOrders();
+  }, []);
+
+  const fetchOrders = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch('/api/transaction');
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch orders');
+      }
+      
+      const data = await response.json();
+      setOrders(data.orders);
+    } catch (error) {
+      console.error('Failed to fetch orders:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleOrderSelect = (order: Order) => {
+    setSelectedOrder(order);
+    setShowOrderInfo(true);
+  };
+
   const handleDownload = async () => {
-    if (!receiptRef.current) return;
+    if (!receiptRef.current || !selectedOrder) return;
 
     const html2pdf = (await import("html2pdf.js")).default;
 
@@ -89,198 +146,249 @@ const OrderPage: React.FC<ReceiptProps> = ({ orderID, customerName, items }) => 
     element.style.display = "block";
 
     const opt = {
-        margin: 0.5,
-        filename: `receipt-${orderID}.pdf`,
+        margin: 0,
+        filename: `receipt-${selectedOrder.orderID}.pdf`,
         image: { type: "jpeg" as const, quality: 1 },
-        html2canvas: { scale: 1 },
-        jsPDF: { unit: "in", format: "a4", orientation: "portrait" as const },
+        html2canvas: { scale: 2 },
+        jsPDF: { unit: "in", format: "a5", orientation: "portrait" as const },
     };
 
     html2pdf().set(opt).from(element).save();
   };
 
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'pending': return 'bg-yellow-500';
+      case 'approved': return 'bg-blue-500';
+      case 'in_progress': return 'bg-purple-500';
+      case 'completed': return 'bg-green-500';
+      case 'cancelled': return 'bg-red-500';
+      default: return 'bg-gray-500';
+    }
+  };
+
+  const getStatusText = (status: string) => {
+    switch (status) {
+      case 'pending': return 'For Approval';
+      case 'approved': return 'Approved';
+      case 'in_progress': return 'In Progress';
+      case 'completed': return 'Completed';
+      case 'cancelled': return 'Cancelled';
+      default: return status;
+    }
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      month: 'long',
+      day: 'numeric',
+      year: 'numeric'
+    });
+  };
+
+  const formatTime = (dateString: string) => {
+    return new Date(dateString).toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  if (loading) {
+    return (
+      <div className='h-[100vh] w-full flex items-center justify-center bg-gradient-to-t from-violet via-light-blue to-white'>
+        <Image
+            height={2048}
+            width={2048}
+            alt='animated logo'
+            src='/icons/animated-logo.gif'
+            className='h-20 object-contain object-center'
+        />
+      </div>
+    );
+  }
+
   return (
-    <div className='h-[100vh] w-full flex flex-col items-center relative overflow-x-hidden p-3 lg:p-10 lg:pt-20 lg:pr-5 gap-5 select-none lg:overflow-hidden bg-gradient-to-t from-violet via-light-blue to-white before:absolute before:top-0 before:left-0 before:h-full before:w-full before:z-30 before:bg-white/70 before:backdrop-blur-xl'>
+    <div className='h-[100vh] w-full flex flex-col items-center relative overflow-x-hidden p-0 pt-20 lg:p-10 lg:pr-5 gap-2 lg:gap-5 select-none lg:overflow-hidden bg-gradient-to-t from-violet via-light-blue to-white before:absolute before:top-0 before:left-0 before:h-full before:w-full before:z-30 before:bg-white/70 before:backdrop-blur-xl'>
         <motion.h1 
             initial={{x:-200, opacity:0}}
             animate={{x:0, opacity:1}}
             exit={{x:-200, opacity:0}}
             transition={{type:'spring', stiffness:100, damping:20}}
-            className='w-full text-left text-2xl xl:text-4xl font-bold z-50'
+            className='pl-3 w-full text-left text-2xl xl:text-4xl font-bold z-50'
         >Orders
         </motion.h1>
+        
         <div className='w-full h-full grid grid-cols-1 lg:grid-cols-7 gap-5 z-50 relative'>
+            {/* Orders List */}
             <div className='col-span-full lg:col-span-2 flex flex-col xl:p-5 w-full xl:h-[95%] overflow-x-hidden'>
-                <span className='font-extrabold text-neutral-500 text-sm uppercase'>Ongoing</span>
-                {Array.from({length: 3}).map((_,i) => (
-                    <button key={i} type='button' className='w-full border-b border-neutral-200 flex gap-3 p-3 hover:bg-light-blue/30 focus:bg-light-blue ease-out duration-200' onClick={() => setShowOrderInfo(true)}>
-                        <span className='h-12 xl:h-14 aspect-square rounded-xl bg-blue'></span>
+                <span className='font-extrabold pl-3 lg:pl-0 text-neutral-500 text-sm uppercase'>Ongoing</span>
+                {orders.filter(order => order.status !== 'completed').map((order) => (
+                    <button 
+                      key={order.orderID} 
+                      type='button' 
+                      className='w-full border-b border-neutral-200 flex gap-3 p-3 hover:bg-light-blue/30 focus:bg-light-blue ease-out duration-200' 
+                      onClick={() => handleOrderSelect(order)}
+                    >
+                        <span className='h-12 xl:h-14 aspect-square rounded-xl bg-blue flex items-center justify-center text-white font-bold text-xs'>
+                            {order.items.length}
+                        </span>
                         <span className='py-2 flex flex-col items-start justify-center leading-4'>
-                            <h3 className='font-extrabold w-full flex items-center justify-between'>#10132025112</h3>
-                            <p className='text-sm'>October 12, 2025</p>
+                            <h3 className='font-extrabold w-full flex items-center text-left'>#{order.orderID}</h3>
+                            <p className='text-sm'>{formatDate(order.orderDate)}</p>
                         </span>
                         <span className='ml-auto flex flex-col items-end leading-5 justify-center'>
-                            <p className='text-[10px] px-3 rounded-full bg-blue text-white font-bold uppercase'>For Approval</p>
-                            <p className='flex items-center gap-1 text-xs'>₱<strong className='font-extrabold text-base'>999.00</strong></p>
+                            <p className={`text-[10px] px-3 rounded-full text-nowrap ${getStatusColor(order.status)} text-white font-bold uppercase`}>
+                                {getStatusText(order.status)}
+                            </p>
+                            <p className='flex items-center gap-1 text-xs'>₱<strong className='font-extrabold text-base'>{inPeso(order.total)}</strong></p>
                         </span>
                     </button>
                 ))}
-                <span className='font-extrabold text-neutral-500 text-sm uppercase mt-5'>previous purchase</span>
-                {Array.from({length: 3}).map((_,i) => (
-                    <button key={i} type='button' className='w-full border-b border-neutral-200 flex gap-3 p-3 hover:bg-light-blue/30 focus:bg-light-blue ease-out duration-200' onClick={() => setShowOrderInfo(true)}>
-                        <span className='h-14 aspect-square rounded-xl bg-blue'></span>
+                
+                <span className='font-extrabold text-neutral-500 text-sm uppercase mt-5 pl-3 lg:pl-0'>Previous Purchases</span>
+                {orders.filter(order => order.status === 'completed').map((order) => (
+                    <button 
+                      key={order.orderID} 
+                      type='button' 
+                      className='w-full border-b border-neutral-200 flex gap-3 p-3 hover:bg-light-blue/30 focus:bg-light-blue ease-out duration-200' 
+                      onClick={() => handleOrderSelect(order)}
+                    >
+                        <span className='h-14 aspect-square rounded-xl bg-blue flex items-center justify-center text-white font-bold text-xs'>
+                            {order.items.length}
+                        </span>
                         <span className='py-2 flex flex-col items-start justify-center leading-4'>
-                            <h3 className='font-extrabold w-full flex items-center justify-between'>#10132025112</h3>
-                            <p className='text-sm'>October 12, 2025</p>
-                                
+                            <h3 className='font-extrabold w-full flex items-center justify-between'>#{order.orderID}</h3>
+                            <p className='text-sm'>{formatDate(order.orderDate)}</p>
                         </span>
                         <span className='ml-auto flex flex-col items-end leading-5 justify-center'>
-                            <p className='text-[10px] px-3 rounded-full bg-violet text-white font-bold uppercase'>Completed</p>
-                            <p className='flex items-center gap-1 text-xs'>₱<strong className='font-extrabold text-base'>999.00</strong></p>
+                            <p className={`text-[10px] px-3 rounded-full ${getStatusColor(order.status)} text-white font-bold uppercase`}>
+                                {getStatusText(order.status)}
+                            </p>
+                            <p className='flex items-center gap-1 text-xs'>₱<strong className='font-extrabold text-base'>{inPeso(order.total)}</strong></p>
                         </span>
                     </button>
                 ))}
             </div>
+
+            {/* Order Details */}
             <AnimatePresence mode='wait'>
-                {showOrderInfo && (
+                {showOrderInfo && selectedOrder && (
                 <motion.div 
                     initial={{y: 999}}
                     animate={{y: 0}}
                     exit={{y: 999}}
-                    transition={{
-                        duration: 0.5,
-                        ease: 'easeOut'
-                    }}
-                    className='col-span-full lg:col-span-5 rounded-xl shadow-md shadow-black/20 bg-white lg:bg-white/50 backdrop-blur-xl p-3 lg:p-5 w-full h-full lg:max-h-[95%] overflow-hidden flex flex-col absolute lg:relative'
+                    transition={{ duration: 0.5, ease: 'easeOut' }}
+                    className='col-span-full lg:col-span-5 rounded-xl shadow-md shadow-black/20 bg-white lg:bg-white/50 backdrop-blur-xl p-3 lg:p-5 w-full h-[95%] lg:max-h-[95%] overflow-hidden flex flex-col absolute lg:relative'
                 >
                     <div className='w-full flex flex-row-reverse lg:flex-row items-center justify-end lg:justify-between gap-3'>
-                        <button type="button" className='lg:hidden bg-neutral-50 text-rose-500 p-1 rounded-xl border border-black/20 ml-auto text-2xl hover:bg-rose-300 focus:bg-rose-500 focus:text-white ease-out duration-200' onClick={() => setShowOrderInfo(false)}><HiOutlineX /></button>
+                        <button type="button" className='lg:hidden bg-neutral-50 text-rose-500 p-1 rounded-xl border border-black/20 ml-auto text-2xl hover:bg-rose-300 focus:bg-rose-500 focus:text-white ease-out duration-200' onClick={() => setShowOrderInfo(false)}>
+                            <HiOutlineX />
+                        </button>
                         <span className='flex flex-col'>
-                            <h2 className='capitalize font-extrabold text-xl'>order #101420252001</h2>
-                            <p className='font-bold text-sm text-neutral-500'>14 Oct 2025 at 10:34 AM</p>
+                            <h2 className='capitalize font-extrabold text-xl'>Order #{selectedOrder.orderID}</h2>
+                            <p className='font-bold text-sm text-neutral-500'>
+                                {formatDate(selectedOrder.orderDate)} at {formatTime(selectedOrder.orderDate)}
+                            </p>
                         </span>
-                        <button type="button" className='py-2 px-2 lg:px-3 rounded-xl border border-dark-blue flex items-center gap-2 text-dark-blue font-bold hover:bg-dark-blue hover:text-white focus:text-white focus:bg-violet ease-out duration-200' onClick={handleDownload}><MdOutlineSaveAlt className='text-xl'/> <span className='hidden lg:block'>Download E-Receipt</span></button>
+                        <button type="button" className='py-2 px-2 lg:px-3 rounded-xl border border-dark-blue flex items-center gap-2 text-dark-blue font-bold hover:bg-dark-blue hover:text-white focus:text-white focus:bg-violet ease-out duration-200' onClick={handleDownload}>
+                            <MdOutlineSaveAlt className='text-xl'/> 
+                            <span className='hidden lg:block'>Download E-Receipt</span>
+                        </button>
                     </div>
+                    
                     <div className='h-full w-full grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-7 gap-3 overflow-x-hidden px-2 py-3'>
+                        {/* Items Section */}
                         <div className='col-span-full xl:col-span-5 h-full flex flex-col gap-3 xl:overflow-hidden px-1'>
                             <div className='h-full max-h-1/2 rounded-xl bg-neutral-100 shadow-md shadow-black/20 overflow-hidden py-3 flex flex-col'>
                                 <span className='text-xl font-bold pl-5'>Items</span>
                                 <div className='h-full w-full flex flex-col overflow-x-hidden'>
-                                    {Array.from({length: 3}).map((_,i) => (
-                                        <div key={i} className='flex w-full p-3 items-center gap-3 border-b border-white'>
-                                            <span className='h-14 xl:h-20 aspect-square rounded-xl bg-light-blue'></span>
+                                    {selectedOrder.items.map((item, index) => (
+                                        <div key={index} className='flex w-full p-3 items-center gap-3 border-b border-white'>
+                                            <span className='h-14 xl:h-20 aspect-square rounded-xl bg-light-blue flex items-center justify-center'>
+                                                {item.imgUrl ? (
+                                                    <Image src={item.imgUrl} alt={item.name} width={80} height={80} className="rounded-xl object-cover" />
+                                                ) : (
+                                                    <span className="text-white font-bold text-xs">IMG</span>
+                                                )}
+                                            </span>
                                             <span className='w-1/2 flex flex-col leading-5'>
-                                                <h3 className='overflow-ellipsis text-nowrap w-full overflow-hidden text-sm xl:text-base'>Carbon Fiber Digital Business Card</h3>
-                                                <p className='text-xs xl:text-sm'>Logo: <strong className='text-dark-blue'>OnTap</strong></p>
-                                                <p className='text-xs xl:text-sm'>Color: <strong className='text-dark-blue'>Default</strong></p>
+                                                <h3 className='overflow-ellipsis text-nowrap w-full overflow-hidden text-sm xl:text-base'>{item.name}</h3>
+                                                <p className='text-xs xl:text-sm'>Logo: <strong className='text-dark-blue'>{item.logo}</strong></p>
                                             </span>
                                             <span className='w-1/2 flex flex-col xl:flex-row items-end xl:items-center justify-around'>
-                                                <p className='text-xs flex items-center gap-1'>₱ <strong className='text-sm xl:text-base'>999.00</strong></p>
-                                                <strong className='text-sm xl:text-base'>99</strong>
-                                                <p className='text-xs flex items-center gap-1'>₱ <strong className='text-base'>98,901.00</strong></p>
+                                                <p className='text-xs flex items-center gap-1'>₱ <strong className='text-sm xl:text-base'>{inPeso(item.price)}</strong></p>
+                                                <strong className='text-sm xl:text-base'>{item.qty}</strong>
+                                                <p className='text-xs flex items-center gap-1'>₱ <strong className='text-base'>{inPeso(item.subtotal)}</strong></p>
                                             </span>
                                         </div>
                                     ))}
                                 </div>
                             </div>
+                            
+                            {/* Recipient Info and Tracking */}
                             <div className='h-max w-full flex flex-col lg:flex-row items-center gap-3'>
                                 <div className='h-full w-full lg:w-1/2 rounded-xl bg-neutral-100 shadow-md shadow-black/20 overflow-x-hidden p-3'>
-                                    <span className='text-base font-bold'>Recepient's Information</span>
+                                    <span className='text-base font-bold'>Recipient&apos;s Information</span>
                                     <div className='w-full flex flex-col gap-2 pt-5'>
                                         <span className='flex flex-col w-full leading-5'>
                                             <strong className='uppercase text-[10px] font-extrabold text-neutral-600'>name</strong>
-                                            <p>Juan Dela Cruz</p>
+                                            <p>{selectedOrder.customerName}</p>
                                         </span>
                                         <span className='flex flex-col w-full leading-5'>
                                             <strong className='uppercase text-[10px] font-extrabold text-neutral-600'>email</strong>
-                                            <p>jdelacruz@gmail.com</p>
+                                            <p>{selectedOrder.email}</p>
                                         </span>
                                         <span className='flex flex-col w-full leading-5'>
                                             <strong className='uppercase text-[10px] font-extrabold text-neutral-600'>contact</strong>
-                                            <p>+63 912 345 6789</p>
+                                            <p>{selectedOrder.contactNumber}</p>
                                         </span>
                                         <span className='flex flex-col w-full leading-5'>
                                             <strong className='uppercase text-[10px] font-extrabold text-neutral-600'>address</strong>
-                                            <p>123 Vermiculate Street, Las Pinas City, Metro Manila, 1002</p>
-                                        </span>
-                                        <span className='flex flex-col w-full leading-5'>
-                                            <strong className='uppercase text-[10px] font-extrabold text-neutral-600'>time availability</strong>
-                                            <strong className='uppercase'>08:00 am - 09:00 pm</strong>
+                                            <p>{selectedOrder.deliveryAddress}</p>
                                         </span>
                                     </div>
-                                    
                                 </div>
+                                
+                                {/* Order Tracking */}
                                 <div className='h-max lg:h-full lg:max-h-[33vh] xl:max-h-[31vh] w-full lg:w-1/2 rounded-xl bg-neutral-100 shadow-md shadow-black/20 p-3 gap-3 flex flex-col xl:overflow-hidden'>
                                     <span className='text-base font-bold'>Order Tracking</span>
                                     <div className='h-max xl:h-full w-full flex flex-col xl:overflow-y-auto overflow-x-hidden pr-2'>
-                                    <span className='h-max w-full flex flex-col pl-5 py-3 relative 
-                                        before:h-3 before:w-3 before:bg-blue before:rounded-xs before:absolute before:z-20 before:left-0 before:top-0
-                                        after:h-full after:w-0.5 after:bg-neutral-300 after:absolute after:left-1.5 after:top-4'>
-                                    <strong className='uppercase font-extrabold text-xs text-neutral-500 mb-3'>today</strong>
-                                    <span className='flex flex-col gap-2'>
-                                        <strong className='text-sm font-extrabold text-dark-blue'>
-                                        10:56 AM <span className='text-black font-normal'> ● Mock Up Layout Approved</span>
-                                        </strong>
-                                        <strong className='text-sm font-extrabold text-dark-blue'>
-                                        09:00 AM <span className='text-black font-normal'> ● Mock Up Layout for Approval</span>
-                                        </strong>
-                                    </span>
-                                    </span>
-                                    <span className='h-max w-full flex flex-col pl-5 py-3 relative 
-                                        before:h-3 before:w-3 before:bg-blue before:rounded-full before:absolute before:z-20 before:left-0 before:top-1
-                                        after:h-full after:w-0.5 after:bg-neutral-300 after:absolute after:left-1.5 after:top-5'>
-                                    <strong className='uppercase font-extrabold text-xs text-neutral-500 mb-3'>yesterday</strong>
-                                    <span className='flex flex-col gap-2'>
-                                        <strong className='text-sm font-extrabold text-dark-blue'>
-                                        05:28 PM <span className='text-black font-normal'> ● Initial Layout Received</span>
-                                        </strong>
-                                        <strong className='text-sm font-extrabold text-dark-blue'>
-                                        09:00 AM <span className='text-black font-normal'> ● Contacted by Marketing Personnel</span>
-                                        </strong>
-                                    </span>
-                                    </span>
-                                    <span className='h-max w-full flex flex-col pl-5 py-3 relative 
-                                        before:h-3 before:w-3 before:bg-blue before:rounded-full before:absolute before:z-20 before:left-0 before:top-1
-                                        after:h-full after:w-0.5 after:bg-neutral-300 after:absolute after:left-1.5 after:top-5'>
-                                    <strong className='uppercase font-extrabold text-xs text-neutral-500 mb-3'>yesterday</strong>
-                                    <span className='flex flex-col gap-2'>
-                                        <strong className='text-sm font-extrabold text-dark-blue'>
-                                        05:28 PM <span className='text-black font-normal'> ● Initial Layout Received</span>
-                                        </strong>
-                                        <strong className='text-sm font-extrabold text-dark-blue'>
-                                        09:00 AM <span className='text-black font-normal'> ● Contacted by Marketing Personnel</span>
-                                        </strong>
-                                    </span>
-                                    </span>
-                                    <span className='h-max w-full flex flex-col pl-5 py-3 relative 
-                                        before:h-3 before:w-3 before:bg-blue before:rounded-full before:absolute before:z-20 before:left-0 before:top-1
-                                        after:h-full after:w-0.5 after:bg-neutral-300 after:absolute after:left-1.5 after:top-5'>
-                                    <strong className='uppercase font-extrabold text-xs text-neutral-500 mb-3'>yesterday</strong>
-                                    <span className='flex flex-col gap-2'>
-                                        <strong className='text-sm font-extrabold text-dark-blue'>
-                                        05:28 PM <span className='text-black font-normal'> ● Initial Layout Received</span>
-                                        </strong>
-                                        <strong className='text-sm font-extrabold text-dark-blue'>
-                                        09:00 AM <span className='text-black font-normal'> ● Contacted by Marketing Personnel</span>
-                                        </strong>
-                                    </span>
-                                    </span>
-                                </div>
+                                        {selectedOrder.trackingEvents.map((event, index) => (
+                                            <div key={index} className='h-max w-full flex flex-col pl-5 py-3 relative 
+                                                before:h-3 before:w-3 before:bg-blue before:rounded-xs before:absolute before:z-20 before:left-0 before:top-4
+                                                after:h-full after:w-0.5 after:bg-neutral-300 after:absolute after:left-1.5 after:top-7'>
+                                                <strong className='uppercase font-extrabold text-xs text-neutral-500 mb-3'>
+                                                    {formatDate(event.timestamp)}
+                                                </strong>
+                                                <span className='flex flex-col gap-2'>
+                                                    <strong className='text-sm font-extrabold text-dark-blue'>
+                                                        {formatTime(event.timestamp)} <span className='text-black font-normal'> ● {event.title}</span>
+                                                    </strong>
+                                                    {event.description && (
+                                                        <p className='text-xs text-neutral-600'>{event.description}</p>
+                                                    )}
+                                                </span>
+                                            </div>
+                                        ))}
+                                    </div>
                                 </div>
                             </div>
                         </div>
+                        
+                        {/* Right Sidebar */}
                         <div className='col-span-full xl:col-span-2 h-max w-full flex flex-col lg:grid lg:grid-cols-2 xl:flex xl:flex-col gap-3'>
+                            {/* Shipping Method */}
                             <div className='rounded-xl bg-neutral-100 shadow-md shadow-black/20 pt-3 w-full flex flex-col overflow-hidden'>
                                 <span className='text-base font-bold pl-3'>Shipping Method</span>
                                 <span className='w-full p-4 flex items-center gap-2'>
-                                    {true ? (
+                                    {selectedOrder.shippingMethod === 'delivery' ? (
                                         <>
                                         <span className='h-12 aspect-square rounded-xl bg-dark-blue text-white items-center justify-center flex text-2xl'>
                                             <RiTruckLine />
                                         </span>
                                         <span className='w-full text-sm flex items-center justify-between'>
                                             <strong className='font-extrabold text-neutral-700'>Door-to-door Delivery</strong>
-                                            <span className='text-xs flex items-center gap-1 ml-auto'>₱<strong className='text-base font-extrabold'>250.00</strong></span>
+                                            <span className='text-xs flex items-center gap-1 ml-auto'>₱<strong className='text-base font-extrabold'>{inPeso(selectedOrder.shippingFee)}</strong></span>
                                         </span>
                                         </>
                                     ) : (
@@ -302,29 +410,31 @@ const OrderPage: React.FC<ReceiptProps> = ({ orderID, customerName, items }) => 
                                     )}
                                 </span>
                             </div>
+                            
+                            {/* Payment Method */}
                             <div className='rounded-xl bg-neutral-100 shadow-md shadow-black/20 pt-3 p-3 w-full flex flex-col overflow-hidden'>
                                 <span className='text-base font-bold'>Mode of Payment</span>
-                                {modeOfPayment === 'cod' ? (
+                                {selectedOrder.paymentMethod === 'cod' ? (
                                     <span className='flex items-center justify-between w-full mt-3 py-2 px-3 text-white rounded-xl bg-dark-blue'>
                                         <span className='uppercase font-bold flex text-xs gap-2 items-center'><TbTruckDelivery className='text-2xl'/>cash on delivery</span>
-                                        <p className='flex items-center gap-1 text-xs'>₱<span className='font-bold text-xl'>999.00</span></p>
+                                        <p className='flex items-center gap-1 text-xs'>₱<span className='font-bold text-xl'>250.00</span></p>
                                     </span>
                                 ) : (
                                     <span className='flex flex-col justify-center w-full mt-3 py-2 px-3 gap-1 text-white rounded-xl bg-dark-blue'>
                                         <span className='flex items-center justify-between'>
-                                            <p className='uppercase text-sm font-bold tracking-wide'>{payment[modeOfPayment].title}</p>
-                                            {payment[modeOfPayment].image}
+                                            <p className='uppercase text-sm font-bold tracking-wide'>{payment[selectedOrder.paymentMethod]?.title || selectedOrder.paymentMethod}</p>
+                                            {payment[selectedOrder.paymentMethod]?.image}
                                         </span>
                                         <span className='flex items-end justify-between gap-5'>
                                             <span className='w-full flex flex-col justify-start'>
-                                                <h5 className='text-xs'>{payment[modeOfPayment].label}</h5>
+                                                <h5 className='text-xs'>{payment[selectedOrder.paymentMethod]?.label}</h5>
                                                 <span className='flex w-full items-center gap-0.5 '>
-                                                    {Array.from({ length: payment[modeOfPayment].digit }).map((_,i) => (
+                                                    {Array.from({ length: payment[selectedOrder.paymentMethod]?.digit || 4 }).map((_,i) => (
                                                         <span key={i} className={`h-5 min-w-1 ${showBilling ? 'text-sm' : 'text-xs'} font-extrabold`}>
                                                             {showBilling ? 
-                                                            modeOfPayment === 'credit' ? `${(i+1) % 5 === 0 ? ' ' : `${i%4 + 1}`}`: 
+                                                            selectedOrder.paymentMethod === 'credit' ? `${(i+1) % 5 === 0 ? ' ' : `${i%4 + 1}`}`: 
                                                             `${i%4 + 1}`
-                                                            : modeOfPayment === 'credit' ? `${(i+1) % 5 === 0 ? ' ' : '●'}` : '●' 
+                                                            : selectedOrder.paymentMethod === 'credit' ? `${(i+1) % 5 === 0 ? ' ' : '●'}` : '●' 
                                                         }
                                                         </span>
                                                     ))}
@@ -336,30 +446,34 @@ const OrderPage: React.FC<ReceiptProps> = ({ orderID, customerName, items }) => 
                                                     </button>
                                                 </span>
                                             </span>
-                                            <p className='flex items-center gap-1 text-xs'>₱<span className='font-bold text-xl'>999.00</span></p>
+                                            <p className='flex items-center gap-1 text-xs'>₱<span className='font-bold text-xl'>{inPeso(selectedOrder.total)}</span></p>
                                         </span>
                                     </span>
                                 )}
                             </div>
+                            
+                            {/* Order Summary */}
                             <div className='col-span-full rounded-xl bg-neutral-100 shadow-md shadow-black/20 pt-3 w-full flex flex-col overflow-hidden'>
                                 <span className='text-base font-bold pl-3'>Summary</span>
                                 <div className='w-full flex flex-col mt-5'>
                                     <span className='w-full flex items-center justify-between px-5'>
                                         <strong className='font-extrabold'>Subtotal</strong>
-                                        <span className='text-sm flex items-center gap-1'>₱<strong className='font-extrabold text-xl'>98,901.00</strong></span>
+                                        <span className='text-sm flex items-center gap-1'>₱<strong className='font-extrabold text-xl'>{inPeso(selectedOrder.subtotal)}</strong></span>
                                     </span>
                                     <span className='w-full flex items-center justify-between px-5'>
                                         <strong className='font-extrabold'>Delivery Fee</strong>
-                                        <span className='text-sm flex items-center gap-1'>₱<strong className='font-extrabold text-xl'>250.00</strong></span>
+                                        <span className='text-sm flex items-center gap-1'>₱<strong className='font-extrabold text-xl'>{inPeso(selectedOrder.shippingFee)}</strong></span>
                                     </span>
-                                    <span className='w-full flex items-center justify-between gap-2 pb-5 px-5'>
-                                        <strong className='font-extrabold'>Discount</strong>
-                                        <strong className='mr-auto font-semibold text-sm'>(10% less)</strong>
-                                        <span className='text-sm flex items-center gap-1'>₱<strong className='font-extrabold text-xl'>9,890.10</strong></span>
-                                    </span>
+                                    {selectedOrder.discount > 0 && (
+                                        <span className='w-full flex items-center justify-between gap-2 pb-5 px-5'>
+                                            <strong className='font-extrabold'>Discount</strong>
+                                            <strong className='mr-auto font-semibold text-sm'>({inPeso((selectedOrder.discount / selectedOrder.subtotal) * 100)}% less)</strong>
+                                            <span className='text-sm flex items-center gap-1'>₱<strong className='font-extrabold text-xl'>{inPeso(selectedOrder.discount)}</strong></span>
+                                        </span>
+                                    )}
                                     <span className='w-full flex items-center justify-between py-2 px-5 bg-dark-blue text-white'>
                                         <strong className='font-extrabold'>Total</strong>
-                                        <span className='text-sm flex items-center gap-1'>₱<strong className='font-extrabold text-xl'>89,260.90</strong></span>
+                                        <span className='text-sm flex items-center gap-1'>₱<strong className='font-extrabold text-xl'>{inPeso(selectedOrder.total)}</strong></span>
                                     </span>
                                 </div>
                             </div>
@@ -369,35 +483,23 @@ const OrderPage: React.FC<ReceiptProps> = ({ orderID, customerName, items }) => 
                 )}
             </AnimatePresence>
         </div>
-        <div className='w-max h-max z-99 absolute bottom-10 right-10 flex flex-col items-end gap-5'>
+
+        {/* Customer Service Button */}
+        {/* <div className='w-max h-max z-99 absolute bottom-10 right-10 flex flex-col items-end gap-5'>
             <AnimatePresence mode="wait">
                 {showCustomerService && (
                     <motion.div 
-                    initial={{
-                        scale: 0, 
-                        x: 75, 
-                        y: 225, 
-                        opacity: 0
-                    }}
-                    animate={{
-                        scale: 1, 
-                        x: 0, 
-                        y: 0,
-                        opacity: 1
-                    }}
-                    exit={{
-                        scale: 0, 
-                        x: 75, 
-                        y:225,
-                        opacity: 0
-                    }}
-                    transition={{
-                        duration: 0.3,
-                        ease: 'easeOut'
-                    }}
+                    initial={{ scale: 0, x: 75, y: 225, opacity: 0 }}
+                    animate={{ scale: 1, x: 0, y: 0, opacity: 1 }}
+                    exit={{ scale: 0, x: 75, y:225, opacity: 0 }}
+                    transition={{ duration: 0.3, ease: 'easeOut' }}
                     className='h-120 w-80 bg-white rounded-3xl border border-black/20 shadow-md shadow-black/30'
                     >
-
+                        
+                        <div className="p-4">
+                            <h3 className="font-bold text-lg">Customer Service</h3>
+                            <p className="text-sm text-gray-600">How can we help you?</p>
+                        </div>
                     </motion.div>
                 )}
             </AnimatePresence>
@@ -410,12 +512,29 @@ const OrderPage: React.FC<ReceiptProps> = ({ orderID, customerName, items }) => 
             >
                 {showCustomerService ? (<RiCloseLine />) : (<RiCustomerService2Fill />)}
             </motion.button>
-        </div>
-        <div ref={receiptRef} className="h-full w-full flex absolute z-9999" style={{display:'none'}}>
-            <ReceiptTemplate orderID={'123456'} customerName={''} items={[]}/>
+        </div> */}
+
+        {/* Hidden Receipt for PDF Generation */}
+        <div ref={receiptRef} className="h-full w-full flex" style={{display:'none'}}>
+            <ReceiptTemplate 
+                orderID={selectedOrder?.orderID || ''}
+                customerName={selectedOrder?.customerName || ''}
+                companyName={selectedOrder?.companyName || ''}
+                contactNumber={selectedOrder?.contactNumber || ''}
+                email={selectedOrder?.email || ''}
+                deliveryAddress={selectedOrder?.deliveryAddress || ''}
+                items={selectedOrder?.items || []}
+                shippingMethod={selectedOrder?.shippingMethod || ''}
+                shippingFee={selectedOrder?.shippingFee || 0}
+                paymentMethod={selectedOrder?.paymentMethod || ''}
+                discount={selectedOrder?.discount || 0}
+                subtotal={selectedOrder?.subtotal || 0}
+                total={selectedOrder?.total || 0}
+                orderDate={selectedOrder?.orderDate || ''}
+            />
         </div>
     </div>
-  )
-}
+  );
+};
 
-export default OrderPage
+export default OrderPage;

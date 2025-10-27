@@ -119,8 +119,6 @@
         setCheckingAuth(false);
 
         if (userData) {
-            // User is logged in, proceed with adding to cart
-            console.log('User is logged in, adding to cart:', userData);
             try {
                 // Assuming you have these values available in your component
                 const productData = {
@@ -128,7 +126,7 @@
                     clientID: user?.clientID, // The logged-in user's client ID
                     quantity: quantity, // The quantity selected by user
                     subtotal: priceOption === 'ontap' ? product.price.ontap * quantity : product.price.custom * quantity, // Calculate subtotal
-                    logo: priceOption === 'ontap' ? 'OnTap' : 'Default'
+                    logo: priceOption === 'ontap' ? 'OnTap' : 'Custom'
                 }
 
                 const response = await fetch('/api/cart/add', {
@@ -146,6 +144,9 @@
                 setShow(true);
                 setIcon('success');
                 setMessage(result.message || 'Item added to cart successfully!');
+                setTimeout(() => {
+                    setInquireItem(false);
+                }, 1000);
                 } else {
                 // Error handling with toast
                 setShow(true);

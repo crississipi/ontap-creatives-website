@@ -1,7 +1,7 @@
 "use client"
 
 import React, { JSX, useEffect, useState } from 'react'
-import { About, AboutUs, AffiliateProgramPage, CartPage, ClientList, Cookies, FAQs, FillUpForm, Footer, Header, Hero, OrderPage, ProductList, Starting, VideoTutorial } from '.'
+import { About, AboutUs, AffiliateProgramPage, CartPage, ClientList, FAQs, FillUpForm, Footer, Header, Hero, OrderPage, ProductList, Starting, VideoTutorial } from '.'
 import { AnimatePresence, motion } from 'framer-motion'
 import { BsQuestionLg } from 'react-icons/bs'
 import { EditProps } from '@/types'
@@ -10,15 +10,13 @@ const Mainpage = ({ editable }: EditProps) => {
   const [page, setPage] = useState(0);
   const [endWarping, endWarpingNow] = useState(false);
 
-  const [showCookies, setShowCookies] = useState(false);
-
   const SectionPage: Record<number, JSX.Element> = {
     1: <AffiliateProgramPage editable={editable}/>,
     2: <FAQs editable={editable}/>,
     3: <ProductList editable={editable}/>,
     4: <CartPage />,
     5: <AboutUs editable={editable}/>,
-    6: <OrderPage orderID={''} customerName={''} items={[]} />
+    6: <OrderPage />
   }
 
   useEffect(() => {
@@ -35,7 +33,6 @@ const Mainpage = ({ editable }: EditProps) => {
       window.removeEventListener("wheel", preventScroll);
       window.removeEventListener("touchmove", preventScroll);
       endWarpingNow(true);
-      setShowCookies(true);
     }, 3000);
 
     return () => clearTimeout(timer);
@@ -55,7 +52,7 @@ const Mainpage = ({ editable }: EditProps) => {
               <Footer setPage={setPage}/>
             </>
             ) : SectionPage[page]}
-          {page !== 2 && page !== 3 && (
+          {page !== 2 && page !== 3 && page !== 6 && (
             <motion.button 
               type="button" 
               animate={{x:[20, 5, 20]}}
@@ -74,7 +71,6 @@ const Mainpage = ({ editable }: EditProps) => {
               FAQs
             </motion.button>
           )}
-          {showCookies && <AnimatePresence><Cookies setShowCookies={setShowCookies}/></AnimatePresence>}
     </div>
   )
 }

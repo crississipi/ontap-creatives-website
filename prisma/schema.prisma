@@ -7,13 +7,65 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model activity {
-  activityID  Int      @id @default(autoincrement())
-  activity    String   @db.VarChar(255)
-  dateVisited DateTime @db.DateTime(0)
-  dateLeft    DateTime @db.DateTime(0)
-  geolocation String   @db.VarChar(255)
-  clients     client[]
+model visitor {
+  visitorID   Int       @id @default(autoincrement())
+  clientID    Int?
+  visitorUUID String    @unique @db.VarChar(255)
+  latitude    Float?    
+  longitude   Float?    
+  city        String?   @db.VarChar(100)
+  region      String?   @db.VarChar(100)
+  country     String?   @db.VarChar(100)
+  ipAddress   String?   @db.VarChar(45)
+  userAgent   String?   @db.Text
+  firstVisit  DateTime  @default(now())
+  lastVisit   DateTime  @default(now())
+  isActive    Boolean   @default(true)
+  
+  // Relations
+  client     client?    @relation(fields: [clientID], references: [clientID], onDelete: Cascade)
+  sessions   session[]  // Changed from activities to sessions
+  
+  @@map("visitor")
+}
+
+model session {
+  sessionID   Int      @id @default(autoincrement())
+  visitorID   Int
+  pageUrl     String?  @db.Text
+  pageTitle   String?  @db.VarChar(255)
+  dateVisited DateTime @default(now()) @db.DateTime(0)
+  dateLeft    DateTime? @db.DateTime(0)
+  duration    Int?     // Duration in seconds
+  metadata    String?  @db.Text // Store additional data as JSON
+  
+  // Relations
+  visitor visitor @relation(fields: [visitorID], references: [visitorID], onDelete: Cascade)
+  
+  @@map("session")
+}
+
+model client {
+  clientID      Int           @id @default(autoincrement())
+  clientName    String?       @db.VarChar(100)
+  email         String        @unique(map: "email") @db.VarChar(50)
+  contactNumber String?       @db.VarChar(20)
+  address       String?       @db.VarChar(255)
+  timeAvailFrom DateTime?     @db.Time(0)
+  timeAvailTo   DateTime?     @db.Time(0)
+  password      String        @db.VarChar(255)
+  adsAgree      Boolean
+  emailVerified Boolean       @default(false)
+  dateCreated   DateTime      @default(now()) @map("dateCreated")
+  
+  // Relations
+  carts         cart[]
+  feedbacks     feedback[]
+  transactions  transaction[]
+  vouchers      voucher[]
+  visitors      visitor[]
+  
+  @@map("client")
 }
 
 model cart {
@@ -33,50 +85,54 @@ model cart {
   @@index([productID], map: "cart_productID_fkey")
 }
 
-model client {
-  clientID      Int           @id @default(autoincrement())
-  clientName    String?       @db.VarChar(100)
-  email         String        @unique(map: "email") @db.VarChar(50)
-  contactNumber String?       @db.VarChar(20)
-  address       String?       @db.VarChar(255)
-  timeAvailFrom DateTime?     @db.Time(0)
-  timeAvailTo   DateTime?     @db.Time(0)
-  password      String        @db.VarChar(255)
-  activityID    Int?
-  cartID        Int?
-  transactionID Int?
-  voucherID     Int?
-  adsAgree      Boolean
-  dateCreated   DateTime      @default(now()) @map("dateCreated")
-  carts         cart[]
-  activity      activity?     @relation(fields: [activityID], references: [activityID])
-  feedbacks     feedback[]
-  transactions  transaction[]
-  vouchers      voucher[]
-
-  @@index([activityID], map: "client_activityID_fkey")
+model tracking {
+  trackingID Int      @id @default(autoincrement())
+  status     String   @db.VarChar(100)
+  info       String?  @db.VarChar(100)
+  time       DateTime? @db.Time(0)
+  date       DateTime @default(now())
+  
+  // Relations
+  transactions transaction[]
+  
+  @@map("tracking")
 }
 
 model transaction {
   orderID       Int      @id @default(autoincrement())
   transactionID String   @unique(map: "transactionID") @db.VarChar(255)
   cartID        Int
-  billingID     Int
-  voucherID     Int
+  billingID     Int?
+  voucherID     Int?
   trackingID    Int
+  clientID      Int      // Added clientID to track who owns the order
   shipMethod    String   @db.VarChar(100)
   subtotal      Float    @db.Float
-  total         Float    @db.Float
   dateOrdered   DateTime @default(now()) @map("dateOrdered")
-  billing       billing  @relation(fields: [billingID], references: [billingID])
+  
+  // Relations
+  billing       billing?  @relation(fields: [billingID], references: [billingID])
   cart          cart     @relation(fields: [cartID], references: [cartID])
-  client        client   @relation(fields: [trackingID], references: [clientID])
-  voucher       voucher  @relation(fields: [voucherID], references: [voucherID])
+  tracking      tracking @relation(fields: [trackingID], references: [trackingID])
+  client        client   @relation(fields: [clientID], references: [clientID])
+  voucher       voucher?  @relation(fields: [voucherID], references: [voucherID])
 
   @@index([billingID], map: "transaction_billingID_fkey")
   @@index([cartID], map: "transaction_cartID_fkey")
   @@index([trackingID], map: "transaction_trackingID_fkey")
   @@index([voucherID], map: "transaction_voucherID_fkey")
+  @@index([clientID], map: "transaction_clientID_fkey")
+}
+
+model Otp {
+  id        String   @id @default(cuid())
+  email     String   @db.VarChar(255)
+  otp       String   @db.VarChar(6)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([email])
+  @@map("otp")
 }
 
 model voucher {

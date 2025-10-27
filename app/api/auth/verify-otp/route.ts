@@ -1,47 +1,43 @@
-import { otpStore } from "@/lib/otpStore";
-import { corsHeaders } from "@/lib/corsHeaders";
+// app/api/auth/verify-otp/route.ts
+import { NextRequest, NextResponse } from 'next/server'
+import { verifyOtpWithoutDelete } from '@/lib/otpStore'
+import { corsHeaders } from '@/lib/corsHeaders'
 
 export async function OPTIONS() {
-  return new Response(null, { status: 200, headers: corsHeaders });
+  return new Response(null, { status: 200, headers: corsHeaders })
 }
 
-export async function POST(req: Request) {
-  const { email, otp } = await req.json();
+export async function POST(request: NextRequest) {
+  try {
+    const { email, otp } = await request.json()
 
-  if (!email || !otp) {
-    return Response.json(
-      { success: false, message: "Email and OTP are required" },
-      { status: 400, headers: corsHeaders }
-    );
+    if (!email || !otp) {
+      return NextResponse.json(
+        { error: 'Email and OTP are required' },
+        { status: 400, headers: corsHeaders }
+      )
+    }
+
+    console.log('🔍 Verifying OTP for email:', email, 'OTP:', otp)
+
+    const result = await verifyOtpWithoutDelete(email, otp)
+
+    if (!result.isValid) {
+      return NextResponse.json(
+        { error: result.message },
+        { status: 400, headers: corsHeaders }
+      )
+    }
+
+    return NextResponse.json(
+      { message: result.message },
+      { status: 200, headers: corsHeaders }
+    )
+  } catch (error) {
+    console.error('Verify OTP error:', error)
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500, headers: corsHeaders }
+    )
   }
-
-  const record = otpStore.get(email);
-  if (!record) {
-    return Response.json(
-      { success: false, message: "No OTP requested for this email" },
-      { status: 400, headers: corsHeaders }
-    );
-  }
-
-  const { otp: validOtp, expiresAt } = record;
-  if (Date.now() > expiresAt) {
-    otpStore.delete(email);
-    return Response.json(
-      { success: false, message: "OTP expired" },
-      { status: 400, headers: corsHeaders }
-    );
-  }
-
-  if (otp !== validOtp) {
-    return Response.json(
-      { success: false, message: "Invalid OTP" },
-      { status: 400, headers: corsHeaders }
-    );
-  }
-
-  otpStore.delete(email);
-  return Response.json(
-    { success: true, message: "OTP verified successfully" },
-    { status: 200, headers: corsHeaders }
-  );
 }

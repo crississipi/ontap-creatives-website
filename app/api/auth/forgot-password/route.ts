@@ -1,3 +1,4 @@
+// app/api/auth/forgot-password/route.ts
 import { NextRequest, NextResponse } from 'next/server'
 import { PrismaClient } from '@prisma/client'
 import { generateOtp, storeOtp } from '@/lib/otpStore'
@@ -12,7 +13,7 @@ export async function OPTIONS() {
 
 export async function POST(request: NextRequest) {
   try {
-    const { email, name } = await request.json()
+    const { email } = await request.json()
 
     if (!email) {
       return NextResponse.json(
@@ -21,15 +22,27 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Check if user exists
+    const user = await prisma.client.findUnique({
+      where: { email }
+    })
+
+    if (!user) {
+      return NextResponse.json(
+        { error: 'No account found with this email address' },
+        { status: 404, headers: corsHeaders }
+      )
+    }
+
     // Generate OTP
     const otp = generateOtp()
     
-    // Store OTP in database for email verification
-    await storeOtp(email, otp, 30) // 30 minutes for email verification
+    // Store OTP in database (persistent)
+    await storeOtp(email, otp, 10) // 10 minutes
 
-    console.log('🔍 Verification OTP stored for email:', email, 'OTP:', otp)
+    console.log('🔍 OTP stored for email:', email, 'OTP:', otp)
 
-    // Send verification email
+    // Send OTP email
     const transporter = nodemailer.createTransport({
       host: process.env.SMTP_HOST,
       port: parseInt(process.env.SMTP_PORT || "465"),
@@ -43,7 +56,7 @@ export async function POST(request: NextRequest) {
     await transporter.sendMail({
       from: `"Ontap Creatives Team" <${process.env.SMTP_USER}>`,
       to: email,
-      subject: "Ontap Creatives: Verify Your Email Address",
+      subject: "Ontap Creatives: Password Reset OTP",
       html: `<div style="font-family: system-ui, sans-serif, Arial; font-size: 12px">
         <div style="padding: 15px 0;">
           <table role="presentation">
@@ -56,14 +69,13 @@ export async function POST(request: NextRequest) {
             </tr>
             <tr>
               <td style="vertical-align: top">
-                <p>Hi <strong>${name || 'User'}</strong>,</p>
-                <p>Welcome to OnTap Creatives! Thank you for creating an account.</p>
-                <p>To complete your registration and verify your email address, please use the OTP below:</p>
+                <p>Hi <strong>${user.clientName || 'User'}</strong>,</p>
+                <p>We received a request to reset your password. Use the OTP below to proceed:</p>
                 <br>
                 <div style="text-align:center; font-size:24px; font-weight:bold; letter-spacing:6px; color:#2E86C1; margin: 20px 0;">${otp}</div>
                 <br>
-                <p>This OTP is valid for 30 minutes.</p>
-                <p>If you didn't create an account with us, please ignore this email.</p>
+                <p>This OTP is valid for 10 minutes.</p>
+                <p>If you didn't request this, please ignore this email.</p>
                 <br><br>
                 <p>Best regards,<br><strong>The OnTap Creatives Team</strong></p>
                 <p style="color: #2E86C1; font-size: 12px; padding: 10px 0px; border-top: 1px solid #2E86C1">
@@ -77,13 +89,13 @@ export async function POST(request: NextRequest) {
     })
 
     return NextResponse.json(
-      { message: 'Verification email sent successfully' },
+      { message: 'OTP sent to your email' },
       { status: 200, headers: corsHeaders }
     )
   } catch (error) {
-    console.error('Send verification error:', error)
+    console.error('Forgot password error:', error)
     return NextResponse.json(
-      { error: 'Failed to send verification email' },
+      { error: 'Failed to process request' },
       { status: 500, headers: corsHeaders }
     )
   } finally {

@@ -1,4 +1,3 @@
-// contexts/UserContext.tsx
 "use client"
 
 import React, { createContext, useContext, useEffect, useState } from 'react'
@@ -16,6 +15,7 @@ interface UserContextType {
   login: (userData: User) => void
   logout: () => void
   loading: boolean
+  updateVisitorClient: (clientID: number) => Promise<void>
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined)
@@ -35,6 +35,10 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       if (storedUser) {
         const userData = JSON.parse(storedUser)
         setUser(userData)
+        
+        // Update visitor record with clientID when session is restored
+        await updateVisitorClient(userData.clientID)
+        
         setLoading(false)
         return
       }
@@ -52,6 +56,9 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         if (data.user) {
           setUser(data.user)
           localStorage.setItem('user', JSON.stringify(data.user))
+          
+          // Update visitor record with clientID
+          await updateVisitorClient(data.user.clientID)
         }
       }
     } catch (error) {
@@ -61,9 +68,36 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-  const login = (userData: User) => {
+  const login = async (userData: User) => {
     setUser(userData)
     localStorage.setItem('user', JSON.stringify(userData))
+    
+    // Update visitor record with clientID when user logs in
+    await updateVisitorClient(userData.clientID)
+  }
+
+  const updateVisitorClient = async (clientID: number): Promise<void> => {
+    try {
+      const visitorUUID = getCookie('visitorUUID')
+      if (visitorUUID) {
+        const response = await fetch('/api/visitor/update-client', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            visitorUUID,
+            clientID
+          })
+        })
+        
+        if (response.ok) {
+          console.log('Visitor record updated with client ID:', clientID)
+        }
+      }
+    } catch (error) {
+      console.error('Failed to update visitor client:', error)
+    }
   }
 
   const logout = async () => {
@@ -97,7 +131,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <UserContext.Provider value={{ user, login, logout, loading }}>
+    <UserContext.Provider value={{ user, login, logout, loading, updateVisitorClient }}>
       {children}
     </UserContext.Provider>
   )
@@ -109,4 +143,14 @@ export function useUser() {
     throw new Error('useUser must be used within a UserProvider')
   }
   return context
+}
+
+// Cookie utility function
+function getCookie(name: string): string | null {
+  if (typeof document === 'undefined') return null;
+  
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) return parts.pop()?.split(';').shift() || null;
+  return null;
 }

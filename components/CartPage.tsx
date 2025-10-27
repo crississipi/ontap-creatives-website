@@ -7,6 +7,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import Image from 'next/image';
 import Toast from './Toast';
 import { useToast } from '@/hooks/useToast';
+import { inPeso } from '@/lib/utils';
 
 interface CartItem {
   cartID: number;
@@ -20,6 +21,7 @@ interface CartItem {
   product: {
     name: string;
     price: number;
+    customPrice: number;
     imgUrl?: string;
     frontUrl?: string;
   };
@@ -103,7 +105,7 @@ const CartPage = () => {
   // Calculate totals for SELECTED ITEMS ONLY
   const selectedCartItems = cartItems.filter(item => selectedItems.includes(item.cartID));
   const totalQuantity = selectedCartItems.reduce((sum, item) => sum + item.quantity, 0);
-  const subtotal = selectedCartItems.reduce((sum, item) => sum + item.subtotal, 0);
+  const subtotal = inPeso(selectedCartItems.reduce((sum, item) => sum + item.subtotal, 0))
   const total = subtotal;
 
   // Handle item selection
@@ -165,10 +167,7 @@ const CartPage = () => {
       if (!response.ok) {
         throw new Error(data.error || 'Failed to update quantity');
       }
-
-      if (data.scheduled) {
-        showToast('success', 'Quantity updated successfully');
-      }
+      
     } catch (error) {
       console.error('Failed to update quantity:', error);
       showToast('error', 'Failed to update quantity');
@@ -288,7 +287,6 @@ const CartPage = () => {
       showToast('info', 'Your cart is empty');
       return;
     }
-
     setGotoCheckout(true);
   };
 
@@ -329,7 +327,7 @@ const CartPage = () => {
         
         {/* Remove Confirmation Modal */}
         {showRemoveConfirmation && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-999 ">
             <motion.div
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
@@ -362,7 +360,7 @@ const CartPage = () => {
         <AnimatePresence mode="wait">
         {gotoCheckout ? (
             <motion.div
-                key="checkout"
+                key="checkout-view"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
@@ -378,14 +376,14 @@ const CartPage = () => {
             </motion.div>
         ) : (
             <motion.div
-                key="checkout"
+                key="cart-view"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ type: "spring", stiffness: 100, damping: 20 }}
                 className='h-full w-full flex items-center relative z-50 gap-5'
             >
-                <div className='flex flex-col w-full xl:w-6/7 h-full pt-12 lg:pt-16'>
+                <div className='flex flex-col w-full 2xl:w-6/7 h-full pt-12 lg:pt-16'>
                 <motion.h1 
                     initial={{x:-200, opacity:0}}
                     animate={{x:0, opacity:1}}
@@ -395,21 +393,21 @@ const CartPage = () => {
                 >Cart
                 </motion.h1>
                 <motion.p
-                    initial={{x:-200, opacity:0}}
-                    animate={{x:0, opacity:1}}
-                    exit={{x:-200, opacity:0}}
+                    initial={{opacity:0}}
+                    animate={{opacity:1}}
+                    exit={{opacity:0}}
                     transition={{type:'spring', stiffness:100, damping:20}}
                     className='w-full text-center lg:text-left'
                 >
                   Welcome back, <strong className='font-extrabold'>{user.clientName}</strong>! You have <strong className='font-extrabold'>{cartItems.length} items</strong> in your cart.
                 </motion.p>
                 
-                <div className='h-auto w-max flex items-center ml-20 mt-10'>
+                <div className='h-auto w-max flex items-center 2xl:ml-20 mt-10'>
                   {/* Bulk Actions */}
                     {selectedItems.length > 0 && (
                     <motion.div
-                        initial={{y:200, opacity:0}}
-                        animate={{y:0, opacity:1}}
+                        initial={{opacity:0}}
+                        animate={{opacity:1}}
                         transition={{type:'spring', stiffness:100, damping:20, duration: 0.05}}
                         className="flex gap-2"
                     >
@@ -434,8 +432,8 @@ const CartPage = () => {
                     {/* Select All Button (when no items are selected) */}
                     {cartItems.length > 0 && selectedItems.length === 0 && (
                     <motion.div
-                        initial={{y:200, opacity:0}}
-                        animate={{y:0, opacity:1}}
+                        initial={{opacity:0}}
+                        animate={{opacity:1}}
                         transition={{type:'spring', stiffness:100, damping:20, duration: 0.05}}
                     >
                         <button
@@ -449,23 +447,22 @@ const CartPage = () => {
                     )}
                 </div>
 
-                <div className='w-full xl:w-[95%] lg:ml-auto h-3/5 lg:h-full max-h-[90%] flex flex-col lg:flex-row gap-3 mt-3'>
+                <div className='w-full 2xl:w-[95%] lg:ml-auto h-full lg:h-full max-h-[90%] flex flex-col lg:flex-row gap-3 mt-3 overflow-hidden'>
                     <motion.div 
-                        initial={{x:-200, opacity:0}}
-                        animate={{x:0, opacity:1}}
-                        exit={{x:-200, opacity:0}}
+                        initial={{opacity:0}}
+                        animate={{opacity:1}}
+                        exit={{opacity:0}}
                         transition={{type:'spring', stiffness:100, damping:20, delay: 0.3}}
-                        className='h-full w-full lg:w-5/7 flex flex-col items-center border border-black/20 rounded-xl p-5 pr-0 gap-3 bg-white/50 backdrop-blur-sm'
+                        className='h-full w-full lg:w-5/7 flex flex-col items-center border border-black/20 rounded-xl p-5 pr-0 gap-3 bg-white/50 backdrop-blur-sm overflow-hidden'
                     >
                         {cartItems.length > 0 ? (
                             <>
                             <div className='hidden w-full lg:grid grid-cols-6 text-sm text-dark-blue font-extrabold uppercase border-b border-black/20 pb-3 mr-5'>
-                                <span className='pl-5 col-span-3'>Product</span>
-                                <span className='text-center col-span-1'>Price</span>
+                                <span className='pl-5 col-span-4'>Product</span>
                                 <span className='text-center col-span-1'>Quantity</span>
                                 <span className='text-center col-span-1'>Total</span>
                             </div>
-                            <div className='h-full w-full flex flex-col overflow-x-hidden overflow-y-auto pr-3'>
+                            <div className='h-full w-full flex flex-col overflow-x-hidden pr-3'>
                                 {cartItems.map((item) => (
                                     <CartSlip 
                                         key={item.cartID}
@@ -492,12 +489,6 @@ const CartPage = () => {
                                 '>
                                     You have no items in your cart.
                                 </span>
-                                <button
-                                  onClick={() => window.location.href = '/products'}
-                                  className="mt-4 px-6 py-2 bg-violet text-white rounded-lg hover:bg-dark-blue transition-colors"
-                                >
-                                  Browse Products
-                                </button>
                             </div>
                         )}
                     </motion.div>
@@ -520,11 +511,11 @@ const CartPage = () => {
                             </div>
                             <div className='w-full flex justify-between text-sm lg:text-base'>
                                 <span className='font-semibold'>Subtotal</span>
-                                <span className='font-extrabold text-base lg:text-lg text-dark-blue'><span className='text-base'>₱</span> {subtotal.toFixed(2)}</span>
+                                <span className='font-extrabold text-base lg:text-lg text-dark-blue'><span className='text-base'>₱</span> {subtotal}</span>
                             </div>
                             <div className='w-full flex justify-between border-t border-black/20 pt-3'>
                                 <span className='font-bold text-base lg:text-xl'>Total</span>
-                                <span className='font-extrabold text-lg lg:text-2xl text-dark-blue'><span className='text-base'>₱</span> {total.toFixed(2)}</span>
+                                <span className='font-extrabold text-lg lg:text-2xl text-dark-blue'><span className='text-base'>₱</span> {total}</span>
                             </div>
                             <button 
                               type="button" 

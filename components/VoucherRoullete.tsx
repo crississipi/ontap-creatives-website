@@ -10,13 +10,16 @@ import { RiArrowRightLine } from "react-icons/ri";
 type Rarity = "very-common" | "common" | "ultra" | "rare" | "very-rare" | "ultra-rare";
 
 interface Voucher {
-  id: number | string;
+  id: number; // Change this to number to match
   label: string;
   rarity: Rarity;
+  discount?: number; // Add this to match
+  expiration?: string; // Add this to match
 }
 
 interface VoucherRouletteProps {
   setRoulette: React.Dispatch<React.SetStateAction<boolean>>;
+  onVoucherWon?: (voucher: Voucher) => void;
 }
 
 // 🎨 Fixed color mapping for each rarity
@@ -36,7 +39,157 @@ const rarityColors: Record<Rarity, string> = {
   "20% Discount" : "/icons/20-off.png"
  }
 
-export default function VoucherRoulette({setRoulette}: VoucherRouletteProps) {
+export default function VoucherRoulette({setRoulette, onVoucherWon}: VoucherRouletteProps) {
+  const [clientID, setClientID] = useState<number | null>(null);
+  const [canSpin, setCanSpin] = useState(true);
+  const [spinsRemaining, setSpinsRemaining] = useState(2);
+  const [isLoading, setIsLoading] = useState(true);
+  const [user, setUser] = useState<any>(null);
+  const [spin, numOfSpin] = useState(0);
+  const [wonVouchers, setWonVouchers] = useState<(Voucher | null)[]>([]);
+
+  // Initialize client session
+  const initializeClient = async () => {
+    try {
+      // Get user session
+      const sessionResponse = await fetch('/api/auth/session');
+      
+      if (!sessionResponse.ok) {
+        throw new Error('Failed to get session');
+      }
+      
+      const sessionData = await sessionResponse.json();
+
+      if (sessionData.user) {
+        setUser(sessionData.user);
+        setClientID(sessionData.user.clientID);
+
+        // Check voucher eligibility
+        const vouchersResponse = await fetch(`/api/voucher?clientID=${sessionData.user.clientID}`);
+        
+        if (vouchersResponse.ok) {
+          const vouchersData = await vouchersResponse.json();
+          setCanSpin(vouchersData.canSpin);
+          setSpinsRemaining(vouchersData.spinsRemaining);
+          if (vouchersData.vouchers) {
+            setWonVouchers(vouchersData.vouchers.map((v: any) => ({
+              id: v.voucherID,
+              label: v.voucherLabel,
+              rarity: getRarityFromLabel(v.voucherLabel)
+            })));
+          }
+        } else {
+          // If vouchers API fails, assume new user can spin twice
+          console.log('Vouchers API not available, allowing spins');
+          setCanSpin(true);
+          setSpinsRemaining(2);
+        }
+      } else {
+        // No user session
+        console.log('No user session found');
+        setCanSpin(false);
+        setSpinsRemaining(0);
+      }
+    } catch (error) {
+      console.error('Failed to initialize client:', error);
+      // Allow spinning even if API fails (fallback)
+      setCanSpin(true);
+      setSpinsRemaining(2);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    initializeClient();
+  }, []);
+
+  // Helper function to extract discount from label
+  const getDiscountFromLabel = (label: string): number => {
+    if (label.includes('5%')) return 5;
+    if (label.includes('10%')) return 10;
+    if (label.includes('15%')) return 15;
+    if (label.includes('20%')) return 20;
+    return 0;
+  };
+
+  const saveVoucherToBackend = async (selectedVoucherParam?: Voucher) => {
+    const selectedVoucher = selectedVoucherParam || getSelectedVoucher();
+    
+    // ✅ FIX: Use the component's props, not a local 'props' variable
+    if (selectedVoucher && onVoucherWon) {
+      onVoucherWon(selectedVoucher);
+    }
+    
+    if (selectedVoucher && clientID) {
+      try {
+        console.log('Saving voucher:', selectedVoucher.label, 'for client:', clientID);
+        
+        const response = await fetch('/api/voucher', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            clientID,
+            voucherLabel: selectedVoucher.label,
+            discount: selectedVoucher.label.includes('%') ? 
+              parseInt(selectedVoucher.label) : 0
+          })
+        });
+
+        const text = await response.text();
+        let data;
+        try { 
+          data = JSON.parse(text); 
+        } catch { 
+          throw new Error('Invalid JSON response from server'); 
+        }
+
+        if (response.ok) {
+          console.log('Voucher saved successfully:', data);
+          
+          // ✅ Update spin-related states immediately
+          setCanSpin(data.canSpin);
+          setSpinsRemaining(data.spinsRemaining);
+
+          // ✅ Add voucher to won list once only
+          setWonVouchers(prev => [...prev, selectedVoucher]);
+
+          // ✅ Show result *after successful save*
+          setShowResult(true);
+        } else {
+          console.error('Failed to save voucher:', data.error);
+          updateLocalSpinState();
+          setWonVouchers(prev => [...prev, selectedVoucher]);
+          setShowResult(true);
+        }
+      } catch (error) {
+        console.error('Failed to save voucher:', error);
+        updateLocalSpinState();
+        setWonVouchers(prev => [...prev, selectedVoucher]);
+        setShowResult(true);
+      }
+    }
+  };
+
+  // Helper function to update local state when backend fails
+  const updateLocalSpinState = () => {
+    // Use the actual spin count instead of wonVouchers.length
+    const newSpinsUsed = spin + 1; // ⭐⭐ FIX: Use spin state instead of wonVouchers.length
+    setSpinsRemaining(Math.max(0, 2 - newSpinsUsed));
+    setCanSpin(newSpinsUsed < 2);
+  };
+
+  // Helper function with proper return type
+  const getRarityFromLabel = (label: string): Rarity => {
+    switch (label) {
+      case 'Better Luck Next Time': return 'very-common';
+      case '5% Discount': return 'ultra';
+      case '10% Discount': return 'rare';
+      case '15% Discount': return 'very-rare';
+      case '20% Discount': return 'ultra-rare';
+      default: return 'very-common';
+    }
+  };
 
   // 🎁 Base voucher list - no color property, only rarity
   const baseVouchers: Voucher[] = [
@@ -58,12 +211,27 @@ export default function VoucherRoulette({setRoulette}: VoucherRouletteProps) {
     "ultra-rare": 5,
   };
 
+  // Add type guard for Rarity
+  const isRarity = (value: string): value is Rarity => {
+    return ["very-common", "common", "ultra", "rare", "very-rare", "ultra-rare"].includes(value);
+  };
+  
+  // Safe access to rarity weights
+  const getRarityWeight = (rarity: string): number => {
+    return isRarity(rarity) ? rarityWeights[rarity] : 0;
+  };
+
+  // Safe access to rarity colors
+  const getRarityColor = (rarity: string): string => {
+    return isRarity(rarity) ? rarityColors[rarity] : "#6B7280"; // default gray
+  };
+
   // 🧮 Group vouchers by label and calculate combined weights
   const groupedVouchers = useMemo(() => {
     const grouped: { [key: string]: { voucher: Voucher; weight: number } } = {};
     
     baseVouchers.forEach((voucher) => {
-      const weight = rarityWeights[voucher.rarity];
+      const weight = getRarityWeight(voucher.rarity); // Use safe access
       if (grouped[voucher.label]) {
         grouped[voucher.label].weight += weight;
       } else {
@@ -87,8 +255,6 @@ export default function VoucherRoulette({setRoulette}: VoucherRouletteProps) {
   const [showResult, setShowResult] = useState(false);
   const [bounce, setBounce] = useState(false);
   const [pinRotation, setPinRotation] = useState(0);
-  const [wonVouchers, setWonVouchers] = useState<(Voucher | null)[]>([]);
-
   // 🔧 Refs
   const rotRef = useRef(0);
   const velRef = useRef(0);
@@ -96,15 +262,14 @@ export default function VoucherRoulette({setRoulette}: VoucherRouletteProps) {
   const pinPhaseRef = useRef(0);
   const lastRotationRef = useRef(0);
 
-  useEffect(() => {
-    if(showResult) {
-      const selectedVoucher = getSelectedVoucher();
-      if (selectedVoucher) {
-        setWonVouchers((prev) => 
-        [...prev, selectedVoucher]);
-      }
-    }
-  },[showResult])
+  // useEffect(() => {
+  //   if(showResult) {
+  //     const selectedVoucher = getSelectedVoucher();
+  //     if (selectedVoucher && !wonVouchers.some(v => v?.id === selectedVoucher.id)) {
+  //       setWonVouchers((prev) => [...prev, selectedVoucher]);
+  //     }
+  //   }
+  // },[showResult])
 
   // 🎨 Create expanded voucher array for the wheel (with combined slices)
   const wheelVouchers = useMemo(() => {
@@ -114,7 +279,7 @@ export default function VoucherRoulette({setRoulette}: VoucherRouletteProps) {
       for (let i = 0; i < group.weight; i++) {
         expanded.push({
           ...group.voucher,
-          id: `${group.voucher.id}-slice${i}`,
+          id: group.voucher.id * 100 + i,
           sliceSize: group.weight // Store the total slice size for this voucher
         });
       }
@@ -130,7 +295,7 @@ export default function VoucherRoulette({setRoulette}: VoucherRouletteProps) {
 
     groupedVouchers.forEach((group) => {
       const sliceDegrees = group.weight * degreePerSlice;
-      const color = rarityColors[group.voucher.rarity];
+      const color = getRarityColor(group.voucher.rarity); // Use safe access
       
       // Main color for most of the slice
       stops.push(`${color} ${currentAngle + 0.5}deg ${currentAngle + sliceDegrees - 0.5}deg`);
@@ -157,7 +322,7 @@ export default function VoucherRoulette({setRoulette}: VoucherRouletteProps) {
   };
 
   const startSpin = () => {
-    if (isSpinning) return;
+    if (isSpinning || !canSpin || !clientID) return;
 
     // Reset states
     setShowResult(false);
@@ -167,37 +332,35 @@ export default function VoucherRoulette({setRoulette}: VoucherRouletteProps) {
     pinPhaseRef.current = 0;
     lastRotationRef.current = 0;
 
-    // 🎯 Weighted random selection by rarity - FIXED PROBABILITIES
+    // Replace the current probability calculation in startSpin with:
     const rarityChances: Record<Rarity, number> = {
-      "very-common": 100,  // Highest probability for "Better Luck Next Time"
-      "common": 10,
-      "ultra": 5,
-      "rare": 3,
-      "very-rare": 2,
-      "ultra-rare": 1,     // Lowest probability for rarest vouchers
+      "very-common": 74.14,
+      "common": 10.29,
+      "ultra": 7.43,
+      "rare": 4.57,
+      "very-rare": 2.71,
+      "ultra-rare": 0.86,
     };
 
-    // Convert rarities to a weighted list
-    const weightedVouchers = groupedVouchers.map((group) => ({
-      ...group,
-      probability: rarityChances[group.voucher.rarity],
-    }));
+    // Safe access to rarity chances
+    const getRarityChance = (rarity: string): number => {
+      return isRarity(rarity) ? rarityChances[rarity] : 0;
+    };
 
-    // Normalize probabilities
-    const totalProb = weightedVouchers.reduce((sum, v) => sum + v.probability, 0);
-    const normalized = weightedVouchers.map((v) => ({
-      ...v,
-      probability: v.probability / totalProb,
-    }));
+// In your startSpin function:
+const weightedVouchers = groupedVouchers.map((group) => ({
+  ...group,
+  probability: getRarityChance(group.voucher.rarity), // Use safe access
+}));
 
-    // Pick based on cumulative probability
+    // Pick based on cumulative probability (OUTSIDE of animation loop)
     const rand = Math.random();
     let cumulative = 0;
-    let chosenGroup = normalized[0];
-    
-    for (const v of normalized) {
+    let chosenGroup = weightedVouchers[0];
+
+    for (const v of weightedVouchers) {
       cumulative += v.probability;
-      if (rand <= cumulative) {
+      if (rand <= cumulative / 100) {
         chosenGroup = v;
         break;
       }
@@ -209,13 +372,12 @@ export default function VoucherRoulette({setRoulette}: VoucherRouletteProps) {
       .filter((w) => w.label === chosenGroup.voucher.label);
 
     // Pick a random slice within the group
-    const targetSlice =
-      matchingSlices[Math.floor(Math.random() * matchingSlices.length)].index;
+    const targetSliceIndex = matchingSlices[Math.floor(Math.random() * matchingSlices.length)].index;
 
     // Calculate spin amount so it lands exactly on the chosen slice
     const extraRotations = 5 + Math.floor(Math.random() * 2);
     const targetRotation =
-      360 * extraRotations + targetSlice * degreePerSlice;
+      360 * extraRotations + targetSliceIndex * degreePerSlice;
 
     // Start with high velocity
     velRef.current = targetRotation / 0.8;
@@ -274,12 +436,17 @@ export default function VoucherRoulette({setRoulette}: VoucherRouletteProps) {
         setPinRotation(0);
 
         const finalIndex = calculateSelectedVoucher(rotRef.current);
+        const selectedVoucher = wheelVouchers[finalIndex]; // ✅ get it immediately
         setSelectedIndex(finalIndex);
+        numOfSpin((prev) => prev + 1);
 
         setTimeout(() => setBounce(true), 100);
-        setTimeout(() => { setShowResult(true); }, 800);
-        
+        setTimeout(async () => { 
+          await saveVoucherToBackend(selectedVoucher); // ✅ pass directly
+        }, 800);
+
         if (rafRef.current) cancelAnimationFrame(rafRef.current);
+        
         return;
       }
 
@@ -291,7 +458,7 @@ export default function VoucherRoulette({setRoulette}: VoucherRouletteProps) {
 
   // 👁️‍🗨️ Show result when user leaves the tab
   useEffect(() => {
-    const handleVisibilityChange = () => {
+    const handleVisibilityChange = async () => {
       if (document.hidden && isSpinning) {
         // User left the tab - stop spinning and show result immediately
         if (rafRef.current) {
@@ -304,11 +471,11 @@ export default function VoucherRoulette({setRoulette}: VoucherRouletteProps) {
         
         // Calculate final selected voucher
         const finalIndex = calculateSelectedVoucher(rotRef.current);
+        const selectedVoucher = wheelVouchers[finalIndex]; // ✅ get it immediately
         setSelectedIndex(finalIndex);
-        
-        // Show results immediately
+        numOfSpin((prev) => prev + 1);
+        await saveVoucherToBackend(selectedVoucher);
         setBounce(true);
-        setShowResult(true);
       }
     };
 
@@ -375,8 +542,6 @@ export default function VoucherRoulette({setRoulette}: VoucherRouletteProps) {
     return baseVouchers.find(v => v.label === wheelVoucher.label) || wheelVoucher;
   };
 
-  const image = ['/icons/truck.png', '/icons/percent.png', '/icons/gift.png']
-
   return (
     <div className="h-[100vh] bg-gradient-to-t from-0% from-[#e8e6e5] via-15% via-[#f3f1ee] to-25% to-[#f8f5f4] p-6 flex flex-col items-center justify-center gap-6 select-none fixed top-1/2 left-1/2 -translate-1/2 w-full z-999">
       <motion.h1 
@@ -399,7 +564,15 @@ export default function VoucherRoulette({setRoulette}: VoucherRouletteProps) {
               height={2048}
               width={2048}
               alt="robot animation"
-              src={isSpinning ? '/video/robot-animation.gif' : getSelectedVoucher()?.label === 'Better Luck Next Time' ? '/video/sad-animation.gif' : '/video/happy-animation.gif'}
+              src={
+                isSpinning 
+                  ? '/video/robot-animation.gif' 
+                  : showResult && getSelectedVoucher()?.label === 'Better Luck Next Time' 
+                    ? '/video/sad-animation.gif' 
+                    : showResult 
+                      ? '/video/happy-animation.gif'
+                      : '/video/robot-animation.gif'
+              }
               className="h-full w-auto object-contain object-center"
             />
           </div>
@@ -427,7 +600,7 @@ export default function VoucherRoulette({setRoulette}: VoucherRouletteProps) {
             >
               <div className="flex flex-col items-center">
                 <div className="w-12 h-16 flex items-center justify-center">
-                  <IoTriangle className="text-rose-500 h-full w-full drop-shadow-md drop-shadow-black/30 rotate-z-180" />
+                  <IoTriangle className="text-dark-blue h-full w-full drop-shadow-md drop-shadow-black/30 rotate-z-180" />
                 </div>
               </div>
             </motion.div>
@@ -452,11 +625,11 @@ export default function VoucherRoulette({setRoulette}: VoucherRouletteProps) {
             
             {/* Center Spin Button */}
             <button
-              onClick={() => wonVouchers.length < 2 && startSpin()}
-              disabled={isSpinning || wonVouchers.length > 2}
+              onClick={startSpin}
+              disabled={isSpinning || isLoading || spin >= 2}
               className={`absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 rounded-full shadow-lg font-bold transition-all duration-200 border-4 ${
-                isSpinning
-                  ? 'bg-white border-violet-400 cursor-not-allowed'
+                isSpinning || isLoading || spin >= 2
+                  ? 'bg-gray-100 border-gray-300 cursor-not-allowed text-gray-400'
                   : 'bg-white text-violet-700 border-violet-200 hover:bg-violet-50 hover:scale-105 hover:text-violet-900 active:scale-95'
               }`}
             >
@@ -465,10 +638,21 @@ export default function VoucherRoulette({setRoulette}: VoucherRouletteProps) {
                 width={2048}
                 alt="spin icon"
                 src='/images/logo.png'
-                className="h-12 w-12 object-contain object-center absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
+                className={`h-12 w-12 object-contain object-center absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 ${
+                  isSpinning || isLoading || spin >= 2 ? 'opacity-50' : ''
+                }`}
                 draggable={false}
               />
             </button>
+
+            {/* Update spins counter to show when no spins left */}
+            <div className={`absolute -bottom-16 left-1/2 -translate-x-1/2 uppercase text-sm font-extrabold ${
+              spinsRemaining <= 0 ? 'text-red-500' : 'text-gray-600'
+            }`}>
+              {isLoading ? 'Loading...' : 
+              spinsRemaining <= 0 ? 'No spins remaining' : 
+              `Spins remaining: ${spinsRemaining}`}
+            </div>
           </div>
         </motion.div>
         <div className="h-full w-auto grid grid-cols-3 gap-3 items-center">

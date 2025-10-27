@@ -1,14 +1,11 @@
-import ReceiptClient from "./ReceiptClient";
+import ReceiptClient from '@/components/ReceiptClient';
 
-export function generateStaticParams() {
-  return [
-    { orderID: "123456" },
-    { orderID: "789101" },
-  ];
+interface PageProps {
+  params: {
+    orderID: string;
+  };
 }
 
-export const dynamicParams = false;
-
-export default function ReceiptPage({ params }: { params: { orderID: string } }) {
+export default function ReceiptPage({ params }: PageProps) {
   return <ReceiptClient orderID={params.orderID} />;
 }

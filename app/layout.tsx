@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { UserProvider } from "@/contexts/UserContext";
+import VisitorTracker from "@/components/VisitorTracker";
 
 export const metadata: Metadata = {
   title: "OnTap Creatives",
@@ -16,12 +17,12 @@ export default function RootLayout({
     <html lang="en">
       <body>
         <UserProvider>
+          <VisitorTracker />
           {children}
         </UserProvider>
       </body>
     </html>
   )
 }
-
 
 

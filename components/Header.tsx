@@ -121,7 +121,7 @@ const Header = ({ setPage }: HeaderProps) => {
                 <button 
                   type="button" 
                   className='w-16 aspect-square rounded-full border items-center justify-center flex text-5xl hover:bg-light-blue focus:bg-light-blue ease-out duration-200'
-                  onClick={() => setShowLogin(true)}
+                  onClick={() => {setShowLogin(true); isNavShown(false);}}
                 >
                   <TiUser />
                 </button>
@@ -129,7 +129,7 @@ const Header = ({ setPage }: HeaderProps) => {
                 <button 
                   type="button"
                   className='px-5 py-2 bg-light-blue hover:bg-blue focus:bg-violet text-white rounded-md ease-out duration-200'
-                  onClick={() => setShowLogin(true)}
+                  onClick={() => {setShowLogin(true);isNavShown(false);}}
                 >
                   Sign In / Register
                 </button>

@@ -11,7 +11,6 @@ import ProductList from "./ProductList";
 import FAQs from "./FAQs";
 import Starting from "./Starting";
 import PopUp from "./PopUp";
-import Cookies from "./Cookies";
 import Mainpage from "./Mainpage";
 import EditableText from "./Editable";
 import ShowMoreInfo from "./ShowMoreInfo";
@@ -35,7 +34,6 @@ export {
     FAQs,
     Starting,
     PopUp,
-    Cookies,
     Mainpage,
     EditableText,
     ShowMoreInfo,
