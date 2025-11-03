@@ -19,6 +19,8 @@ import CartPage from "./CartPage";
 import CheckOut from "./CheckOut";
 import ContactNum from "./ContactNum";
 import OrderPage from "./OrderPage";
+import PrivacyPolicy from "./PrivacyPolicy";
+import TermsConditions from "./TermsConditions"
 
 export {
     Header, 
@@ -41,5 +43,7 @@ export {
     CartPage,
     CheckOut,
     ContactNum,
-    OrderPage
+    OrderPage,
+    PrivacyPolicy,
+    TermsConditions
 }

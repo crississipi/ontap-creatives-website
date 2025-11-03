@@ -2,14 +2,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { PrismaClient } from '@prisma/client'
 import { generateOtp, storeOtp } from '@/lib/otpStore'
-import { corsHeaders } from '@/lib/corsHeaders'
 import nodemailer from 'nodemailer'
 
 const prisma = new PrismaClient()
-
-export async function OPTIONS() {
-  return new Response(null, { status: 200, headers: corsHeaders })
-}
 
 export async function POST(request: NextRequest) {
   try {
@@ -18,7 +13,7 @@ export async function POST(request: NextRequest) {
     if (!email) {
       return NextResponse.json(
         { error: 'Email is required' },
-        { status: 400, headers: corsHeaders }
+        { status: 400 }
       )
     }
 
@@ -30,7 +25,7 @@ export async function POST(request: NextRequest) {
     if (!user) {
       return NextResponse.json(
         { error: 'No account found with this email address' },
-        { status: 404, headers: corsHeaders }
+        { status: 404 }
       )
     }
 
@@ -39,8 +34,6 @@ export async function POST(request: NextRequest) {
     
     // Store OTP in database (persistent)
     await storeOtp(email, otp, 10) // 10 minutes
-
-    console.log('🔍 OTP stored for email:', email, 'OTP:', otp)
 
     // Send OTP email
     const transporter = nodemailer.createTransport({
@@ -90,15 +83,17 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(
       { message: 'OTP sent to your email' },
-      { status: 200, headers: corsHeaders }
+      { status: 200 }
     )
   } catch (error) {
-    console.error('Forgot password error:', error)
+    console.error('Password reset error:', error);
     return NextResponse.json(
       { error: 'Failed to process request' },
-      { status: 500, headers: corsHeaders }
+      { status: 500 }
     )
   } finally {
     await prisma.$disconnect()
   }
 }
+
+// No need for OPTIONS handler - middleware handles it!

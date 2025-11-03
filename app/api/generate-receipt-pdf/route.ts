@@ -1,6 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import chromium from '@sparticuz/chromium';
-import puppeteer from 'puppeteer-core';
 
 interface ReceiptData {
   orderID: string;
@@ -15,6 +13,8 @@ interface ReceiptData {
     price: number;
     subtotal: number;
     logo: string;
+    imgUrl?: string;
+    frontUrl?: string;
   }[];
   shippingMethod: string;
   shippingFee: number;
@@ -28,12 +28,9 @@ interface ReceiptData {
 export const maxDuration = 30;
 
 export async function POST(request: NextRequest) {
-  let browser;
-  
   try {
     const receiptData: ReceiptData = await request.json();
-    console.log('🔍 Generating PDF for order:', receiptData.orderID);
-
+    
     // Validate required fields
     if (!receiptData.orderID || !receiptData.customerName) {
       return NextResponse.json(
@@ -42,91 +39,29 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    let pdfBuffer: Uint8Array;
+    // Generate HTML content
+    const htmlContent = generateReceiptHTML(receiptData);
     
-    try {
-      console.log('🔍 Launching Chromium for PDF generation...');
-      
-      const executablePath = process.env.VERCEL
-        ? await chromium.executablePath()
-        : process.platform === 'win32'
-        ? 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe'
-        : process.platform === 'linux'
-        ? '/usr/bin/google-chrome'
-        : '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
-
-      browser = await puppeteer.launch({
-        executablePath,
-        args: chromium.args,
-        headless: true,
-      });
-
-      const page = await browser.newPage();
-      
-      const htmlContent = generateReceiptHTML(receiptData);
-      
-      await page.setContent(htmlContent, { 
-        waitUntil: 'networkidle0'
-      });
-      
-      await page.waitForFunction(() => document.readyState === 'complete');
-
-      const pdf = await page.pdf({
-        format: 'A4',
-        printBackground: true,
-        margin: {
-          top: '0.5in',
-          right: '0.5in',
-          bottom: '0.5in',
-          left: '0.5in'
-        },
-        displayHeaderFooter: false,
-        preferCSSPageSize: true,
-        timeout: 30000
-      });
-
-      if (!pdf || pdf.length === 0) {
-        throw new Error('Generated PDF is empty');
-      }
-
-      // Use Uint8Array instead of Buffer to avoid type issues
-      pdfBuffer = pdf;
-      console.log(`✅ PDF generated successfully, size: ${pdfBuffer.length} bytes`);
-
-    } catch (puppeteerError) {
-      console.error('❌ PDF generation failed:', puppeteerError);
-      throw new Error(`PDF generation failed: ${puppeteerError instanceof Error ? puppeteerError.message : 'Unknown error'}`);
-    }
-
-    // Return PDF as response using Uint8Array
-    return new NextResponse(pdfBuffer as BodyInit, {
-      status: 200,
-      headers: {
-        'Content-Type': 'application/pdf',
-        'Content-Disposition': `attachment; filename="receipt-${receiptData.orderID}.pdf"`,
-        'Content-Length': pdfBuffer.length.toString(),
+    // Return HTML content that can be used by html2pdf on the client side
+    return NextResponse.json(
+      { 
+        success: true,
+        html: htmlContent,
+        orderID: receiptData.orderID
       },
-    });
+      { status: 200 }
+    );
 
   } catch (error) {
-    console.error('🔍 PDF generation error:', error);
+    console.error('PDF generation error:', error);
     
     return NextResponse.json(
       { 
         error: 'Failed to generate PDF',
-        details: error instanceof Error ? error.message : 'Unknown error',
-        suggestion: 'Please use the client-side download button instead'
+        details: error instanceof Error ? error.message : 'Unknown error'
       },
       { status: 500 }
     );
-  } finally {
-    if (browser) {
-      try {
-        await browser.close();
-      } catch (closeError) {
-        console.error('Error closing browser:', closeError);
-      }
-    }
   }
 }
 
@@ -156,7 +91,7 @@ function generateReceiptHTML(data: ReceiptData): string {
         }
         .company-name {
           font-size: 24px;
-          fontWeight: bold;
+          font-weight: bold;
           color: #2563eb;
           margin-bottom: 8px;
         }
@@ -266,7 +201,7 @@ function generateReceiptHTML(data: ReceiptData): string {
           <tbody>
             ${data.items.map(item => `
               <tr>
-                <td>${item.name}</td>
+                <td><img alt='item image' src='${item.frontUrl || item.imgUrl}'/>${item.name}</td>
                 <td>${item.logo}</td>
                 <td>${item.qty}</td>
                 <td>₱${item.price.toFixed(2)}</td>

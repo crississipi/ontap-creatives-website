@@ -834,7 +834,7 @@ const ReceiptTemplate = ({
                         fontSize: '8px',
                         gap: '4px',
                         alignItems: 'center',
-                        margin: 0,
+                        margin: '-5px 0 0 0',
                         padding: 0
                       }}><TbTruckDelivery style={{ fontSize: '14px' }}/>cash on delivery</span>
                       <p style={{ 
@@ -842,7 +842,7 @@ const ReceiptTemplate = ({
                         alignItems: 'center', 
                         gap: '2px', 
                         fontSize: '8px',
-                        margin: 0,
+                        margin: '-5px 0 0 0',
                         padding: 0
                       }}>₱<span style={{ fontWeight: 'bold', fontSize: '11px' }}>{formatCurrency(total)}</span></p>
                     </span>

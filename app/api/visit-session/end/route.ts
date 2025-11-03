@@ -15,8 +15,6 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { sessionID, dateLeft, duration } = body
 
-    console.log('🔍 Ending session:', sessionID);
-
     if (!sessionID) {
       return NextResponse.json(
         { error: 'Session ID is required' },
@@ -33,15 +31,12 @@ export async function POST(request: NextRequest) {
       }
     })
 
-    console.log('🔍 Session ended:', session.sessionID, 'Duration:', duration, 'seconds');
-
     return NextResponse.json({ 
       success: true, 
       sessionID: session.sessionID,
       duration: session.duration
     })
   } catch (error) {
-    console.error('🔍 Error ending session:', error)
     
     // Type guard to check if it's a Prisma error
     const prismaError = error as PrismaError;

@@ -1,6 +1,6 @@
     "use client"
     import React, { useEffect, useRef, useState } from 'react'
-    import { RiArrowRightLine, RiHeartFill, RiHeartLine, RiLoader4Line, RiQuestionFill, RiShoppingCart2Line, RiStarFill, RiStarHalfFill } from 'react-icons/ri'
+    import { RiArrowRightLine, RiHeartFill, RiHeartLine, RiLoader4Line, RiQuestionFill, RiShoppingCart2Line, RiStarFill, RiStarHalfFill, RiStarLine } from 'react-icons/ri'
     import Image from 'next/image'
     import { AnimatePresence, motion } from 'framer-motion'
     import { TbCurrencyPeso } from 'react-icons/tb'
@@ -26,11 +26,36 @@
         address: string;
     }
 
+    interface FeedbackData {
+        hasFeedbacks: boolean;
+        feedbackCount: number;
+        feedbacks: Array<{
+            feedbackID: number;
+            rate: number;
+            comment: string | null;
+            dateAdded: string;
+            client: {
+            clientName: string | null;
+            };
+        }>;
+    }
+
+    interface ShowMoreInfoProps {
+        product: ProductProps;
+        setInquireItem: (inquire: boolean) => void;
+        inquire?: boolean;
+        editable?: boolean;
+        setGotoCheckout?: (goto: boolean) => void; // Add this
+        setSelectedProduct?: (product: any) => void; // Add this
+    }
+
     const ShowMoreInfo = ({ 
     product,
     setInquireItem,
     inquire,
     editable,
+    setGotoCheckout,
+    setSelectedProduct,
     }: ShowMoreInfoProps) => {
     const [quantity, setQty] = useState(1);
     const [review, setReview] = useState('Latest');
@@ -49,6 +74,8 @@
     const [show, setShow] = useState(false);
     const [icon, setIcon] = useState('info');
     const [message, setMessage] = useState('Template Info');
+    const [feedbackData, setFeedbackData] = useState<FeedbackData | null>(null);
+    const [loadingFeedbacks, setLoadingFeedbacks] = useState(true);
     
     useScrollLock(inquire!);
 
@@ -97,6 +124,41 @@
         verifyAuth();
     }, []);
 
+    
+    useEffect(() => {
+        const fetchFeedbacks = async () => {
+            try {
+            setLoadingFeedbacks(true);
+            const response = await fetch(`/api/feedbacks/${product.productID}`);
+            
+            if (response.ok) {
+                const data = await response.json();
+                setFeedbackData(data);
+            } else {
+                console.error('Failed to fetch feedbacks');
+                setFeedbackData({
+                hasFeedbacks: false,
+                feedbackCount: 0,
+                feedbacks: []
+                });
+            }
+            } catch (error) {
+            console.error('Error fetching feedbacks:', error);
+            setFeedbackData({
+                hasFeedbacks: false,
+                feedbackCount: 0,
+                feedbacks: []
+            });
+            } finally {
+            setLoadingFeedbacks(false);
+            }
+        };
+
+        if (product?.productID) {
+            fetchFeedbacks();
+        }
+    }, [product?.productID]);
+
     // Handle buy now and add to cart actions
     const handleBuyAction = async () => {
         setCheckingAuth(true);
@@ -104,9 +166,35 @@
         setCheckingAuth(false);
 
         if (userData) {
-        // User is logged in, proceed with purchase
-        console.log('User is logged in, proceeding with purchase:', userData);
-        // Add your purchase logic here
+        // User is logged in, prepare product data and redirect to checkout
+        const productData = {
+            product: {
+            productID: product.productID,
+            name: finalProductName,
+            price: priceOption === 'ontap' ? product.price.ontap : product.price.custom!,
+            imgUrl: finalImgUrl || finalFrontImg,
+            frontUrl: finalFrontImg,
+            description: product.description,
+            customPrice: product.price.custom,
+            category: product.category
+            },
+            quantity: quantity,
+            logo: priceOption === 'ontap' ? 'OnTap' : 'Custom',
+            subtotal: priceOption === 'ontap' ? product.price.ontap * quantity : product.price.custom! * quantity,
+            variable: variable,
+            priceOption: priceOption,
+            fileInfo: fileInfo,
+            logoSize: logoSize
+        };
+
+        // Pass data to parent component and redirect to checkout
+        if (setSelectedProduct) {
+            setSelectedProduct(productData);
+        }
+        if (setGotoCheckout) {
+            setGotoCheckout(true);
+        }
+        setInquireItem(false); // Close the product modal
         } else {
         // User is not logged in, show login modal
         setShowLogin(true);
@@ -794,69 +882,94 @@
                     </div>
                     <div className='col-span-full lg:col-span-2 w-full h-full md:rounded-lg lg:w-1/3 flex flex-col p-3 shadow-[inset_0_4px_6px_rgba(0,0,0,0.1)] overflow-hidden mb-32 md:mb-0 lg:absolute lg:right-0'>
                         <div className='w-full flex items-center justify-between'>
-                            <p className='md:text-sm font-extrabold pl-2'>Feedbacks</p>
+                            <p className='md:text-sm font-extrabold pl-2'>
+                            Feedbacks {feedbackData && `(${feedbackData.feedbackCount})`}
+                            </p>
                             <div className='relative'>
-                                <button 
+                            <button 
                                 type="button" 
                                 className='px-4 py-1.5 md:text-sm font-semibold rounded-sm border hover:bg-blue focus:bg-violet hover:text-white ease-out duration-200'
                                 onClick={() => setShowMode(!showMode)}
-                                >
-                                    {review}
-                                </button>
-                                {showMode && (
-                                    <span className='absolute flex flex-col rounded-md border w-max right-0 mt-1 overflow-hidden text-sm bg-white'>
-                                        <button 
-                                            type="button" 
-                                            className='py-1.5 px-4 hover:bg-light-blue focus:bg-dark-blue focus:text-white ease-out duration-200'
-                                            onClick={() => {setReview('Latest'); setShowMode(false);}}
-                                        >Latest</button>
-                                        <button 
-                                            type="button" 
-                                            className='py-1.5 px-4 hover:bg-light-blue focus:bg-dark-blue focus:text-white ease-out duration-200'
-                                            onClick={() => {setReview('Most Popular'); setShowMode(false);}}
-                                        >Most Popular</button>
-                                        <button 
-                                            type="button" 
-                                            className='py-1.5 px-4 hover:bg-light-blue focus:bg-dark-blue focus:text-white ease-out duration-200'
-                                            onClick={() => {setReview('Oldest'); setShowMode(false);}}
-                                        >Oldest</button>
-                                    </span>
-                                )}
+                            >
+                                {review}
+                            </button>
+                            {showMode && (
+                                <span className='absolute flex flex-col rounded-md border w-max right-0 mt-1 overflow-hidden text-sm bg-white'>
+                                <button 
+                                    type="button" 
+                                    className='py-1.5 px-4 hover:bg-light-blue focus:bg-dark-blue focus:text-white ease-out duration-200'
+                                    onClick={() => {setReview('Latest'); setShowMode(false);}}
+                                >Latest</button>
+                                <button 
+                                    type="button" 
+                                    className='py-1.5 px-4 hover:bg-light-blue focus:bg-dark-blue focus:text-white ease-out duration-200'
+                                    onClick={() => {setReview('Most Popular'); setShowMode(false);}}
+                                >Most Popular</button>
+                                <button 
+                                    type="button" 
+                                    className='py-1.5 px-4 hover:bg-light-blue focus:bg-dark-blue focus:text-white ease-out duration-200'
+                                    onClick={() => {setReview('Oldest'); setShowMode(false);}}
+                                >Oldest</button>
+                                </span>
+                            )}
                             </div>
                         </div>
+                        
                         <div className='h-full w-full flex flex-col gap-5 md:gap-3 mt-3 overflow-x-hidden'>
-                            {Array.from({ length: 5 }).map((_,i) => (
-                                <div key={i} className='flex flex-col w-full px-2 border-b border-neutral-200'>
-                                    <div className='w-full flex items-center gap-3'>
-                                        <span className='h-10 w-10 rounded-full bg-neutral-400'></span>
-                                        <span className='font-semibold'>
-                                            <h3>Juan Dela Cruz</h3>
-                                            <p className='text-sm text-neutral-500'>Company Name</p>
-                                        </span>
-                                        <div className='flex flex-col items-end ml-auto'>
-                                            <span className='flex items-center gap-1 text-amber-500'>
-                                                <RiStarFill />
-                                                <RiStarFill />
-                                                <RiStarFill />
-                                                <RiStarFill />
-                                                <RiStarHalfFill />
-                                            </span>
-                                            <span className='font-semibold text-neutral-500 text-sm'>09.16.25</span>
-                                        </div>
-                                    </div>
-                                    
-                                    <p className='text-sm my-2'>
-                                        Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.
+                            {loadingFeedbacks ? (
+                            <div className="flex items-center justify-center py-8">
+                                <RiLoader4Line className="animate-spin text-2xl text-blue" />
+                                <span className="ml-2">Loading feedbacks...</span>
+                            </div>
+                            ) : feedbackData && feedbackData.hasFeedbacks ? (
+                            feedbackData.feedbacks.map((feedback) => (
+                                <div key={feedback.feedbackID} className='flex flex-col w-full px-2 border-b border-neutral-200'>
+                                <div className='w-full flex items-center gap-3'>
+                                    <span className='h-10 w-10 rounded-full bg-neutral-400 flex items-center justify-center text-white font-bold'>
+                                    {feedback.client.clientName?.charAt(0) || 'U'}
+                                    </span>
+                                    <span className='font-semibold'>
+                                    <h3>{feedback.client.clientName || 'Anonymous User'}</h3>
+                                    <p className='text-sm text-neutral-500'>
+                                        {new Date(feedback.dateAdded).toLocaleDateString()}
                                     </p>
-                                    <div>
-                                        <button type="button" className='text-2xl' onClick={() => setLike(!like)}>
-                                            {like ? <RiHeartFill /> : <RiHeartLine />}
-                                        </button>
+                                    </span>
+                                    <div className='flex flex-col items-end ml-auto'>
+                                    <span className='flex items-center gap-1 text-amber-500'>
+                                        {[...Array(5)].map((_, i) => (
+                                        <RiStarFill 
+                                            key={i} 
+                                            className={i < Math.floor(feedback.rate) ? "text-amber-500" : "text-gray-300"} 
+                                        />
+                                        ))}
+                                    </span>
+                                    <span className='font-semibold text-neutral-500 text-sm'>
+                                        {new Date(feedback.dateAdded).toLocaleDateString()}
+                                    </span>
                                     </div>
                                 </div>
-                            ))}
+                                
+                                <p className='text-sm my-2'>
+                                    {feedback.comment || 'No comment provided.'}
+                                </p>
+                                <div>
+                                    <button type="button" className='text-2xl' onClick={() => setLike(!like)}>
+                                    {like ? <RiHeartFill className="text-red-500" /> : <RiHeartLine />}
+                                    </button>
+                                </div>
+                                </div>
+                            ))
+                            ) : (
+                            <div className="flex flex-col items-center justify-center py-8 text-center">
+                                <RiStarLine className="text-4xl text-gray-300 mb-2" />
+                                <p className="text-gray-500 font-semibold">No feedbacks yet</p>
+                                <p className="text-sm text-gray-400 mt-1">
+                                Order now and be the first to give us a feedback
+                                </p>
+                            </div>
+                            )}
                         </div>
-                    </div>
+                        </div>
                 </div>
                 <div className='flex lg:hidden w-full flex-col h-max lg:min-h-3/4 shadow-[0px_-3px_14px_#00000099] lg:shadow-transparent sticky bottom-16 md:bottom-0 bg-neutral-100 md:bg-white ml-0 left-0 z-50'>
                             {showCustomize && (

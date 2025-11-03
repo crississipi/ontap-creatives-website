@@ -4,6 +4,8 @@ import React, { useEffect, useRef, useState } from 'react'
 import { HiCheck } from 'react-icons/hi';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
+import { useToast } from '@/hooks/useToast';
+import Toast from './Toast';
 
 interface CookiesProps {
   setShowCookies: (cookies: boolean) => void;
@@ -14,6 +16,7 @@ const SaveCookies = ({ setShowCookies, onAccept }: CookiesProps) => {
   const [enableEmail, setEnableEmail] = useState(false);
   const [email, setEmail] = useState('');
   const cookiesRef = useRef<HTMLDivElement>(null);
+  const { toast, showToast } = useToast();
 
   const preventScroll = (e: Event) => {
     e.preventDefault();
@@ -43,7 +46,7 @@ const SaveCookies = ({ setShowCookies, onAccept }: CookiesProps) => {
       cookiesRef.current.removeEventListener("touchmove", preventScroll);
       setShowCookies(false);
     } catch (error) {
-      console.error('Error accepting cookies:', error);
+      showToast('error', 'Error accepting cookies');
     }
   }
   
@@ -52,6 +55,12 @@ const SaveCookies = ({ setShowCookies, onAccept }: CookiesProps) => {
       ref={cookiesRef} 
       className='h-full w-full fixed z-[99999] bg-black/30 flex flex-col items-center pt-10 gap-5 px-5 md:px-0 select-none'
     >
+      {toast.show && (
+        <Toast 
+          icon={toast.icon}
+          message={toast.message}
+        />
+      )}
         <motion.div 
           initial={{ y: -500 }}
           animate={{ y: 0 }}

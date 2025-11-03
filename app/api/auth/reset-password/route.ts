@@ -3,13 +3,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { PrismaClient } from '@prisma/client'
 import bcrypt from 'bcryptjs'
 import { verifyAndDeleteOtp } from '@/lib/otpStore'
-import { corsHeaders } from '@/lib/corsHeaders'
 
 const prisma = new PrismaClient()
-
-export async function OPTIONS() {
-  return new Response(null, { status: 200, headers: corsHeaders })
-}
 
 export async function POST(request: NextRequest) {
   try {
@@ -18,18 +13,16 @@ export async function POST(request: NextRequest) {
     if (!email || !otp || !newPassword) {
       return NextResponse.json(
         { error: 'Email, OTP, and new password are required' },
-        { status: 400, headers: corsHeaders }
+        { status: 400 }
       )
     }
-
-    console.log('🔍 Reset password request for:', email, 'with OTP:', otp)
 
     // Verify OTP first (this will delete it if valid)
     const otpResult = await verifyAndDeleteOtp(email, otp)
     if (!otpResult.isValid) {
       return NextResponse.json(
         { error: otpResult.message },
-        { status: 400, headers: corsHeaders }
+        { status: 400 }
       )
     }
 
@@ -41,7 +34,7 @@ export async function POST(request: NextRequest) {
     if (!user) {
       return NextResponse.json(
         { error: 'User not found' },
-        { status: 404, headers: corsHeaders }
+        { status: 404 }
       )
     }
 
@@ -54,17 +47,14 @@ export async function POST(request: NextRequest) {
       data: { password: hashedPassword }
     })
 
-    console.log('✅ Password reset successfully for:', email)
-
     return NextResponse.json(
       { message: 'Password reset successfully' },
-      { status: 200, headers: corsHeaders }
+      { status: 200 }
     )
   } catch (error) {
-    console.error('Reset password error:', error)
     return NextResponse.json(
       { error: 'Failed to reset password' },
-      { status: 500, headers: corsHeaders }
+      { status: 500 }
     )
   } finally {
     await prisma.$disconnect()

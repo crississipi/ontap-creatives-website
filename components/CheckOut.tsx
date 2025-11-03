@@ -7,7 +7,7 @@ import { FaHandHoldingDollar, FaTruckRampBox } from 'react-icons/fa6'
 import { RiMapPin2Fill, RiStore2Line, RiTruckLine } from 'react-icons/ri'
 import { AnimatePresence, motion } from 'framer-motion'
 import VoucherRoulette from './VoucherRoullete'
-import ReceiptClient from './ReceiptClient' // Import ReceiptClient
+import ReceiptClient from './ReceiptClient'
 
 interface CartItem {
   cartID: number;
@@ -47,7 +47,7 @@ interface CheckOutProps {
   setGotoCheckout: React.Dispatch<React.SetStateAction<boolean>>;
   selectedItems: number[];
   cartItems: CartItem[];
-  user: User;
+  user: User | null;
 }
 
 interface FormData {
@@ -333,7 +333,6 @@ const CheckOut = ({setGotoCheckout, selectedItems, cartItems, user}: CheckOutPro
         });
 
         const result = await response.json();
-        console.log('API Response:', result);
 
         if (response.ok) {
           // SUCCESS: Show receipt instead of alert and closing checkout
@@ -383,7 +382,7 @@ const CheckOut = ({setGotoCheckout, selectedItems, cartItems, user}: CheckOutPro
   }
 
   return (
-    <div className='h-full w-full flex flex-col pb-0 pl-0 pr-5 gap-5 select-none overflow-hidden z-50 pt-16 relative'>
+    <div className='h-full lg:h-full w-full flex flex-col pb-0 lg:px-5 gap-5 select-none overflow-hidden fixed inset-0 z-50 bg-white pt-20'>
         {showVoucher && (
           <VoucherRoulette 
             setRoulette={setShowVoucher} 
@@ -397,16 +396,16 @@ const CheckOut = ({setGotoCheckout, selectedItems, cartItems, user}: CheckOutPro
             transition={{type:'spring', stiffness:100, damping:20}}
             className='flex gap-3 items-center'
         >
-            <button type="button" className='text-2xl p-2 py-1 rounded-md border border-transparent hover:border-light-blue focus:bg-dark-blue focus:text-white ease-out duration-200' onClick={() => setGotoCheckout(false)}><HiOutlineArrowNarrowLeft /></button>
+            <button type="button" className='ml-3 text-2xl p-2 py-1 rounded-md border border-transparent hover:border-light-blue focus:bg-dark-blue focus:text-white ease-out duration-200' onClick={() => setGotoCheckout(false)}><HiOutlineArrowNarrowLeft /></button>
             <h1 className='w-full text-left text-4xl font-bold'>Checkout</h1>
         </motion.div>
-        <div className='h-full max-h-[95%] w-full flex gap-3 pl-20 pb-10'>
+        <div className='h-max lg:h-full lg:max-h-[95%] w-full grid grid-cols-1 lg:flex lg:flex-row gap-3 px-5 lg:pr-0 lg:pl-20 pb-10 overflow-x-hidden'>
             <motion.div 
                 initial={{x:-200, opacity:0}}
                 animate={{x:0, opacity:1}}
                 exit={{x:-200, opacity:0}}
                 transition={{type:'spring', stiffness:100, damping:20, delay: 0.3}}
-                className='h-full w-2/5 grid grid-cols-2 gap-3 p-0 overflow-x-hidden'
+                className='h-full w-full lg:w-2/5 grid grid-cols-2 gap-3 p-0 lg:overflow-x-hidden'
             >
                 <h2 className='col-span-full font-black text-lg'>Contact Information</h2>
                 
@@ -597,7 +596,7 @@ const CheckOut = ({setGotoCheckout, selectedItems, cartItems, user}: CheckOutPro
                         </span>
                         
                         {/* Barangay */}
-                        <span className='flex flex-col col-span-3 gap-1'>
+                        <span className='flex flex-col col-span-full lg:col-span-3 gap-1'>
                             <label htmlFor="barangay" className='uppercase tracking-wide text-xs font-extrabold text-dark-blue'>Barangay *</label>
                             <input 
                                 id="barangay"
@@ -613,7 +612,7 @@ const CheckOut = ({setGotoCheckout, selectedItems, cartItems, user}: CheckOutPro
                         </span>
                         
                         {/* City */}
-                        <span className='flex flex-col col-span-3 gap-1'>
+                        <span className='flex flex-col col-span-4 lg:col-span-3 gap-1'>
                             <label htmlFor="city" className='uppercase tracking-wide text-xs font-extrabold text-dark-blue'>City *</label>
                             <input 
                                 id="city"
@@ -645,7 +644,7 @@ const CheckOut = ({setGotoCheckout, selectedItems, cartItems, user}: CheckOutPro
                         </span>
                         
                         {/* ZIP Code */}
-                        <span className='flex flex-col col-span-1 gap-1'>
+                        <span className='flex flex-col col-span-2 lg:col-span-1 gap-1'>
                             <label htmlFor="zipCode" className='uppercase tracking-wide text-xs font-extrabold text-dark-blue'>ZIP Code *</label>
                             <input 
                                 id="zipCode"
@@ -661,7 +660,7 @@ const CheckOut = ({setGotoCheckout, selectedItems, cartItems, user}: CheckOutPro
                         </span>
                         
                         {/* Time Availability */}
-                        <span className='grid grid-cols-2 col-span-3 gap-1'>
+                        <span className='grid grid-cols-2 col-span-4 lg:col-span-3 gap-1'>
                             <label htmlFor="timeFrom" className='col-span-full uppercase tracking-wide text-xs font-extrabold text-dark-blue'>Time Availability *</label>
                             <input 
                                 id="timeFrom"
@@ -724,14 +723,14 @@ const CheckOut = ({setGotoCheckout, selectedItems, cartItems, user}: CheckOutPro
                         width={2048}
                         alt='Gcash Logo'
                         src="/icons/gcash-logo-1.png"
-                        className='ml-auto h-7 w-16 object-cover object-center'
+                        className='ml-auto w-7 aspect-square object-cover object-center'
                     />
                     <Image
                         height={2048}
                         width={2048}
                         alt='Gcash Logo'
                         src="/icons/paymaya-logo.png"
-                        className='h-7 w-auto object-contain object-center'
+                        className='h-7 w-auto object-contain object-center ml-1'
                     />
                 </button>
                 <button type="button" className={`col-span-1 px-3 py-2 rounded-md border ${modeOfPayment === 'bank' ? 'bg-violet text-white border-light-blue' : 'border-black/30 hover:border-black focus:border-dark-blue focus:bg-sky-100 ease-out duration-200'} flex items-center justify-between font-bold`}  onClick={() => setModeOfPayment('bank')}>
@@ -763,11 +762,11 @@ const CheckOut = ({setGotoCheckout, selectedItems, cartItems, user}: CheckOutPro
                 animate={{y:0, opacity:1}}
                 exit={{y:500, opacity:0}}
                 transition={{type:'spring', stiffness:100, damping:20}}
-            className='h-full w-1/3 border border-black/20 rounded-xl overflow-hidden shadow-lg shadow-transparent p-5 ml-32 flex flex-col gap-3 hover:shadow-black/30 ease-out duration-200'
+                className='h-max lg:h-full lg:w-1/3 border border-black/20 rounded-xl lg:overflow-hidden shadow-lg shadow-transparent p-5 lg:ml-32 flex flex-col gap-3 hover:shadow-black/30 ease-out duration-200'
             >
                 <h2 className='text-xl font-extrabold'>Order Summary</h2>
-                <div className='flex flex-col w-full h-full overflow-x-hidden'>
-                    <div className='w-full min-h-2/5 max-h-3/5 flex flex-col items-center overflow-x-hidden overflow-y-auto border border-black/10 rounded-lg'>
+                <div className='flex flex-col w-full h-full lg:overflow-x-hidden'>
+                    <div className='w-full min-h-max lg:min-h-2/5 max-h-3/5 flex flex-col items-center overflow-x-hidden lg:overflow-y-auto border border-black/10 rounded-lg'>
                         {filteredCartItems.length > 0 ? (
                             filteredCartItems.map((item) => (
                                 <div key={item.cartID} className='h-24 w-full p-3 flex items-center gap-3 z-50 border-b border-black/10 last:border-0'>

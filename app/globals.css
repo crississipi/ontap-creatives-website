@@ -24,6 +24,10 @@
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: #5A5CA8; border-radius: 10px; }
 
+.horizontal-scroll::-webkit-scrollbar {
+  height: 5px !important;
+}
+
 /* Hide number input spinners cross-browser */
 input[type="number"] {
   appearance: textfield;        /* Standard */
@@ -219,4 +223,105 @@ body {
   .card-size {
     width: 55%;
   };
+}
+
+.privacy-parent {
+  display: flex;
+  flex-direction: column;
+}
+
+.privacy-parent h2, .privacy-parent h3, .privacy-parent strong {
+  color: #2C4594;
+  font-weight: bolder;
+}
+
+.privacy-parent h2, .privacy-parent h3 {
+  font-size: 1.2rem;
+}
+
+.privacy-parent h2 {
+  margin-top: 1.5rem;
+}
+
+.privacy-parent h3 {
+  font-size: 1rem;
+  margin: 0.5rem 0;
+}
+
+.privacy-parent p {
+  margin-left: 1rem;
+}
+
+.privacy-parent ul {
+  list-style: inside;
+  gap: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  margin: 0.5rem 2rem 1.5rem;
+}
+
+.privacy-parent ul li {
+  margin-left: 0.5rem;
+}
+
+.privacy-parent ul li strong {
+  color:#5A5CA8
+}
+
+.privacy-parent ol {
+  list-style:decimal;
+  margin: 1rem;
+}
+
+.privacy-parent ol li {
+  margin: 0 0 0.5rem 3rem;
+}
+
+.privacy-parent strong {
+  margin: 1rem 0 0 !important;
+}
+
+.privacy-parent span {
+  color: #5199D3;
+  font-size: 0.9rem;
+}
+
+.privacy-parent ul #necessaryCookies, #cookiesPolicy, #functionalityCookies {
+  display: inline-flex;
+  flex-direction: column;
+  list-style: inside;
+  border: 1px solid #ddd;
+  padding: 0 1rem 1rem;
+}
+
+.privacy-parent a {
+  color:#5199D3;
+  text-decoration: underline;
+}
+
+.table-of-contents a {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  user-select: none;
+  padding-top: 0.3rem;
+  padding-bottom: 0.3rem;
+}
+
+.table-of-contents a:hover {
+  background-color: #5199D3;
+  color: white;
+}
+
+.table-of-contents a:focus {
+  background-color: #2C4594;
+  color: white;
+}
+
+.table-of-contents span a {
+  padding-left: 2.25rem;
+}
+
+.table-of-contents span span a {
+  padding-left: 4rem;
 }

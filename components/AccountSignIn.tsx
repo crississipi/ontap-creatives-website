@@ -5,6 +5,8 @@ import { useClickOutside, useScrollLock } from '@/hooks'
 import { HiOutlineX } from 'react-icons/hi'
 import { useUser } from '@/contexts/UserContext'
 import Image from 'next/image'
+import { useToast } from '@/hooks/useToast';
+import Toast from './Toast';
 
 interface AccountSignInProps {
   setShowLogin: (show: boolean) => void;
@@ -16,8 +18,6 @@ type AuthView = 'login' | 'signup' | 'forgot-password' | 'verify-otp' | 'reset-p
 const AccountSignIn = ({ setShowLogin, onSuccess }: AccountSignInProps) => {
   const [currentView, setCurrentView] = useState<AuthView>('login')
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
-  const [success, setSuccess] = useState('')
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -29,6 +29,7 @@ const AccountSignIn = ({ setShowLogin, onSuccess }: AccountSignInProps) => {
     newPassword: '',
     confirmNewPassword: ''
   })
+  const { toast, showToast } = useToast();
   
   const { login } = useUser()
   useScrollLock(true)
@@ -37,8 +38,6 @@ const AccountSignIn = ({ setShowLogin, onSuccess }: AccountSignInProps) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
-    setError('')
-    setSuccess('')
 
     try {
       switch (currentView) {
@@ -62,8 +61,7 @@ const AccountSignIn = ({ setShowLogin, onSuccess }: AccountSignInProps) => {
           break;
       }
     } catch (error) {
-      console.error('Auth error:', error)
-      setError('An unexpected error occurred. Please try again.')
+      showToast('error', 'An unexpected error occurred. Please try again.');
     } finally {
       setLoading(false)
     }
@@ -91,13 +89,13 @@ const AccountSignIn = ({ setShowLogin, onSuccess }: AccountSignInProps) => {
       }
     } else {
       const errorData = await response.json()
-      setError(errorData.error || 'Login failed. Please try again.')
+      showToast('error', 'Login failed. Please try again.');
     }
   }
 
   const handleSignup = async () => {
     if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match')
+      showToast('error', 'Passwords do not match');
       return
     }
 
@@ -126,13 +124,13 @@ const AccountSignIn = ({ setShowLogin, onSuccess }: AccountSignInProps) => {
 
       if (verificationResponse.ok) {
         setCurrentView('verify-email')
-        setSuccess('Account created! Please verify your email with the OTP sent to your inbox.')
+        showToast('success', 'Account created! Please verify your email with the OTP sent to your inbox.');
       } else {
-        setError('Account created but failed to send verification email. Please contact support.')
+        showToast('error', 'Account created but failed to send verification email. Please contact support.');
       }
     } else {
       const errorData = await response.json()
-      setError(errorData.error || 'Registration failed. Please try again.')
+      showToast('error', 'Registration failed. Please try again.');
     }
   }
 
@@ -147,7 +145,7 @@ const AccountSignIn = ({ setShowLogin, onSuccess }: AccountSignInProps) => {
     })
 
     if (response.ok) {
-      setSuccess('Email verified successfully! Please sign in to continue.')
+      showToast('success', 'Email verified successfully! Please sign in to continue.');
       setTimeout(() => {
         setCurrentView('login')
         setFormData(prev => ({ 
@@ -162,7 +160,7 @@ const AccountSignIn = ({ setShowLogin, onSuccess }: AccountSignInProps) => {
       }, 2000)
     } else {
       const errorData = await response.json()
-      setError(errorData.error || 'Invalid OTP. Please try again.')
+      showToast('error', 'Invalid OTP. Please try again.');
     }
   }
 
@@ -175,10 +173,10 @@ const AccountSignIn = ({ setShowLogin, onSuccess }: AccountSignInProps) => {
 
     if (response.ok) {
       setCurrentView('verify-otp')
-      setSuccess('OTP sent to your email. Please check your inbox.')
+      showToast('info', 'OTP sent to your email. Please check your inbox.');
     } else {
       const errorData = await response.json()
-      setError(errorData.error || 'Failed to send OTP. Please try again.')
+      showToast('error', 'Failed to send OTP. Please try again.');
     }
   }
 
@@ -194,16 +192,16 @@ const AccountSignIn = ({ setShowLogin, onSuccess }: AccountSignInProps) => {
 
     if (response.ok) {
       setCurrentView('reset-password')
-      setSuccess('OTP verified! Please set your new password.')
+      showToast('info', 'OTP verified! Please set your new password.');
     } else {
       const errorData = await response.json()
-      setError(errorData.error || 'Invalid OTP. Please try again.')
+      showToast('error', 'Invalid OTP. Please try again.');
     }
   }
 
   const handleResetPassword = async () => {
     if (formData.newPassword !== formData.confirmNewPassword) {
-      setError('Passwords do not match')
+      showToast('error', 'Passwords do not match.');
       return
     }
 
@@ -218,27 +216,24 @@ const AccountSignIn = ({ setShowLogin, onSuccess }: AccountSignInProps) => {
     })
 
     if (response.ok) {
-      setSuccess('Password reset successfully! Please log in with your new password.')
+      showToast('success', 'Password reset successfully! Please log in with your new password.');
       setTimeout(() => {
         setCurrentView('login')
         setFormData(prev => ({ ...prev, password: '', otp: '', newPassword: '', confirmNewPassword: '' }))
       }, 2000)
     } else {
       const errorData = await response.json()
-      setError(errorData.error || 'Failed to reset password. Please try again.')
+      showToast('error', 'Failed to reset password. Please try again.');
     }
   }
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
     setFormData(prev => ({ ...prev, [name]: value }))
-    if (error) setError('')
   }
 
   const switchToLogin = () => {
     setCurrentView('login')
-    setError('')
-    setSuccess('')
     setFormData(prev => ({
       ...prev,
       password: '',
@@ -254,8 +249,6 @@ const AccountSignIn = ({ setShowLogin, onSuccess }: AccountSignInProps) => {
 
   const switchToSignup = () => {
     setCurrentView('signup')
-    setError('')
-    setSuccess('')
     setFormData(prev => ({
       ...prev,
       password: '',
@@ -268,8 +261,6 @@ const AccountSignIn = ({ setShowLogin, onSuccess }: AccountSignInProps) => {
 
   const switchToForgotPassword = () => {
     setCurrentView('forgot-password')
-    setError('')
-    setSuccess('')
     setFormData(prev => ({
       ...prev,
       password: '',
@@ -293,12 +284,12 @@ const AccountSignIn = ({ setShowLogin, onSuccess }: AccountSignInProps) => {
       })
 
       if (response.ok) {
-        setSuccess('Verification email sent again! Please check your inbox.')
+        showToast('success', 'Verification email sent again! Please check your inbox.');
       } else {
-        setError('Failed to resend verification email. Please try again.')
+        showToast('error', 'Failed to resend verification email. Please try again.');
       }
     } catch (error) {
-      setError('Failed to resend verification email. Please try again.')
+      showToast('error', 'Failed to resend verification email. Please try again.');
     } finally {
       setLoading(false)
     }
@@ -318,6 +309,12 @@ const AccountSignIn = ({ setShowLogin, onSuccess }: AccountSignInProps) => {
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-1000 flex items-center justify-center p-4">
+      {toast.show && (
+        <Toast 
+          icon={toast.icon}
+          message={toast.message}
+        />
+      )}
       <motion.div
         ref={clickRef}
         initial={{ scale: 0.8, opacity: 0 }}
@@ -337,18 +334,6 @@ const AccountSignIn = ({ setShowLogin, onSuccess }: AccountSignInProps) => {
         <h2 className="text-2xl font-bold mb-6 text-center">
           {getTitle()}
         </h2>
-
-        {error && (
-          <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-lg">
-            {error}
-          </div>
-        )}
-
-        {success && (
-          <div className="mb-4 p-3 bg-green-100 border border-green-400 text-green-700 rounded-lg">
-            {success}
-          </div>
-        )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Email Field - shown in all views except login */}

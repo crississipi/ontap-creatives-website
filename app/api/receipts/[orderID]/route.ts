@@ -11,14 +11,14 @@ export async function GET(
     const {orderID} = await params
     let orderid = orderID;
 
-    console.log('🔍 Fetching receipt for:', orderid);
+    // console.log('🔍 Fetching receipt for:', orderid);
 
     // Handle both formats: "receipt-TXN-..." and "TXN-..."
     if (orderid.startsWith('receipt-')) {
       orderid = orderid.replace('receipt-', '');
     }
 
-    console.log('🔍 Processing transaction ID:', orderid);
+    // console.log('🔍 Processing transaction ID:', orderid);
 
     // Fetch transaction data
     const transactions = await prisma.transaction.findMany({
@@ -37,10 +37,10 @@ export async function GET(
       }
     });
 
-    console.log('🔍 Found transactions:', transactions.length);
+    // console.log('🔍 Found transactions:', transactions.length);
 
     if (!transactions || transactions.length === 0) {
-      console.log('❌ No transactions found for ID:', orderid);
+      // console.log('❌ No transactions found for ID:', orderid);
       return NextResponse.json({ error: 'Receipt not found' }, { status: 404 });
     }
 
@@ -53,12 +53,12 @@ export async function GET(
     const shippingFee = firstTransaction.shipMethod === 'delivery' ? 250 : 0;
     const totalAmount = itemsSubtotal - discountAmount + shippingFee;
 
-    console.log('🔍 Calculated totals:', {
-      itemsSubtotal,
-      discountAmount,
-      shippingFee,
-      totalAmount
-    });
+    // console.log('🔍 Calculated totals:', {
+    //   itemsSubtotal,
+    //   discountAmount,
+    //   shippingFee,
+    //   totalAmount
+    // });
 
     // Format receipt data for the client
     const receiptData = {
@@ -88,11 +88,11 @@ export async function GET(
       orderDate: firstTransaction.dateOrdered.toISOString()
     };
 
-    console.log('✅ Receipt data prepared for:', orderid);
+    // console.log('✅ Receipt data prepared for:', orderid);
 
     return NextResponse.json(receiptData);
   } catch (error) {
-    console.error('❌ Failed to fetch receipt:', error);
+    // console.error('❌ Failed to fetch receipt:', error);
     return NextResponse.json(
       { error: 'Failed to fetch receipt' },
       { status: 500 }

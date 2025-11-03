@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
     // Store OTP in database for email verification
     await storeOtp(email, otp, 30) // 30 minutes for email verification
 
-    console.log('🔍 Verification OTP stored for email:', email, 'OTP:', otp)
+    // console.log('🔍 Verification OTP stored for email:', email, 'OTP:', otp)
 
     // Send verification email
     const transporter = nodemailer.createTransport({
@@ -81,7 +81,7 @@ export async function POST(request: NextRequest) {
       { status: 200, headers: corsHeaders }
     )
   } catch (error) {
-    console.error('Send verification error:', error)
+    // console.error('Send verification error:', error)
     return NextResponse.json(
       { error: 'Failed to send verification email' },
       { status: 500, headers: corsHeaders }

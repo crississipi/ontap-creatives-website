@@ -83,7 +83,6 @@ const FillUpForm = () => {
           setMessage(`Error: ${data.message}`);
         }
         } catch (error) {
-            console.error('Error sending email:', error);
             setShow(true);
             setIcon('error');
             setMessage(`An unexpected error occurred.`);

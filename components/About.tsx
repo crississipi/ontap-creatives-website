@@ -35,7 +35,7 @@ const About = ({editable}: EditProps) => {
   const { ref: section3Ref, isInView: section3Visible } = useInView();
 
   return (
-    <div ref={section1Ref} className='h-auto w-full xl:w-[95%] bg-white px-5 md:px-10 flex flex-col py-16 font-bold gap-10 md:gap-20 items-center'>
+    <div ref={section1Ref} className='h-auto w-full xl:w-[90%] bg-white px-5 md:px-10 flex flex-col py-16 font-bold gap-10 md:gap-20 items-center'>
         <div className='w-full flex flex-col gap-3 mr-auto'>
             {editable ? (
                 <>

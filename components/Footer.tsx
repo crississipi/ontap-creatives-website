@@ -75,18 +75,16 @@ const Footer = ({ setPage }: FooterProps) => {
         </div>
         <div className='col-span-3 md:col-span-1 w-full flex flex-col'>
             <h4 className='text-lg mb-2 text-blue font-bold md:text-2xl '>Legal</h4>
-            <a 
-                href="#" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className='md:text-lg hover:text-light-blue focus:text-light-blue ease-out duration-200'
-            >Terms and Conditions</a>
-            <a 
-                href="#" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className='md:text-lg hover:text-light-blue focus:text-light-blue ease-out duration-200'
-            >Privacy Policy</a>
+            <button
+                type='button'
+                className='text-left md:text-lg hover:text-light-blue focus:text-light-blue ease-out duration-200'
+                onClick={() => setPage(8)}
+            >Terms and Conditions</button>
+            <button 
+                type='button'
+                className='md:text-lg hover:text-light-blue focus:text-light-blue ease-out duration-200 text-left'
+                onClick={() => setPage(7)}
+            >Privacy Policy</button>
             </div>
         <div className='col-span-2 md:col-span-2 hidden md:flex w-full flex-col'>
             <h4 className='text-lg text-blue font-bold md:text-2xl'>Address</h4>

@@ -190,3 +190,14 @@ model products {
   carts            cart[]
   feedbacks        feedback[]
 }
+
+model admin {
+  adminID    Int      @id @default(autoincrement())
+  authLevel  Int
+  email      String   @unique
+  password   String
+  status     String
+  dateCreated DateTime @default(now())
+
+  @@map("admin")
+}

@@ -8,8 +8,6 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { visitorUUID, pageUrl, pageTitle, metadata } = body
 
-    console.log('🔍 Starting session for visitor:', visitorUUID);
-
     if (!visitorUUID) {
       return NextResponse.json(
         { error: 'Visitor UUID is required' },
@@ -23,8 +21,6 @@ export async function POST(request: NextRequest) {
     })
 
     if (!visitor) {
-      console.log('🔍 Visitor not found, creating new visitor...');
-      
       // Get client IP from request
       const clientIP = request.headers.get('x-forwarded-for') || 
                       request.headers.get('x-real-ip') || 
@@ -41,11 +37,8 @@ export async function POST(request: NextRequest) {
           ipAddress: clientIP
         }
       })
-      
-      console.log('🔍 New visitor created:', visitor.visitorID);
     } else {
-      console.log('🔍 Found existing visitor:', visitor.visitorID);
-      
+
       // Update last visit for existing visitor
       await prisma.visitor.update({
         where: { visitorUUID },
@@ -67,8 +60,6 @@ export async function POST(request: NextRequest) {
       }
     })
 
-    console.log('🔍 Session created:', session.sessionID);
-
     return NextResponse.json({ 
       success: true, 
       sessionID: session.sessionID,
@@ -76,7 +67,6 @@ export async function POST(request: NextRequest) {
       visitorCreated: !visitor // Indicate if visitor was newly created
     })
   } catch (error) {
-    console.error('🔍 Error starting session:', error)
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

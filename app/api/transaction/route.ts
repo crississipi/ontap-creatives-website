@@ -72,7 +72,6 @@ async function getAuthenticatedUser() {
     })
     return user
   } catch (error) {
-    console.error('Auth error:', error)
     return null
   }
 }
@@ -90,8 +89,6 @@ export async function GET(request: NextRequest) {
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-
-    console.log('🔍 Fetching orders for user:', user.clientID);
 
     // Fetch transactions with tracking data
     const transactions = await prisma.transaction.findMany({
@@ -111,8 +108,6 @@ export async function GET(request: NextRequest) {
         dateOrdered: 'desc'
       }
     });
-
-    console.log(`✅ Found ${transactions.length} transactions for user ${user.clientID}`);
 
     // Group transactions by transactionID to combine items from the same order
     const transactionGroups = new Map();
@@ -184,8 +179,6 @@ export async function GET(request: NextRequest) {
       };
     });
 
-    console.log(`✅ Transformed ${orders.length} orders for user ${user.clientID}`);
-
     return NextResponse.json({ 
       success: true,
       orders 
@@ -194,7 +187,6 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('❌ Failed to fetch orders:', error);
     return NextResponse.json(
       { 
         error: 'Failed to fetch orders',

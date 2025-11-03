@@ -2,7 +2,7 @@
 
 import React from 'react'
 import Image from 'next/image'
-import { ProductCardProps, ProductProps } from '@/types';
+import { ProductProps } from '@/types';
 import { TbCurrencyPeso } from 'react-icons/tb';
 
 interface ProductCardComponentProps {

@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
       visitor: updatedVisitor 
     })
   } catch (error) {
-    console.error('Error updating visitor client:', error)
+    // console.error('Error updating visitor client:', error)
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

@@ -5,7 +5,6 @@ import jwt from 'jsonwebtoken'
 import { PrismaClient } from '@prisma/client'
 
 import { sendOrderConfirmationEmail } from '@/lib/emailService';
-import { generateReceiptPDF } from '@/lib/receiptGenerator';
 
 const prisma = new PrismaClient()
 
@@ -38,7 +37,7 @@ async function getAuthenticatedUser() {
     })
     return user
   } catch (error) {
-    console.error('Auth error:', error)
+    // console.error('Auth error:', error)
     return null
   }
 }
@@ -179,7 +178,7 @@ export async function POST(request: NextRequest) {
           }
         });
 
-        console.log('Billing created:', billing.billingID);
+        // console.log('Billing created:', billing.billingID);
 
         // 2. Mark voucher as used if applicable
         if (body.voucher?.id) {
@@ -193,11 +192,11 @@ export async function POST(request: NextRequest) {
               where: { voucherID: body.voucher.id },
               data: { isUsed: true }
             });
-            console.log('Voucher marked as used:', body.voucher.id);
+            // console.log('Voucher marked as used:', body.voucher.id);
           } else if (existingVoucher?.isUsed) {
-            console.warn('Voucher already used:', body.voucher.id);
+            // console.warn('Voucher already used:', body.voucher.id);
           } else {
-            console.warn('Voucher not found:', body.voucher.id);
+            // console.warn('Voucher not found:', body.voucher.id);
           }
         }
 
@@ -212,16 +211,16 @@ export async function POST(request: NextRequest) {
           }
         });
 
-        console.log('Tracking record created:', tracking.trackingID);
+        // console.log('Tracking record created:', tracking.trackingID);
 
         // 4. Create MULTIPLE transaction records
-        console.log('Creating transactions for items:', body.items.length);
+        // console.log('Creating transactions for items:', body.items.length);
         
         const transactions = [];
         for (const item of body.items) {
           const itemSubtotal = item.product.price * item.quantity;
           
-          console.log('Creating transaction for cartID:', item.cartID, 'subtotal:', itemSubtotal);
+          // console.log('Creating transaction for cartID:', item.cartID, 'subtotal:', itemSubtotal);
           
           const transactionData: any = {
             transactionID: sharedTransactionID,
@@ -254,7 +253,7 @@ export async function POST(request: NextRequest) {
           });
           
           transactions.push(transaction);
-          console.log('Transaction created:', transaction.orderID);
+          // console.log('Transaction created:', transaction.orderID);
         }
 
         // 5. Update cart items status to 'ordered'
@@ -269,7 +268,7 @@ export async function POST(request: NextRequest) {
           }
         });
 
-        console.log('Cart items updated to ordered');
+        // console.log('Cart items updated to ordered');
 
         return {
           transactions,
@@ -280,7 +279,7 @@ export async function POST(request: NextRequest) {
         }
 
       } catch (dbError) {
-        console.error('Database error in transaction:', dbError);
+        // console.error('Database error in transaction:', dbError);
         throw dbError;
       }
     }, {
@@ -322,7 +321,7 @@ export async function POST(request: NextRequest) {
     let pdfGenerationSuccess = false;
 
     try {
-      console.log('🔄 Attempting server-side PDF generation...');
+      // console.log('🔄 Attempting server-side PDF generation...');
       const pdfResponse = await fetch(`${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/generate-receipt-pdf`, {
         method: 'POST',
         headers: {
@@ -335,15 +334,15 @@ export async function POST(request: NextRequest) {
         const arrayBuffer = await pdfResponse.arrayBuffer();
         // Convert ArrayBuffer to Buffer properly
         receiptBuffer = Buffer.from(arrayBuffer);
-        console.log('✅ PDF receipt generated successfully via API');
+        // console.log('✅ PDF receipt generated successfully via API');
         pdfGenerationSuccess = true;
       } else {
         const errorText = await pdfResponse.text();
-        console.error('❌ PDF API returned error:', errorText);
+        // console.error('❌ PDF API returned error:', errorText);
         throw new Error('PDF API returned non-PDF response');
       }
     } catch (pdfError) {
-      console.error('❌ PDF generation failed:', pdfError);
+      // console.error('❌ PDF generation failed:', pdfError);
       receiptBuffer = Buffer.from('');
       pdfGenerationSuccess = false;
     }
@@ -362,9 +361,9 @@ export async function POST(request: NextRequest) {
         receiptUrl: receiptUrl
       });
       
-      console.log('Confirmation email sent successfully');
+      // console.log('Confirmation email sent successfully');
     } catch (emailError) {
-      console.error('Email sending failed:', emailError);
+      // console.error('Email sending failed:', emailError);
       // Continue even if email fails - don't fail the entire order
     }
 
@@ -372,11 +371,11 @@ export async function POST(request: NextRequest) {
       success: true,
       message: 'Order placed successfully',
       transactionId: result.transactionId,
-      receiptUrl: `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/receipts/${result.transactionId}`
+      receiptUrl: `${process.env.NEXTAUTH_URL || 'https://ontap.ph/'}/receipts/${result.transactionId}`
     });
 
   } catch (error) {
-    console.error('Order creation error:', error);
+    // console.error('Order creation error:', error);
     
     // Provide more specific error messages
     let errorMessage = 'Internal server error';

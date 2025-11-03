@@ -10,6 +10,8 @@ import { MdOutlineSaveAlt } from 'react-icons/md';
 import { HiOutlineX } from 'react-icons/hi';
 import ReceiptTemplate from './ReceiptTemplate';
 import { inPeso } from '@/lib/utils';
+import { useToast } from '@/hooks/useToast';
+import Toast from './Toast';
 
 type PaymentInfo = {
   title: string;
@@ -155,7 +157,7 @@ const OrderPage: React.FC = () => {
   const [showCustomerService, setShowCustomerService] = useState(false);
   const [showBilling, setShowBilling] = useState(false);
   const [showOrderInfo, setShowOrderInfo] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { toast, showToast } = useToast();
   
   const receiptRef = useRef<HTMLDivElement>(null);
 
@@ -167,20 +169,17 @@ const OrderPage: React.FC = () => {
   const fetchOrders = async () => {
     try {
         setLoading(true);
-        setError(null);
-        console.log('🔄 Fetching orders...');
         
         const response = await fetch('/api/transaction');
         
         if (!response.ok) {
-        throw new Error(`Failed to fetch orders: ${response.status}`);
+          showToast('error', 'Failed to fetch orders.')
         }
         
         const data = await response.json();
-        console.log('📦 API response:', data);
         
         if (!data.success) {
-        throw new Error(data.error || 'Failed to fetch orders');
+        throw new Error(data.error || showToast('error', 'Failed to fetch orders'));
         }
         
         // Validate and sanitize the data with proper date handling
@@ -224,12 +223,9 @@ const OrderPage: React.FC = () => {
             status: order.status || 'pending'
         };
         });
-        
-        console.log(`✅ Loaded ${validatedOrders.length} orders`);
         setOrders(validatedOrders);
     } catch (error) {
-        console.error('❌ Failed to fetch orders:', error);
-        setError('Failed to load orders. Please try again.');
+        showToast('error', 'Failed to load orders. Please try again.');
     } finally {
         setLoading(false);
     }
@@ -254,13 +250,12 @@ const OrderPage: React.FC = () => {
         filename: `receipt-${selectedOrder.orderID}.pdf`,
         image: { type: "jpeg" as const, quality: 1 },
         html2canvas: { scale: 2 },
-        jsPDF: { unit: "in", format: "a5", orientation: "portrait" as const },
+        jsPDF: { unit: "in", format: "a6", orientation: "portrait" as const },
       };
 
       await html2pdf().set(opt).from(element).save();
     } catch (error) {
-      console.error('PDF download failed:', error);
-      alert('Failed to download PDF. Please try again.');
+      showToast('error', 'Failed to download PDF. Please try again.');
     }
   };
 
@@ -315,28 +310,20 @@ const OrderPage: React.FC = () => {
     );
   }
 
-  if (error) {
-    return (
-      <div className='h-[100vh] w-full flex flex-col items-center justify-center bg-gradient-to-t from-violet via-light-blue to-white'>
-        <div className='text-red-500 text-lg mb-4'>{error}</div>
-        <button 
-          onClick={fetchOrders}
-          className='px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors'
-        >
-          Retry
-        </button>
-      </div>
-    );
-  }
-
   return (
-    <div className='h-[100vh] w-full flex flex-col items-center relative overflow-x-hidden p-0 pt-20 lg:p-10 lg:pr-5 gap-2 lg:gap-5 select-none lg:overflow-hidden bg-gradient-to-t from-violet via-light-blue to-white before:absolute before:top-0 before:left-0 before:h-full before:w-full before:z-30 before:bg-white/70 before:backdrop-blur-xl'>
+    <div className='h-[100vh] w-full flex flex-col items-center relative overflow-x-hidden p-0 lg:p-10 pt-20 lg:pr-5 gap-2 lg:gap-5 select-none lg:overflow-hidden bg-gradient-to-t from-violet via-light-blue to-white before:absolute before:top-0 before:left-0 before:h-full before:w-full before:z-30 before:bg-white/70 before:backdrop-blur-xl'>
+      {toast.show && (
+        <Toast 
+          icon={toast.icon}
+          message={toast.message}
+        />
+      )}
       <motion.h1 
         initial={{x:-200, opacity:0}}
         animate={{x:0, opacity:1}}
         exit={{x:-200, opacity:0}}
         transition={{type:'spring', stiffness:100, damping:20}}
-        className='pl-3 w-full text-left text-2xl xl:text-4xl font-bold z-50'
+        className='pl-3 pt-10 w-full text-left text-2xl xl:text-4xl font-bold z-50'
       >
         Orders
       </motion.h1>
@@ -345,7 +332,8 @@ const OrderPage: React.FC = () => {
         {/* Orders List */}
         <div className='col-span-full lg:col-span-2 flex flex-col xl:p-5 w-full xl:h-[95%] overflow-x-hidden'>
           <span className='font-extrabold pl-3 lg:pl-0 text-neutral-500 text-sm uppercase'>Ongoing</span>
-          {orders.filter(order => order.status !== 'completed').map((order) => (
+          { orders.length > 0 ? 
+            orders.filter(order => order.status !== 'completed').map((order) => (
             <button 
               key={order.orderID} 
               type='button' 
@@ -366,7 +354,24 @@ const OrderPage: React.FC = () => {
                 <p className='flex items-center gap-1 text-xs'>₱<strong className='font-extrabold text-base'>{inPeso(order.total)}</strong></p>
               </span>
             </button>
-          ))}
+          )) : 
+          (
+            <div className='h-1/2 w-full flex flex-col items-center justify-center overflow-x-hidden pr-3'>
+              <Image
+                height={2048}
+                width={2048}
+                alt='empty box animation'
+                src='/icons/empty-box.gif'
+                className='h-40 aspect-square object-center object-contain'
+              />
+              <span className='font-bold text-neutral-500 px-5 py-3 rounded-lg border-2 border-neutral-300 bg-neutral-100 relative
+              before:h-5 before:w-5 before:absolute before:bg-neutral-100 before:top-full before:left-3 before:rotate-z-45 before:border-2 before:border-transparent before:border-b-neutral-300 before:border-r-neutral-300 before:-mt-2.5
+              '>
+                You have no pending orders.
+              </span>
+            </div>
+          )
+          }
           
           <span className='font-extrabold text-neutral-500 text-sm uppercase mt-5 pl-3 lg:pl-0'>Previous Purchases</span>
           {orders.filter(order => order.status === 'completed').map((order) => (

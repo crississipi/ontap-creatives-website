@@ -79,20 +79,14 @@ export default function VoucherRoulette({setRoulette, onVoucherWon}: VoucherRoul
             })));
           }
         } else {
-          // If vouchers API fails, assume new user can spin twice
-          console.log('Vouchers API not available, allowing spins');
           setCanSpin(true);
           setSpinsRemaining(2);
         }
       } else {
-        // No user session
-        console.log('No user session found');
         setCanSpin(false);
         setSpinsRemaining(0);
       }
     } catch (error) {
-      console.error('Failed to initialize client:', error);
-      // Allow spinning even if API fails (fallback)
       setCanSpin(true);
       setSpinsRemaining(2);
     } finally {
@@ -104,15 +98,6 @@ export default function VoucherRoulette({setRoulette, onVoucherWon}: VoucherRoul
     initializeClient();
   }, []);
 
-  // Helper function to extract discount from label
-  const getDiscountFromLabel = (label: string): number => {
-    if (label.includes('5%')) return 5;
-    if (label.includes('10%')) return 10;
-    if (label.includes('15%')) return 15;
-    if (label.includes('20%')) return 20;
-    return 0;
-  };
-
   const saveVoucherToBackend = async (selectedVoucherParam?: Voucher) => {
     const selectedVoucher = selectedVoucherParam || getSelectedVoucher();
     
@@ -123,8 +108,6 @@ export default function VoucherRoulette({setRoulette, onVoucherWon}: VoucherRoul
     
     if (selectedVoucher && clientID) {
       try {
-        console.log('Saving voucher:', selectedVoucher.label, 'for client:', clientID);
-        
         const response = await fetch('/api/voucher', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -145,8 +128,6 @@ export default function VoucherRoulette({setRoulette, onVoucherWon}: VoucherRoul
         }
 
         if (response.ok) {
-          console.log('Voucher saved successfully:', data);
-          
           // ✅ Update spin-related states immediately
           setCanSpin(data.canSpin);
           setSpinsRemaining(data.spinsRemaining);
@@ -157,13 +138,11 @@ export default function VoucherRoulette({setRoulette, onVoucherWon}: VoucherRoul
           // ✅ Show result *after successful save*
           setShowResult(true);
         } else {
-          console.error('Failed to save voucher:', data.error);
           updateLocalSpinState();
           setWonVouchers(prev => [...prev, selectedVoucher]);
           setShowResult(true);
         }
       } catch (error) {
-        console.error('Failed to save voucher:', error);
         updateLocalSpinState();
         setWonVouchers(prev => [...prev, selectedVoucher]);
         setShowResult(true);

@@ -15,8 +15,6 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { sessionID, pageUrl, pageTitle, metadata } = body
 
-    console.log('🔍 Updating session:', sessionID);
-
     if (!sessionID) {
       return NextResponse.json(
         { error: 'Session ID is required' },
@@ -34,16 +32,11 @@ export async function POST(request: NextRequest) {
       }
     })
 
-    console.log('🔍 Session updated:', session.sessionID);
-
     return NextResponse.json({ 
       success: true, 
       sessionID: session.sessionID 
     })
   } catch (error) {
-    console.error('🔍 Error updating session:', error)
-    
-    // Type guard to check if it's a Prisma error
     const prismaError = error as PrismaError;
     
     // If session doesn't exist, return success to prevent frontend errors

@@ -77,7 +77,7 @@ const AffiliateProgramPage = ({editable}: EditProps) => {
                 )}
                 
             </motion.span>
-            <div className='h-2/3 aspect-square top-1/2 mt-4 -ml-7 md:mt-6 md:-ml-3 left-4/7 lg:left-1/2 lg:ml-0 absolute -translate-y-1/2 flex items-center justify-center perspective-distant'>
+            <div className='h-2/3 aspect-square top-1/2 mt-4 -ml-7 md:mt-6 md:-ml-3 left-4/7 lg:left-1/2 lg:ml-0 2xl:ml-32 absolute -translate-y-1/2 flex items-center justify-center perspective-distant'>
                 <span className='h-16 w-16 rounded-full absolute top-1/2 left-1/2 -translate-1/2 waterEffect' style={{ animationDelay: "0.5s" }}></span>
                 <span className='h-24 w-24 rounded-full absolute top-1/2 left-1/2 -translate-1/2 waterEffect' style={{ animationDelay: "0.55s" }}></span>
                 <span className='h-32 w-32 rounded-full absolute top-1/2 left-1/2 -translate-1/2 waterEffect' style={{ animationDelay: "0.6s" }}></span>

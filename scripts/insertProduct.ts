@@ -119,10 +119,7 @@ const productsData = [
 async function insertProducts() {
   try {
     console.log('Starting to insert products...')
-    
-    // Clear existing products (optional - remove if you want to keep existing data)
-    // await prisma.products.deleteMany()
-    
+
     for (const productData of productsData) {
       const product = await prisma.products.create({
         data: productData

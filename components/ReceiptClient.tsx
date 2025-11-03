@@ -1,18 +1,20 @@
 "use client";
 
-import { JSX, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Receipt from "@/components/Receipt";
 import Image from "next/image";
 import ReceiptTemplate from "@/components/ReceiptTemplate";
 import { ReceiptData } from "@/types/receipt";
+import { useToast } from '@/hooks/useToast';
+import Toast from './Toast';
 
 export default function ReceiptClient({ orderID }: { orderID: string }) {
   const [data, setData] = useState<ReceiptData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [downloading, setDownloading] = useState(false);
   const [downloadMethod, setDownloadMethod] = useState<'server' | 'client' | null>(null);
   const receiptRef = useRef<HTMLDivElement>(null);
+  const { toast, showToast } = useToast();
 
   // Clean the orderID to remove 'receipt-' prefix if present
   const cleanOrderID = orderID.startsWith('receipt-') 
@@ -23,23 +25,19 @@ export default function ReceiptClient({ orderID }: { orderID: string }) {
     const fetchReceiptData = async () => {
       try {
         setLoading(true);
-        console.log('🔍 Fetching receipt data for:', cleanOrderID);
-        
         const response = await fetch(`/api/receipts/${cleanOrderID}`);
         
         if (!response.ok) {
           if (response.status === 404) {
-            throw new Error('Receipt not found');
+            showToast('error', 'Receipt Not Found.')
           }
-          throw new Error('Failed to fetch receipt');
+          showToast('error', 'Failed to fetch receipt');
         }
         
         const receiptData = await response.json();
-        console.log('✅ Receipt data loaded:', receiptData);
         setData(receiptData);
       } catch (err) {
-        console.error('Failed to fetch receipt:', err);
-        setError(err instanceof Error ? err.message : 'Unknown error');
+        showToast('error', 'Failed to fetch receipt');
       } finally {
         setLoading(false);
       }
@@ -54,8 +52,6 @@ export default function ReceiptClient({ orderID }: { orderID: string }) {
     try {
       setDownloading(true);
       setDownloadMethod('server');
-      
-      console.log('🔍 Attempting server-side PDF generation...');
       
       const response = await fetch('/api/generate-receipt-pdf', {
         method: 'POST',
@@ -92,14 +88,13 @@ export default function ReceiptClient({ orderID }: { orderID: string }) {
         
         // Validate it's actually a PDF
         if (blob.type !== 'application/pdf') {
-          throw new Error('Server returned non-PDF content');
+          showToast('error', 'Server returned non-PDF content.');
         }
         
         if (blob.size === 0) {
-          throw new Error('Empty PDF received from server');
+          showToast('error', 'Empty PDF received from server');
         }
-        
-        console.log(`✅ Server-side PDF generated successfully, size: ${blob.size} bytes`);
+        showToast('success', 'Server-side PDF generated successfully, size: ${blob.size} bytes');
         
         // Download the PDF
         const url = window.URL.createObjectURL(blob);
@@ -118,24 +113,15 @@ export default function ReceiptClient({ orderID }: { orderID: string }) {
         
         return;
       }
-
-      // If server-side fails, fallback to client-side
-      const errorText = await response.text();
-      console.error('❌ Server-side PDF failed:', response.status, errorText);
-      
-      console.log('🔍 Falling back to client-side PDF generation...');
       await handleDownloadFallback();
-
     } catch (err) {
-      console.error('❌ Server request failed:', err);
+      showToast('error', 'Server request failed.');
       
       // Fallback to client-side generation
       try {
-        console.log('🔍 Attempting client-side fallback...');
         await handleDownloadFallback();
       } catch (fallbackError) {
-        console.error('❌ All PDF generation methods failed:', fallbackError);
-        alert('Failed to generate PDF. Please try again or contact support.');
+        showToast('error', 'Failed to generate PDF. Please try again or contact support.');
       }
     } finally {
       setDownloading(false);
@@ -145,13 +131,14 @@ export default function ReceiptClient({ orderID }: { orderID: string }) {
 
   const handleDownloadFallback = async () => {
     if (!receiptRef.current) {
-      throw new Error('Receipt element not found for client-side generation');
+      showToast('error', 'Receipt element not found for client-side generation');
+      return;
     }
 
     try {
       setDownloadMethod('client');
-      console.log('🔍 Starting client-side PDF generation with html2pdf...');
       
+
       // Dynamic import to reduce bundle size
       const html2pdf = (await import("html2pdf.js")).default;
 
@@ -181,34 +168,13 @@ export default function ReceiptClient({ orderID }: { orderID: string }) {
         },
         jsPDF: { 
           unit: "in" as const, // Fixed: using string literal type
-          format: "a5" as const, // Fixed: using string literal type
+          format: "a6" as const, // Fixed: using string literal type
           orientation: "portrait" as const // Fixed: using string literal type
         }
       };
-
       await html2pdf().set(opt).from(element).save();
-      
-      console.log('✅ Client-side PDF generation successful');
-      
-    } catch (err) {
-      console.error('❌ Client-side PDF generation failed:', err);
-      throw new Error('Client-side PDF generation failed: ' + (err instanceof Error ? err.message : 'Unknown error'));
-    }
-  };
-
-  const downloadBlob = (blob: Blob, filename: string) => {
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.style.display = 'none';
-    a.href = url;
-    a.download = filename;
-    
-    document.body.appendChild(a);
-    a.click();
-    
-    // Clean up
-    window.URL.revokeObjectURL(url);
-    document.body.removeChild(a);
+      showToast('success', 'Client-side PDF generation successful');
+    } catch (err) { showToast('error', 'Client-side PDF generation failed.'); }
   };
 
   // Show loading state
@@ -226,63 +192,56 @@ export default function ReceiptClient({ orderID }: { orderID: string }) {
     );
   }
 
-  // Show error state
-  if (error || !data) {
-    return (
-      <main className="flex justify-center items-center h-screen text-gray-500">
-        <div className="text-center">
-          <p className="text-red-500 mb-4">{error || 'Failed to load receipt'}</p>
-          <button 
-            onClick={() => window.location.reload()}
-            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-          >
-            Retry
-          </button>
-        </div>
-      </main>
-    );
-  }
-
   return (
     <main className="flex justify-center h-screen overflow-x-hidden w-full relative bg-white">
-      <div className="h-max w-full flex">
-        <Receipt
-          orderID={data.orderID}
-          customerName={data.customerName}
-          companyName={data.companyName}
-          contactNumber={data.contactNumber}
-          email={data.email}
-          deliveryAddress={data.deliveryAddress}
-          items={data.items}
-          shippingMethod={data.shippingMethod}
-          shippingFee={data.shippingFee}
-          paymentMethod={data.paymentMethod}
-          discount={data.discount}
-          subtotal={data.subtotal}
-          total={data.total}
-          orderDate={data.orderDate}
+      {toast.show && (
+        <Toast 
+          icon={toast.icon}
+          message={toast.message}
         />
-      </div>
-      
-      {/* Hidden element for client-side PDF generation */}
-      <div ref={receiptRef} className="h-full w-full flex" style={{display:'none'}}>
-        <ReceiptTemplate 
-          orderID={data.orderID}
-          customerName={data.customerName}
-          companyName={data.companyName}
-          contactNumber={data.contactNumber}
-          email={data.email}
-          deliveryAddress={data.deliveryAddress}
-          items={data.items}
-          shippingMethod={data.shippingMethod}
-          shippingFee={data.shippingFee}
-          paymentMethod={data.paymentMethod}
-          discount={data.discount}
-          subtotal={data.subtotal}
-          total={data.total}
-          orderDate={data.orderDate}
-        />
-      </div>
+      )}
+      {data && (
+        <>
+          <div className="h-max w-full flex">
+            <Receipt
+              orderID={data.orderID}
+              customerName={data.customerName}
+              companyName={data.companyName}
+              contactNumber={data.contactNumber}
+              email={data.email}
+              deliveryAddress={data.deliveryAddress}
+              items={data.items}
+              shippingMethod={data.shippingMethod}
+              shippingFee={data.shippingFee}
+              paymentMethod={data.paymentMethod}
+              discount={data.discount}
+              subtotal={data.subtotal}
+              total={data.total}
+              orderDate={data.orderDate}
+            />
+          </div>
+          
+          {/* Hidden element for client-side PDF generation */}
+          <div ref={receiptRef} className="h-full w-full flex" style={{display:'none'}}>
+            <ReceiptTemplate 
+              orderID={data.orderID}
+              customerName={data.customerName}
+              companyName={data.companyName}
+              contactNumber={data.contactNumber}
+              email={data.email}
+              deliveryAddress={data.deliveryAddress}
+              items={data.items}
+              shippingMethod={data.shippingMethod}
+              shippingFee={data.shippingFee}
+              paymentMethod={data.paymentMethod}
+              discount={data.discount}
+              subtotal={data.subtotal}
+              total={data.total}
+              orderDate={data.orderDate}
+            />
+          </div>
+        </>
+      )}
       
       {/* Download Button with enhanced status */}
       <button

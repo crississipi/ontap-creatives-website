@@ -42,7 +42,7 @@ export async function GET(
     })
     return NextResponse.json({ cartItems }, { status: 200 })
   } catch (error) {
-    console.error('Get cart error:', error)
+    // console.error('Get cart error:', error)
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

@@ -42,7 +42,7 @@ export async function DELETE(
       { status: 200 }
     )
   } catch (error) {
-    console.error('Delete cart item error:', error)
+    // console.error('Delete cart item error:', error)
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -90,7 +90,7 @@ export async function GET(
     return NextResponse.json({ cartItem }, { status: 200 })
     
   } catch (error) {
-    console.error('Get cart item error:', error)
+    // console.error('Get cart item error:', error)
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

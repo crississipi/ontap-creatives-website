@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { PrismaClient } from '@prisma/client'
 
-const prisma = new PrismaClient()
+export const prisma = new PrismaClient()
 
 const pendingUpdates = new Map<number, NodeJS.Timeout>()
 
@@ -46,7 +46,7 @@ export async function PUT(request: NextRequest) {
           pendingUpdates.delete(cartID)
           resolve(updatedCartItem)
         } catch (error) {
-          console.error('Database update error:', error)
+          // console.error('Database update error:', error)
           pendingUpdates.delete(cartID)
           resolve(null)
         }
@@ -65,7 +65,7 @@ export async function PUT(request: NextRequest) {
     )
 
   } catch (error) {
-    console.error('Update cart error:', error)
+    // console.error('Update cart error:', error)
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

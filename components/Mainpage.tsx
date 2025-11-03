@@ -1,7 +1,7 @@
 "use client"
 
 import React, { JSX, useEffect, useState } from 'react'
-import { About, AboutUs, AffiliateProgramPage, CartPage, ClientList, FAQs, FillUpForm, Footer, Header, Hero, OrderPage, ProductList, Starting, VideoTutorial } from '.'
+import { About, AboutUs, AffiliateProgramPage, CartPage, ClientList, FAQs, FillUpForm, Footer, Header, Hero, OrderPage, PrivacyPolicy, ProductList, Starting, TermsConditions, VideoTutorial } from '.'
 import { AnimatePresence, motion } from 'framer-motion'
 import { BsQuestionLg } from 'react-icons/bs'
 import { EditProps } from '@/types'
@@ -16,7 +16,9 @@ const Mainpage = ({ editable }: EditProps) => {
     3: <ProductList editable={editable}/>,
     4: <CartPage />,
     5: <AboutUs editable={editable}/>,
-    6: <OrderPage />
+    6: <OrderPage />,
+    7: <PrivacyPolicy/>,
+    8: <TermsConditions />
   }
 
   useEffect(() => {
