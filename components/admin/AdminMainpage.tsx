@@ -3,11 +3,12 @@
 import { EditProps, HeaderProps } from '@/types'
 import React, { JSX, useState } from 'react'
 import Image from 'next/image'
-import { RiArrowLeftDoubleLine, RiCloseLargeFill, RiCoupon2Line, RiDashboardLine, RiDiscountPercentLine, RiGalleryLine, RiLogoutBoxLine, RiMenuFill, RiPaintBrushLine, RiShoppingBag4Line, RiText } from 'react-icons/ri'
+import { RiArrowLeftDoubleLine, RiCloseLargeFill, RiCoupon2Line, RiDashboardLine, RiDiscountPercentLine, RiGalleryLine, RiLogoutBoxLine, RiMenuFill, RiPaintBrushLine, RiSettings6Line, RiShoppingBag4Line, RiText } from 'react-icons/ri'
 import { AffiliateInfo, AffiliatesPage, Content, Customization, Dashboard, ProductPage, Promos, UserInfo, VisitorsPage } from '.'
 import { LuBriefcaseBusiness } from 'react-icons/lu'
 import { HiViewGridAdd } from 'react-icons/hi'
 import { AnimatePresence, motion } from 'framer-motion'
+import Settings from './Settings'
 
 const Navigations = [
     {
@@ -41,7 +42,8 @@ const AdminMainpage = ({ setPage, editable }: MainpageProps) => {
     2: <AffiliatesPage changePage={changePage}/>,
     3: <Customization child={child} tag={tag} />,
     4: <UserInfo />,
-    5: <AffiliateInfo />
+    5: <AffiliateInfo />,
+    6: <Settings />
   };
   const [showMore, setShowMore] = useState(false);
   const [showMoreOptions, setShowMoreOption] = useState(false);
@@ -131,7 +133,13 @@ const AdminMainpage = ({ setPage, editable }: MainpageProps) => {
                         </div>
                     )}
                 </div>
-                <button type="button" className='hidden md:flex items-center gap-3 mt-auto w-9/10 rounded-md bg-light-blue/50 text-dark-blue px-3 py-3 font-semibold hover:bg-light-blue focus:bg-violet focus:text-white ease-out duration-200' onClick={() => setPage(0)}>
+                <button 
+                    type="button" 
+                    className='flex w-full items-center gap-3 p-3 text-dark-blue font-semibold pl-5 hover:bg-light-blue focus:bg-violet
+                    focus:text-white ease-out duration-200' 
+                    onClick={() => changePage(6)}
+                 ><RiSettings6Line className='text-2xl'/>Settings</button>
+                <button type="button" className='hidden md:flex items-center gap-3 mt-auto w-9/10 rounded-md bg-light-blue/50 text-dark-blue p-3 font-semibold hover:bg-light-blue focus:bg-violet focus:text-white ease-out duration-200' onClick={() => setPage(0)}>
                     <RiLogoutBoxLine className='text-xl'/>
                     {!minimized && <span className='pr-5'>Log Out</span>}
                 </button>
