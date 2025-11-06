@@ -14,36 +14,37 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    // Use a free IP geolocation service
-    const ipApiResponse = await fetch(`http://ip-api.com/json/${clientIP}?fields=status,message,country,countryCode,region,regionName,city,lat,lon,query`);
+    // ✅ FIXED: Use HTTPS instead of HTTP
+    const ipApiResponse = await fetch(`https://ipapi.co/${clientIP}/json/`);
     const ipData = await ipApiResponse.json();
 
-    if (ipData.status === 'success') {
+    if (ipData.error !== true) {
       return NextResponse.json({
-        latitude: ipData.lat,
-        longitude: ipData.lon,
+        latitude: ipData.latitude,
+        longitude: ipData.longitude,
         city: ipData.city,
-        region: ipData.regionName,
-        country: ipData.country,
-        countryCode: ipData.countryCode,
-        ipAddress: ipData.query,
-        source: 'ip-api'
+        region: ipData.region,
+        country: ipData.country_name,
+        countryCode: ipData.country_code,
+        ipAddress: ipData.ip,
+        source: 'ipapi.co'
       });
     }
 
-    // Fallback to another service
-    const ipifyResponse = await fetch(`https://geo.ipify.org/api/v2/country,city?apiKey=${process.env.IPIFY_API_KEY}&ipAddress=${clientIP}`);
-    const ipifyData = await ipifyResponse.json();
+    // Alternative HTTPS service
+    const ipwhoisResponse = await fetch(`https://ipwho.is/${clientIP}`);
+    const ipwhoisData = await ipwhoisResponse.json();
 
-    if (ipifyData.location) {
+    if (ipwhoisData.success) {
       return NextResponse.json({
-        latitude: ipifyData.location.lat,
-        longitude: ipifyData.location.lng,
-        city: ipifyData.location.city,
-        region: ipifyData.location.region,
-        country: ipifyData.location.country,
+        latitude: ipwhoisData.latitude,
+        longitude: ipwhoisData.longitude,
+        city: ipwhoisData.city,
+        region: ipwhoisData.region,
+        country: ipwhoisData.country,
+        countryCode: ipwhoisData.country_code,
         ipAddress: clientIP,
-        source: 'ipify'
+        source: 'ipwhois'
       });
     }
 
