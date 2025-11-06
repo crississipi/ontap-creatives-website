@@ -26,11 +26,7 @@ export async function GET(
         transactionID: orderid
       },
       include: {
-        cart: {
-          include: {
-            product: true
-          }
-        },
+        product: true,
         client: true,
         billing: true,
         voucher: true
