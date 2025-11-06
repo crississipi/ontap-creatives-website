@@ -114,14 +114,26 @@ export async function sendAdminOrderNotification(data: AdminNotificationData): P
 
   const adminEmail = process.env.COMPANY_EMAIL;
 
+  // ✅ ADDED: Error handling for missing admin email
+  if (!adminEmail) {
+    console.error('COMPANY_EMAIL not configured in environment variables');
+    return;
+  }
+
   const emailHtml = generateAdminEmailContent(data);
 
-  await transporter.sendMail({
-    from: `"OnTap Creatives Order System" <${process.env.SMTP_USER}>`,
-    to: adminEmail,
-    subject: `📦 New Order Received - ${data.transactionId}`,
-    html: emailHtml,
-  });
+  try {
+    await transporter.sendMail({
+      from: `"OnTap Creatives Order System" <${process.env.SMTP_USER}>`,
+      to: adminEmail,
+      subject: `📦 New Order Received - ${data.transactionId}`,
+      html: emailHtml,
+    });
+    console.log('Admin notification email sent successfully');
+  } catch (error) {
+    console.error('Failed to send admin notification email:', error);
+    throw error;
+  }
 }
 
 function generateAdminEmailContent(data: AdminNotificationData): string {

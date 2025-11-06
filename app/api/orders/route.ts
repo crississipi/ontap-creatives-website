@@ -44,7 +44,7 @@ async function getAuthenticatedUser() {
 
 // Input validation schema
 interface OrderItem {
-  productID: number
+  cartID: number
   quantity: number
   logo: string
   subtotal: number
@@ -177,11 +177,10 @@ export async function POST(request: NextRequest) {
           }
         });
 
-        // console.log('Billing created:', billing.billingID);
+        console.log('Billing created:', billing.billingID);
 
         // 2. Mark voucher as used if applicable
         if (body.voucher?.id) {
-          // First check if the voucher exists
           const existingVoucher = await tx.voucher.findUnique({
             where: { voucherID: body.voucher.id }
           });
@@ -191,11 +190,11 @@ export async function POST(request: NextRequest) {
               where: { voucherID: body.voucher.id },
               data: { isUsed: true }
             });
-            // console.log('Voucher marked as used:', body.voucher.id);
+            console.log('Voucher marked as used:', body.voucher.id);
           } else if (existingVoucher?.isUsed) {
-            // console.warn('Voucher already used:', body.voucher.id);
+            console.warn('Voucher already used:', body.voucher.id);
           } else {
-            // console.warn('Voucher not found:', body.voucher.id);
+            console.warn('Voucher not found:', body.voucher.id);
           }
         }
 
@@ -210,22 +209,21 @@ export async function POST(request: NextRequest) {
           }
         });
 
-        // console.log('Tracking record created:', tracking.trackingID);
+        console.log('Tracking record created:', tracking.trackingID);
 
-        // 4. Create MULTIPLE transaction records - ONE PER PRODUCT
-        // console.log('Creating transactions for items:', body.items.length);
+        // 4. Create MULTIPLE transaction records - ONE PER CART ITEM
+        console.log('Creating transactions for cart items:', body.items.length);
         
         const transactions = [];
         for (const item of body.items) {
-          const itemSubtotal = item.product.price * item.quantity;
-          
-          // console.log('Creating transaction for productID:', item.productID, 'subtotal:', itemSubtotal);
+          // ✅ CORRECT: Using cartID from the order items
+          console.log('Creating transaction for cartID:', item.cartID, 'subtotal:', item.subtotal);
           
           const transactionData: any = {
             transactionID: sharedTransactionID,
-            productID: item.productID, // Store productID directly
+            cartID: item.cartID, // ✅ CORRECT: Storing cartID
             shipMethod: body.shippingInfo.method,
-            subtotal: itemSubtotal,
+            subtotal: item.subtotal, // ✅ CORRECT: Using the subtotal from the cart item
             dateOrdered: new Date(),
             billing: {
               connect: { billingID: billing.billingID }
@@ -250,27 +248,23 @@ export async function POST(request: NextRequest) {
           });
           
           transactions.push(transaction);
-          // console.log('Transaction created for product:', item.productID, 'orderID:', transaction.orderID);
+          console.log('Transaction created for cart:', item.cartID, 'orderID:', transaction.orderID);
         }
 
-        // 5. Update cart items status to 'ordered' based on productID and clientID
-        // Get all product IDs from the order
-        const productIDs = body.items.map(item => item.productID);
-        
+        // 5. Update cart items status to 'ordered' - ✅ CORRECT: Using cartID
+        const cartIDs = body.items.map(item => item.cartID);
         await tx.cart.updateMany({
           where: {
-            clientID: user.clientID,
-            productID: {
-              in: productIDs
-            },
-            status: 'active' // Only update active cart items
+            cartID: {
+              in: cartIDs
+            }
           },
           data: {
             status: 'ordered'
           }
         });
 
-        // console.log('Cart items updated to ordered for products:', productIDs);
+        console.log('Cart items updated to ordered for cartIDs:', cartIDs);
 
         return {
           transactions,
@@ -281,11 +275,10 @@ export async function POST(request: NextRequest) {
         }
 
       } catch (dbError) {
-        // console.error('Database error in transaction:', dbError);
+        console.error('Database error in transaction:', dbError);
         throw dbError;
       }
     }, {
-      // Increase transaction timeout to 10 seconds
       maxWait: 10000,
       timeout: 10000,
     });
@@ -293,7 +286,6 @@ export async function POST(request: NextRequest) {
     // ✅ SUCCESS: Database operations completed
     // Now perform time-consuming tasks OUTSIDE the transaction
 
-    // Generate receipt data for PDF and email
     const receiptData = {
       orderID: result.transactionId,
       customerName: `${body.contactInfo.firstName} ${body.contactInfo.lastName}`,
@@ -323,7 +315,6 @@ export async function POST(request: NextRequest) {
     let pdfGenerationSuccess = false;
 
     try {
-      // console.log('🔄 Attempting server-side PDF generation...');
       const pdfResponse = await fetch(`${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/generate-receipt-pdf`, {
         method: 'POST',
         headers: {
@@ -334,22 +325,20 @@ export async function POST(request: NextRequest) {
 
       if (pdfResponse.ok && pdfResponse.headers.get('content-type')?.includes('application/pdf')) {
         const arrayBuffer = await pdfResponse.arrayBuffer();
-        // Convert ArrayBuffer to Buffer properly
         receiptBuffer = Buffer.from(arrayBuffer);
-        // console.log('✅ PDF receipt generated successfully via API');
         pdfGenerationSuccess = true;
+        console.log('✅ PDF receipt generated successfully');
       } else {
         const errorText = await pdfResponse.text();
-        // console.error('❌ PDF API returned error:', errorText);
         throw new Error('PDF API returned non-PDF response');
       }
     } catch (pdfError) {
-      // console.error('❌ PDF generation failed:', pdfError);
+      console.error('❌ PDF generation failed:', pdfError);
       receiptBuffer = Buffer.from('');
       pdfGenerationSuccess = false;
     }
 
-    // Send confirmation email (outside transaction)
+    // Send confirmation email to CUSTOMER
     try {
       const receiptUrl = `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/receipts/${result.transactionId}`;
       
@@ -366,10 +355,9 @@ export async function POST(request: NextRequest) {
       console.log('Customer confirmation email sent successfully');
     } catch (emailError) {
       console.error('Customer email sending failed:', emailError);
-      // Continue even if email fails - don't fail the entire order
     }
 
-    // NEW: Send admin notification email
+    // Send admin notification email
     try {
       await sendAdminOrderNotification({
         orderData: body,
@@ -381,7 +369,6 @@ export async function POST(request: NextRequest) {
       console.log('Admin notification email sent successfully');
     } catch (adminEmailError) {
       console.error('Admin notification email failed:', adminEmailError);
-      // Continue even if admin email fails - don't fail the entire order
     }
 
     return NextResponse.json({
@@ -392,15 +379,12 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    // console.error('Order creation error:', error);
+    console.error('Order creation error:', error);
     
-    // Provide more specific error messages
     let errorMessage = 'Internal server error';
-    
     if (error instanceof Error) {
       errorMessage = error.message;
       
-      // Handle specific Prisma errors
       if (error.message.includes('Unique constraint')) {
         errorMessage = 'Duplicate transaction detected. Please try again.';
       } else if (error.message.includes('Foreign key constraint')) {

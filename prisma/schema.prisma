@@ -79,6 +79,7 @@ model cart {
   dateAdded    DateTime      @default(now()) @map("dateAdded")
   client       client        @relation(fields: [clientID], references: [clientID])
   product      products      @relation(fields: [productID], references: [productID])
+  transactions transaction[]
 
   @@index([clientID], map: "cart_clientID_fkey")
   @@index([productID], map: "cart_productID_fkey")
@@ -108,7 +109,6 @@ model transaction {
   shipMethod    String   @db.VarChar(100)
   subtotal      Float    @db.Float
   dateOrdered   DateTime @default(now()) @map("dateOrdered")
-  transactions  transaction[]
   
   // Relations
   billing       billing?  @relation(fields: [billingID], references: [billingID])
