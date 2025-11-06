@@ -7,7 +7,7 @@ import nodemailer from 'nodemailer'
 const prisma = new PrismaClient()
 
 export async function OPTIONS() {
-  return new Response(null, { status: 200, headers: corsHeaders })
+  return new Response(null, { status: 200 })
 }
 
 export async function POST(request: NextRequest) {
@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
     if (!email) {
       return NextResponse.json(
         { error: 'Email is required' },
-        { status: 400, headers: corsHeaders }
+        { status: 400 }
       )
     }
 
@@ -78,13 +78,13 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(
       { message: 'Verification email sent successfully' },
-      { status: 200, headers: corsHeaders }
+      { status: 200 }
     )
   } catch (error) {
     // console.error('Send verification error:', error)
     return NextResponse.json(
       { error: 'Failed to send verification email' },
-      { status: 500, headers: corsHeaders }
+      { status: 500 }
     )
   } finally {
     await prisma.$disconnect()
