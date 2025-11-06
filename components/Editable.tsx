@@ -1,3 +1,5 @@
+"use client"
+
 import React, { useState, ChangeEvent, KeyboardEvent, JSX } from 'react';
 
 interface EditableTextProps {
