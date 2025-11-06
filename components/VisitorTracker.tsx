@@ -5,8 +5,6 @@ import { useVisitorTracking } from '@/hooks/useVisitorTracking';
 import { useUser } from '@/contexts/UserContext';
 import Cookies from './SaveCookies';
 import { useToast } from '@/hooks/useToast';
-import Toast from './Toast';
-
 // Types for better type safety
 interface EnhancedLocation {
   latitude: number;

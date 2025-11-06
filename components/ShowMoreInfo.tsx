@@ -1,4 +1,5 @@
     "use client"
+    
     import React, { useEffect, useRef, useState } from 'react'
     import { RiArrowRightLine, RiHeartFill, RiHeartLine, RiLoader4Line, RiQuestionFill, RiShoppingCart2Line, RiStarFill, RiStarHalfFill, RiStarLine } from 'react-icons/ri'
     import Image from 'next/image'
