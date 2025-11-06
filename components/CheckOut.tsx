@@ -8,6 +8,7 @@ import { RiMapPin2Fill, RiStore2Line, RiTruckLine } from 'react-icons/ri'
 import { AnimatePresence, motion } from 'framer-motion'
 import VoucherRoulette from './VoucherRoullete'
 import ReceiptClient from './ReceiptClient'
+import { useToast } from '@/hooks/useToast'
 
 interface CartItem {
   cartID: number;
@@ -97,6 +98,7 @@ const CheckOut = ({setGotoCheckout, selectedItems, cartItems, user}: CheckOutPro
   const [selectedVoucher, setSelectedVoucher] = useState<Voucher | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formErrors, setFormErrors] = useState<FormErrors>({});
+  const { toast, showToast } = useToast();
   
   // NEW STATE FOR RECEIPT
   const [showReceipt, setShowReceipt] = useState(false);
@@ -149,7 +151,7 @@ const CheckOut = ({setGotoCheckout, selectedItems, cartItems, user}: CheckOutPro
             }
           }
         } catch (error) {
-          console.error('Failed to fetch vouchers:', error);
+          showToast('error', 'Failed to fetch vouchers.');
         }
       }
     };
@@ -264,19 +266,20 @@ const CheckOut = ({setGotoCheckout, selectedItems, cartItems, user}: CheckOutPro
   };
 
   const handleCompletePurchase = async () => {
+    
+    // Validate form
+    if (!validateForm()) {
+        showToast('info', 'Please fill in all required fields correctly.');
+        return;
+    }
+
     if (!doubleCheck) {
         setDoubleCheck(true);
         return;
     }
 
     if (!agreeTerms || !confirmDetails) {
-        alert('Please agree to the terms and confirm your details.');
-        return;
-    }
-
-    // Validate form
-    if (!validateForm()) {
-        alert('Please fill in all required fields correctly.');
+        showToast('info', 'Please agree to the terms and confirm your details.');
         return;
     }
 
@@ -322,8 +325,6 @@ const CheckOut = ({setGotoCheckout, selectedItems, cartItems, user}: CheckOutPro
         }
         };
 
-        console.log('Sending order data:', orderData);
-
         const response = await fetch('/api/orders', {
         method: 'POST',
         headers: {
@@ -335,19 +336,16 @@ const CheckOut = ({setGotoCheckout, selectedItems, cartItems, user}: CheckOutPro
         const result = await response.json();
 
         if (response.ok) {
-          // SUCCESS: Show receipt instead of alert and closing checkout
           setOrderTransactionId(result.transactionId);
           setShowReceipt(true);
           
-          console.log('Order placed successfully! Receipt displayed.');
+          showToast('success', 'Order placed successfully! Receipt displayed.');
           
         } else {
-        console.error('API Error Response:', result);
-        throw new Error(result.error || result.details?.join(', ') || 'Failed to place order');
+        showToast('error', 'Server Connection Timeout.');
         }
     } catch (error) {
-        console.error('Order placement error:', error);
-        alert(`Failed to place order: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        showToast('error', 'Server Connection Timeout.');
     } finally {
         setIsSubmitting(false);
     }
@@ -708,15 +706,32 @@ const CheckOut = ({setGotoCheckout, selectedItems, cartItems, user}: CheckOutPro
                 )}
 
                 <h2 className='col-span-full font-black text-lg mt-5'>Payment Method</h2>
-                <button type="button" className={`col-span-1 px-3 py-2 gap-2 rounded-md border ${modeOfPayment === 'cod' ? 'bg-violet text-white border-light-blue' : 'border-black/30 hover:border-black focus:border-dark-blue focus:bg-sky-100 ease-out duration-200'} flex items-center justify-between font-bold`} onClick={() => setModeOfPayment('cod')}>
+                <button 
+                type="button" 
+                className={`col-span-1 px-3 py-2 gap-2 rounded-md border ${modeOfPayment === 'cod' ? 'bg-violet text-white border-light-blue' : 'border-black/30 hover:border-black focus:border-dark-blue focus:bg-sky-100 ease-out duration-200'} flex items-center justify-between font-bold`} 
+                onClick={() => setModeOfPayment('cod')}
+                >
                     Cash on Delivery
                     <FaHandHoldingDollar className={`ml-auto text-xl ${modeOfPayment === 'cod' ? 'text-white': 'text-dark-blue'}`}/>
                     <FaTruckRampBox className={`text-xl ${modeOfPayment === 'cod' ? 'text-white': 'text-dark-blue'}`}/>
                 </button>
-                <button type="button" className={`col-span-1 px-3 py-2 rounded-md border ${modeOfPayment === 'card' ? 'bg-violet text-white border-light-blue' : 'border-black/30 hover:border-black focus:border-dark-blue focus:bg-sky-100 ease-out duration-200'} flex items-center justify-between font-bold`} onClick={() => setModeOfPayment('card')}>Credit / Debit Card
+                <button 
+                type="button" 
+                className={`col-span-1 px-3 py-2 rounded-md border ${modeOfPayment === 'card' ? 'bg-violet text-white border-light-blue' : 'border-black/30 hover:border-black focus:border-dark-blue focus:bg-sky-100 ease-out duration-200'} flex items-center justify-between font-bold disabled:border-black/20 disabled:text-black/30 disabled-button relative`} 
+                onClick={() => setModeOfPayment('card')}
+                disabled
+                >
+                    <span className='py-1 w-full text-center absolute top-1/2 left-0 -translate-y-1/2 bg-rose-500/30 text-red-500 border-y-2 border-red-600/50 backdrop-blur-sm'>CURRENTLY UNAVAILABLE</span>
+                    Credit / Debit Card
                     <img src="https://www.paypalobjects.com/webstatic/mktg/logo/pp_cc_mark_37x23.jpg" alt="PayPal Logo" className='h-7 w-auto'/>
                 </button>
-                <button type="button" className={`col-span-1 px-3 py-2 rounded-md border ${modeOfPayment === 'ewallet' ? 'bg-violet text-white border-light-blue' : 'border-black/30 hover:border-black focus:border-dark-blue focus:bg-sky-100 ease-out duration-200'} flex items-center justify-between font-bold`}  onClick={() => setModeOfPayment('ewallet')}>
+                <button 
+                    type="button" 
+                    className={`col-span-1 px-3 py-2 rounded-md border ${modeOfPayment === 'ewallet' ? 'bg-violet text-white border-light-blue' : 'border-black/30 hover:border-black focus:border-dark-blue focus:bg-sky-100 ease-out duration-200'} flex items-center justify-between font-bold disabled:border-black/20 disabled:text-black/30 disabled-button relative`}  
+                    onClick={() => setModeOfPayment('ewallet')}
+                    disabled
+                >
+                    <span className='py-1 w-full text-center absolute top-1/2 left-0 -translate-y-1/2 bg-rose-500/30 text-red-500 border-y-2 border-red-600/50 backdrop-blur-sm'>CURRENTLY UNAVAILABLE</span>
                     E-Wallet
                     <Image
                         height={2048}
@@ -733,7 +748,13 @@ const CheckOut = ({setGotoCheckout, selectedItems, cartItems, user}: CheckOutPro
                         className='h-7 w-auto object-contain object-center ml-1'
                     />
                 </button>
-                <button type="button" className={`col-span-1 px-3 py-2 rounded-md border ${modeOfPayment === 'bank' ? 'bg-violet text-white border-light-blue' : 'border-black/30 hover:border-black focus:border-dark-blue focus:bg-sky-100 ease-out duration-200'} flex items-center justify-between font-bold`}  onClick={() => setModeOfPayment('bank')}>
+                <button 
+                    type="button" 
+                    className={`col-span-1 px-3 py-2 rounded-md border ${modeOfPayment === 'bank' ? 'bg-violet text-white border-light-blue' : 'border-black/30 hover:border-black focus:border-dark-blue focus:bg-sky-100 ease-out duration-200'} flex items-center justify-between font-bold disabled:border-black/20 disabled:text-black/30 disabled-button relative`} 
+                    onClick={() => setModeOfPayment('bank')}
+                    disabled
+                >
+                    <span className='py-1 w-full text-center absolute top-1/2 left-0 -translate-y-1/2 bg-rose-500/30 text-red-500 border-y-2 border-red-600/50 backdrop-blur-sm'>CURRENTLY UNAVAILABLE</span>
                     Bank Transfer
                     <span className='ml-auto p-1 bg-[#004ea8]'>
                         <Image

@@ -77,10 +77,7 @@ async function getAuthenticatedUser() {
 }
 
 export async function OPTIONS() {
-  return new Response(null, {
-    status: 200,
-    headers: corsHeaders
-  })
+  return new Response(null, {status: 200})
 }
 
 export async function GET(request: NextRequest) {
@@ -182,8 +179,6 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ 
       success: true,
       orders 
-    }, {
-      headers: corsHeaders
     });
 
   } catch (error) {
@@ -192,10 +187,7 @@ export async function GET(request: NextRequest) {
         error: 'Failed to fetch orders',
         details: error instanceof Error ? error.message : 'Unknown error'
       },
-      { 
-        status: 500,
-        headers: corsHeaders
-      }
+      {status: 500,}
     );
   } finally {
     await prisma.$disconnect();

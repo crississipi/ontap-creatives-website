@@ -4,7 +4,7 @@ import { headers } from 'next/headers'
 import jwt from 'jsonwebtoken'
 import { PrismaClient } from '@prisma/client'
 
-import { sendOrderConfirmationEmail } from '@/lib/emailService';
+import { sendAdminOrderNotification, sendOrderConfirmationEmail } from '@/lib/emailService';
 
 const prisma = new PrismaClient()
 
@@ -44,7 +44,6 @@ async function getAuthenticatedUser() {
 
 // Input validation schema
 interface OrderItem {
-  cartID: number
   productID: number
   quantity: number
   logo: string
@@ -213,23 +212,21 @@ export async function POST(request: NextRequest) {
 
         // console.log('Tracking record created:', tracking.trackingID);
 
-        // 4. Create MULTIPLE transaction records
+        // 4. Create MULTIPLE transaction records - ONE PER PRODUCT
         // console.log('Creating transactions for items:', body.items.length);
         
         const transactions = [];
         for (const item of body.items) {
           const itemSubtotal = item.product.price * item.quantity;
           
-          // console.log('Creating transaction for cartID:', item.cartID, 'subtotal:', itemSubtotal);
+          // console.log('Creating transaction for productID:', item.productID, 'subtotal:', itemSubtotal);
           
           const transactionData: any = {
             transactionID: sharedTransactionID,
+            productID: item.productID, // Store productID directly
             shipMethod: body.shippingInfo.method,
             subtotal: itemSubtotal,
             dateOrdered: new Date(),
-            cart: {
-              connect: { cartID: item.cartID }
-            },
             billing: {
               connect: { billingID: billing.billingID }
             },
@@ -253,22 +250,27 @@ export async function POST(request: NextRequest) {
           });
           
           transactions.push(transaction);
-          // console.log('Transaction created:', transaction.orderID);
+          // console.log('Transaction created for product:', item.productID, 'orderID:', transaction.orderID);
         }
 
-        // 5. Update cart items status to 'ordered'
+        // 5. Update cart items status to 'ordered' based on productID and clientID
+        // Get all product IDs from the order
+        const productIDs = body.items.map(item => item.productID);
+        
         await tx.cart.updateMany({
           where: {
-            cartID: {
-              in: body.items.map(item => item.cartID)
-            }
+            clientID: user.clientID,
+            productID: {
+              in: productIDs
+            },
+            status: 'active' // Only update active cart items
           },
           data: {
             status: 'ordered'
           }
         });
 
-        // console.log('Cart items updated to ordered');
+        // console.log('Cart items updated to ordered for products:', productIDs);
 
         return {
           transactions,
@@ -361,10 +363,25 @@ export async function POST(request: NextRequest) {
         receiptUrl: receiptUrl
       });
       
-      // console.log('Confirmation email sent successfully');
+      console.log('Customer confirmation email sent successfully');
     } catch (emailError) {
-      // console.error('Email sending failed:', emailError);
+      console.error('Customer email sending failed:', emailError);
       // Continue even if email fails - don't fail the entire order
+    }
+
+    // NEW: Send admin notification email
+    try {
+      await sendAdminOrderNotification({
+        orderData: body,
+        customerEmail: body.contactInfo.email,
+        transactionId: result.transactionId,
+        totalAmount: body.totals.subtotal - (body.totals.discount || 0) + (body.totals.shippingFee || 0)
+      });
+      
+      console.log('Admin notification email sent successfully');
+    } catch (adminEmailError) {
+      console.error('Admin notification email failed:', adminEmailError);
+      // Continue even if admin email fails - don't fail the entire order
     }
 
     return NextResponse.json({

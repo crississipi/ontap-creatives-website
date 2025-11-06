@@ -10,6 +10,13 @@ interface EmailData {
   receiptUrl: string;
 }
 
+interface AdminNotificationData {
+  orderData: any;
+  customerEmail: string;
+  transactionId: string;
+  totalAmount: number;
+}
+
 export async function sendOrderConfirmationEmail(data: EmailData): Promise<void> {
   const transporter = nodemailer.createTransport({
     host: process.env.SMTP_HOST,
@@ -91,4 +98,170 @@ export async function sendOrderConfirmationEmail(data: EmailData): Promise<void>
       }
     ]
   });
+}
+
+// NEW: Admin notification function
+export async function sendAdminOrderNotification(data: AdminNotificationData): Promise<void> {
+  const transporter = nodemailer.createTransport({
+    host: process.env.SMTP_HOST,
+    port: parseInt(process.env.SMTP_PORT || '465'),
+    secure: true,
+    auth: {
+      user: process.env.SMTP_USER,
+      pass: process.env.SMTP_PASS,
+    },
+  });
+
+  const adminEmail = process.env.COMPANY_EMAIL;
+
+  const emailHtml = generateAdminEmailContent(data);
+
+  await transporter.sendMail({
+    from: `"OnTap Creatives Order System" <${process.env.SMTP_USER}>`,
+    to: adminEmail,
+    subject: `📦 New Order Received - ${data.transactionId}`,
+    html: emailHtml,
+  });
+}
+
+function generateAdminEmailContent(data: AdminNotificationData): string {
+  const { orderData, customerEmail, transactionId, totalAmount } = data;
+  const { contactInfo, shippingInfo, paymentInfo, items, totals } = orderData;
+
+  const itemsHtml = items.map((item: any) => `
+    <tr>
+      <td style="padding: 12px; border-bottom: 1px solid #e2e8f0;">${item.product.name}</td>
+      <td style="padding: 12px; border-bottom: 1px solid #e2e8f0; text-align: center;">${item.quantity}</td>
+      <td style="padding: 12px; border-bottom: 1px solid #e2e8f0; text-align: right;">₱${item.product.price.toFixed(2)}</td>
+      <td style="padding: 12px; border-bottom: 1px solid #e2e8f0; text-align: right;">₱${item.subtotal.toFixed(2)}</td>
+    </tr>
+  `).join('');
+
+  const shippingAddress = shippingInfo.method === 'delivery' && shippingInfo.address 
+    ? `${shippingInfo.address.house}, ${shippingInfo.address.barangay}, ${shippingInfo.address.city}, ${shippingInfo.address.region} ${shippingInfo.address.zipCode}`
+    : 'Store Pickup';
+
+  return `
+    <div style="font-family: system-ui, sans-serif, Arial; font-size: 14px; line-height: 1.6; color: #333;">
+      <div style="max-width: 700px; margin: 0 auto; padding: 0; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden;">
+        <!-- Header -->
+        <div style="background: linear-gradient(135deg, #5A5CA8, #2563eb); color: white; padding: 30px 20px; text-align: center;">
+          <h1 style="margin: 0 0 10px 0; font-size: 28px;">📦 New Order Received</h1>
+          <p style="margin: 0; font-size: 18px; opacity: 0.9;">Order ID: ${transactionId}</p>
+          <p style="margin: 10px 0 0 0; font-size: 16px; opacity: 0.9;">${new Date().toLocaleString('en-PH', { 
+            timeZone: 'Asia/Manila',
+            dateStyle: 'full',
+            timeStyle: 'medium'
+          })}</p>
+        </div>
+
+        <!-- Urgent Alert -->
+        <div style="background: #fff3cd; padding: 15px 20px; border-left: 4px solid #ffc107; margin: 0;">
+          <strong>🚀 Action Required:</strong> Please process this order as soon as possible.
+        </div>
+
+        <div style="padding: 0;">
+          <!-- Order Summary -->
+          <div style="padding: 25px; border-bottom: 1px solid #e2e8f0;">
+            <h2 style="color: #5A5CA8; margin-top: 0; border-bottom: 2px solid #5A5CA8; padding-bottom: 8px;">Order Summary</h2>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+              <div>
+                <p style="margin: 8px 0;"><strong>Transaction ID:</strong><br>${transactionId}</p>
+                <p style="margin: 8px 0;"><strong>Total Amount:</strong><br>₱${totalAmount.toFixed(2)}</p>
+              </div>
+              <div>
+                <p style="margin: 8px 0;"><strong>Payment Method:</strong><br>${paymentInfo.method.toUpperCase()}</p>
+                <p style="margin: 8px 0;"><strong>Shipping Method:</strong><br>${shippingInfo.method.toUpperCase()}</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Customer Information -->
+          <div style="padding: 25px; border-bottom: 1px solid #e2e8f0;">
+            <h2 style="color: #5A5CA8; margin-top: 0; border-bottom: 2px solid #5A5CA8; padding-bottom: 8px;">Customer Information</h2>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+              <div>
+                <p style="margin: 8px 0;"><strong>Name:</strong><br>${contactInfo.firstName} ${contactInfo.lastName}</p>
+                <p style="margin: 8px 0;"><strong>Email:</strong><br>${customerEmail}</p>
+              </div>
+              <div>
+                <p style="margin: 8px 0;"><strong>Contact Number:</strong><br>${contactInfo.contactNumber}</p>
+                ${contactInfo.companyName ? `<p style="margin: 8px 0;"><strong>Company:</strong><br>${contactInfo.companyName}</p>` : ''}
+              </div>
+            </div>
+          </div>
+
+          <!-- Shipping Details -->
+          <div style="padding: 25px; border-bottom: 1px solid #e2e8f0;">
+            <h2 style="color: #5A5CA8; margin-top: 0; border-bottom: 2px solid #5A5CA8; padding-bottom: 8px;">Shipping Details</h2>
+            <p style="margin: 8px 0;"><strong>Address:</strong><br>${shippingAddress}</p>
+            ${shippingInfo.timeAvailability ? `
+              <p style="margin: 8px 0;"><strong>Time Availability:</strong><br>${shippingInfo.timeAvailability.from} - ${shippingInfo.timeAvailability.to}</p>
+            ` : ''}
+          </div>
+
+          <!-- Order Items -->
+          <div style="padding: 25px; border-bottom: 1px solid #e2e8f0;">
+            <h2 style="color: #5A5CA8; margin-top: 0; border-bottom: 2px solid #5A5CA8; padding-bottom: 8px;">Order Items</h2>
+            <table style="width: 100%; border-collapse: collapse; margin: 15px 0;">
+              <thead>
+                <tr style="background: #f8fafc;">
+                  <th style="padding: 12px; text-align: left; border-bottom: 2px solid #e2e8f0;">Product</th>
+                  <th style="padding: 12px; text-align: center; border-bottom: 2px solid #e2e8f0;">Qty</th>
+                  <th style="padding: 12px; text-align: right; border-bottom: 2px solid #e2e8f0;">Price</th>
+                  <th style="padding: 12px; text-align: right; border-bottom: 2px solid #e2e8f0;">Subtotal</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${itemsHtml}
+              </tbody>
+              <tfoot style="background: #f8fafc;">
+                <tr>
+                  <td colspan="3" style="padding: 12px; text-align: right; border-top: 2px solid #e2e8f0;"><strong>Subtotal:</strong></td>
+                  <td style="padding: 12px; text-align: right; border-top: 2px solid #e2e8f0;"><strong>₱${totals.subtotal.toFixed(2)}</strong></td>
+                </tr>
+                ${totals.discount > 0 ? `
+                <tr>
+                  <td colspan="3" style="padding: 12px; text-align: right;"><strong>Discount:</strong></td>
+                  <td style="padding: 12px; text-align: right;"><strong>-₱${totals.discount.toFixed(2)}</strong></td>
+                </tr>
+                ` : ''}
+                <tr>
+                  <td colspan="3" style="padding: 12px; text-align: right;"><strong>Shipping Fee:</strong></td>
+                  <td style="padding: 12px; text-align: right;"><strong>₱${totals.shippingFee.toFixed(2)}</strong></td>
+                </tr>
+                <tr style="background: #e8f4fd;">
+                  <td colspan="3" style="padding: 12px; text-align: right; border-top: 2px solid #5A5CA8;"><strong>Total Amount:</strong></td>
+                  <td style="padding: 12px; text-align: right; border-top: 2px solid #5A5CA8;"><strong>₱${totalAmount.toFixed(2)}</strong></td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+
+          <!-- Next Steps -->
+          <div style="padding: 25px; background: #f8fafc;">
+            <h2 style="color: #5A5CA8; margin-top: 0;">Next Steps</h2>
+            <ol style="margin: 15px 0; padding-left: 20px;">
+              <li style="margin-bottom: 8px;">Review order details and verify payment</li>
+              <li style="margin-bottom: 8px;">Contact customer if additional information is needed: <strong>${contactInfo.contactNumber}</strong></li>
+              <li style="margin-bottom: 8px;">Update order status in the system</li>
+              <li style="margin-bottom: 8px;">Begin production/order processing</li>
+              <li>Schedule delivery or prepare for pickup</li>
+            </ol>
+            
+            <div style="margin-top: 20px; padding: 15px; background: white; border-radius: 5px; border-left: 4px solid #5A5CA8;">
+              <p style="margin: 0;"><strong>Customer Contact:</strong> ${contactInfo.contactNumber}</p>
+              <p style="margin: 5px 0 0 0;"><strong>Customer Email:</strong> ${customerEmail}</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <div style="background: #1e293b; color: white; padding: 20px; text-align: center; font-size: 12px;">
+          <p style="margin: 0;">This is an automated notification from OnTap Creatives Order System</p>
+          <p style="margin: 5px 0 0 0;">&copy; ${new Date().getFullYear()} OnTap Creatives. All rights reserved.</p>
+        </div>
+      </div>
+    </div>
+  `;
 }
