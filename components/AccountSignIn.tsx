@@ -114,7 +114,7 @@ const AccountSignIn = ({ setShowLogin, onSuccess }: AccountSignInProps) => {
 
     if (response.ok) {
       // Send verification email and go to verification view
-      const verificationResponse = await fetch('/api/auth/send-verification', {
+      const verificationResponse = await fetch('/api/auth/verify-email', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -275,7 +275,7 @@ const AccountSignIn = ({ setShowLogin, onSuccess }: AccountSignInProps) => {
   const resendVerificationEmail = async () => {
     setLoading(true)
     try {
-      const response = await fetch('/api/auth/email-verification', {
+      const response = await fetch('/api/email-verification', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

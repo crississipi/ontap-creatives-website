@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { PrismaClient } from '@prisma/client'
 import { generateOtp, storeOtp } from '@/lib/otpStore'
-import { corsHeaders } from '@/lib/corsHeaders'
 import nodemailer from 'nodemailer'
 
 const prisma = new PrismaClient()
