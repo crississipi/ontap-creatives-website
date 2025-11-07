@@ -12,7 +12,6 @@ export default function ReceiptClient({ orderID }: { orderID: string }) {
   const [data, setData] = useState<ReceiptData | null>(null);
   const [loading, setLoading] = useState(true);
   const [downloading, setDownloading] = useState(false);
-  const [downloadMethod, setDownloadMethod] = useState<'server' | 'client' | null>(null);
   const receiptRef = useRef<HTMLDivElement>(null);
   const { toast, showToast } = useToast();
 
@@ -47,134 +46,29 @@ export default function ReceiptClient({ orderID }: { orderID: string }) {
   }, [cleanOrderID]); // Use cleanOrderID as dependency
 
   const handleDownload = async () => {
-    if (!data) return;
+    if (!receiptRef.current || !data) return;
 
     try {
       setDownloading(true);
-      setDownloadMethod('server');
-      
-      const response = await fetch('/api/generate-receipt-pdf', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          orderID: data.orderID,
-          customerName: data.customerName,
-          companyName: data.companyName,
-          contactNumber: data.contactNumber,
-          email: data.email,
-          deliveryAddress: data.deliveryAddress,
-          items: data.items.map(item => ({
-            name: item.name,
-            qty: item.qty,
-            price: item.price,
-            subtotal: item.subtotal,
-            logo: item.logo
-          })),
-          shippingMethod: data.shippingMethod,
-          shippingFee: data.shippingFee,
-          paymentMethod: data.paymentMethod,
-          discount: data.discount,
-          subtotal: data.subtotal,
-          total: data.total,
-          orderDate: data.orderDate
-        }),
-      });
-
-      if (response.ok) {
-        // Get the PDF blob directly
-        const blob = await response.blob();
-        
-        // Validate it's actually a PDF
-        if (blob.type !== 'application/pdf') {
-          showToast('error', 'Server returned non-PDF content.');
-        }
-        
-        if (blob.size === 0) {
-          showToast('error', 'Empty PDF received from server');
-        }
-        showToast('success', 'Server-side PDF generated successfully, size: ${blob.size} bytes');
-        
-        // Download the PDF
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.style.display = 'none';
-        a.href = url;
-        a.download = `receipt-${data.orderID}.pdf`;
-        document.body.appendChild(a);
-        a.click();
-        
-        // Clean up
-        setTimeout(() => {
-          window.URL.revokeObjectURL(url);
-          document.body.removeChild(a);
-        }, 100);
-        
-        return;
-      }
-      await handleDownloadFallback();
-    } catch (err) {
-      showToast('error', 'Server request failed.');
-      
-      // Fallback to client-side generation
-      try {
-        await handleDownloadFallback();
-      } catch (fallbackError) {
-        showToast('error', 'Failed to generate PDF. Please try again or contact support.');
-      }
-    } finally {
-      setDownloading(false);
-      setDownloadMethod(null);
-    }
-  };
-
-  const handleDownloadFallback = async () => {
-    if (!receiptRef.current) {
-      showToast('error', 'Receipt element not found for client-side generation');
-      return;
-    }
-
-    try {
-      setDownloadMethod('client');
-      
-
-      // Dynamic import to reduce bundle size
       const html2pdf = (await import("html2pdf.js")).default;
 
       const element = receiptRef.current.cloneNode(true) as HTMLElement;
-      
-      // Ensure proper styling for PDF
       element.style.display = "block";
-      element.style.width = "100%";
-      element.style.background = "white";
-      element.style.padding = "20px";
-      element.style.fontFamily = "Arial, sans-serif";
 
-      // FIXED: Proper type definitions for html2pdf options
       const opt = {
-        margin: 0.5,
-        filename: `receipt-${orderID}.pdf`,
-        image: { 
-          type: "jpeg" as const, // Fixed: using string literal type
-          quality: 0.98 
-        },
-        html2canvas: { 
-          scale: 2,
-          useCORS: true,
-          logging: true,
-          letterRendering: true,
-          backgroundColor: "#ffffff"
-        },
-        jsPDF: { 
-          unit: "in" as const, // Fixed: using string literal type
-          format: "a6" as const, // Fixed: using string literal type
-          orientation: "portrait" as const // Fixed: using string literal type
-        }
+        margin: 0,
+        filename: `receipt-${data.orderID}.pdf`,
+        image: { type: "jpeg" as const, quality: 1 },
+        html2canvas: { scale: 2 },
+        jsPDF: { unit: "in", format: "a6", orientation: "portrait" as const },
       };
+
       await html2pdf().set(opt).from(element).save();
-      showToast('success', 'Client-side PDF generation successful');
-    } catch (err) { showToast('error', 'Client-side PDF generation failed.'); }
+    } catch (error) {
+      showToast('error', 'Failed to download PDF. Please try again.');
+    } finally {
+      setDownloading(false);
+    }
   };
 
   // Show loading state
@@ -221,7 +115,7 @@ export default function ReceiptClient({ orderID }: { orderID: string }) {
             />
           </div>
           
-          {/* Hidden element for client-side PDF generation */}
+          {/* Hidden Receipt for PDF Generation */}
           <div ref={receiptRef} className="h-full w-full flex" style={{display:'none'}}>
             <ReceiptTemplate 
               orderID={data.orderID}
@@ -243,7 +137,7 @@ export default function ReceiptClient({ orderID }: { orderID: string }) {
         </>
       )}
       
-      {/* Download Button with enhanced status */}
+      {/* Download Button */}
       <button
         onClick={handleDownload}
         disabled={downloading}
@@ -255,7 +149,7 @@ export default function ReceiptClient({ orderID }: { orderID: string }) {
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
             </svg>
-            {downloadMethod === 'client' ? 'Client PDF...' : 'Server PDF...'}
+            Generating PDF...
           </>
         ) : (
           <>
@@ -266,13 +160,6 @@ export default function ReceiptClient({ orderID }: { orderID: string }) {
           </>
         )}
       </button>
-
-      {/* Debug info (optional - remove in production) */}
-      {process.env.NODE_ENV === 'development' && (
-        <div className="fixed bottom-4 right-4 bg-gray-800 text-white text-xs p-2 rounded opacity-75">
-          PDF Method: {downloadMethod || 'Not attempted'}
-        </div>
-      )}
     </main>
   );
 }
