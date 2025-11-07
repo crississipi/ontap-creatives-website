@@ -178,23 +178,28 @@ export default function VisitorTracker() {
     
     if (!cookiesAccepted) {
       setShowCookies(true);
-      requestUserLocation();
+      // Don't request location until cookies are accepted
     } else {
+      // Only get location and start session after cookies are accepted AND UUID is set
       if (!userLocation) {
         const enhancedLocation = await getEnhancedLocation();
         if (enhancedLocation) {
           setUserLocation(enhancedLocation);
         }
       }
-      await initializeVisitorInDB(uuid, userLocation);
-      await startSession({
-        locationCaptured: !!userLocation,
-        latitude: userLocation?.latitude,
-        longitude: userLocation?.longitude,
-        locationAccuracy: userLocation?.accuracy || 'unknown',
-        locationConfidence: userLocation?.confidence,
-        locationSource: userLocation?.source
-      });
+      
+      // Wait for UUID to be set in state before initializing
+      setTimeout(async () => {
+        await initializeVisitorInDB(uuid, userLocation);
+        await startSession({
+          locationCaptured: !!userLocation,
+          latitude: userLocation?.latitude,
+          longitude: userLocation?.longitude,
+          locationAccuracy: userLocation?.accuracy || 'unknown',
+          locationConfidence: userLocation?.confidence,
+          locationSource: userLocation?.source
+        });
+      }, 100);
     }
   };
 
