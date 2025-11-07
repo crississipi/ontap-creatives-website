@@ -59,19 +59,6 @@ export default function VisitorTracker() {
       })
     },
     {
-      name: 'ip-api.com',
-      url: 'http://ip-api.com/json/?fields=status,message,country,countryCode,region,regionName,city,lat,lon,timezone,isp,org,as,query',
-      mapper: (data) => ({
-        latitude: data.lat,
-        longitude: data.lon,
-        city: data.city,
-        country: data.country,
-        region: data.regionName,
-        isp: data.isp,
-        timezone: data.timezone
-      })
-    },
-    {
       name: 'ipwhois',
       url: 'https://ipwho.is/',
       mapper: (data) => ({
@@ -82,6 +69,21 @@ export default function VisitorTracker() {
         region: data.region,
         isp: data.connection?.isp,
         timezone: data.timezone?.id
+      })
+    },
+    {
+      name: 'ipapi.com',
+      url: 'https://ipapi.com/json/',
+      mapper: (data) => ({
+        latitude: data.latitude,
+        longitude: data.longitude,
+        city: data.city,
+        country: data.country_name,
+        region: data.region_name,
+        isp: data.isp,
+        timezone: data.timezone,
+        accuracy: data.latitude && data.longitude ? 'medium' : 'very-low',
+        confidence: 0.7
       })
     }
   ];
