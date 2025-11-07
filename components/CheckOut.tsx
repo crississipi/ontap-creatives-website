@@ -266,7 +266,6 @@ const CheckOut = ({setGotoCheckout, selectedItems, cartItems, user}: CheckOutPro
   };
 
   const handleCompletePurchase = async () => {
-    
     // Validate form
     if (!validateForm()) {
         showToast('info', 'Please fill in all required fields correctly.');
@@ -321,9 +320,11 @@ const CheckOut = ({setGotoCheckout, selectedItems, cartItems, user}: CheckOutPro
             subtotal,
             shippingFee,
             discount,
-            total
+            total // ✅ Make sure total is included
         }
         };
+
+        console.log('🔍 Sending order data:', orderData);
 
         const response = await fetch('/api/orders', {
         method: 'POST',
@@ -335,17 +336,21 @@ const CheckOut = ({setGotoCheckout, selectedItems, cartItems, user}: CheckOutPro
 
         const result = await response.json();
 
+        console.log('🔍 Order response:', { status: response.status, data: result });
+
         if (response.ok) {
-          setOrderTransactionId(result.transactionId);
-          setShowReceipt(true);
-          
-          showToast('success', 'Order placed successfully! Receipt displayed.');
-          
+        setOrderTransactionId(result.transactionId);
+        setShowReceipt(true);
+        showToast('success', 'Order placed successfully! Receipt displayed.');
         } else {
-        showToast('error', 'Server Connection Timeout.');
+        // ✅ IMPROVED: Show specific error message from server
+        const errorMessage = result.error || result.details?.[0] || 'Failed to place order. Please try again.';
+        showToast('error', errorMessage);
+        console.error('❌ Order failed:', result);
         }
     } catch (error) {
-        showToast('error', 'Server Connection Timeout.');
+        console.error('❌ Order network error:', error);
+        showToast('error', 'Network error. Please check your connection and try again.');
     } finally {
         setIsSubmitting(false);
     }
