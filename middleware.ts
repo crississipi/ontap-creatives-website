@@ -4,6 +4,7 @@ import type { NextRequest } from 'next/server';
 
 const allowedOrigins = [
   "https://ontap.ph",
+  "https://darkslategray-horse-918539.hostingersite.com",
   "http://localhost:3000", 
   "http://localhost:3001",
   "http://127.0.0.1:3000",
