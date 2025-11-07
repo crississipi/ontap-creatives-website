@@ -100,8 +100,8 @@ const Hero = ({ endWarping, editable }: HeroProps) => {
         
         <Image
             priority
-            height={2048}
-            width={2048}
+            height={4096}
+            width={4096}
             alt='ontap creatives logo'
             src='/images/ontap-hero-bg.png'
             className='h-full w-full object-cover pt-5 absolute top-1/2 left-1/2 -translate-1/2'

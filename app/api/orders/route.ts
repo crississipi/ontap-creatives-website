@@ -225,9 +225,11 @@ export async function POST(request: NextRequest) {
 
         console.log('✅ Tracking record created:', tracking.trackingID);
 
+        // In your app/api/orders/route.ts - Update the transaction creation section
+
         // 4. Create MULTIPLE transaction records - ONE PER CART ITEM
         console.log('🔍 Creating transactions for cart items:', body.items.length);
-        
+
         const transactions = [];
         for (const item of body.items) {
           console.log('🔍 Creating transaction for cartID:', item.cartID, 'subtotal:', item.subtotal);
@@ -237,7 +239,7 @@ export async function POST(request: NextRequest) {
             const cartItem = await tx.cart.findUnique({
               where: { 
                 cartID: item.cartID,
-                clientID: user.clientID // Ensure cart belongs to the user
+                clientID: user.clientID
               }
             });
 
@@ -245,12 +247,15 @@ export async function POST(request: NextRequest) {
               throw new Error(`Cart item ${item.cartID} not found or doesn't belong to user`);
             }
 
+            // ✅ FIXED: Use the cart relation instead of cartID
             const transactionData: any = {
               transactionID: sharedTransactionID,
-              cartID: item.cartID,
               shipMethod: body.shippingInfo.method,
               subtotal: item.subtotal,
               dateOrdered: new Date(),
+              cart: { // ✅ Use 'cart' relation instead of 'cartID'
+                connect: { cartID: item.cartID }
+              },
               billing: {
                 connect: { billingID: billing.billingID }
               },
@@ -277,7 +282,7 @@ export async function POST(request: NextRequest) {
             console.log('✅ Transaction created for cart:', item.cartID, 'orderID:', transaction.orderID);
           } catch (itemError) {
             console.error(`❌ Failed to create transaction for cartID ${item.cartID}:`, itemError);
-            throw itemError; // Re-throw to rollback transaction
+            throw itemError;
           }
         }
 
