@@ -18,7 +18,7 @@ interface DirectPurchaseProduct {
         imgUrl?: string;
         frontUrl?: string;
         description: string;
-        customPrice?: number;
+        customPrice: number;
         category: string;
     };
     quantity: number;
