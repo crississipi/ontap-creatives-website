@@ -89,7 +89,7 @@ interface OrderRequest {
     subtotal: number
     shippingFee: number
     discount: number
-    total: number // ✅ ADDED: Make sure total is included
+    total: number
   }
 }
 
@@ -124,7 +124,7 @@ function validateOrderData(data: any): { isValid: boolean; errors: string[] } {
   // Payment validation
   if (!data.paymentInfo?.method) errors.push('Payment method is required')
 
-  // Totals validation - ✅ FIXED: Check for total instead of undefined
+  // Totals validation
   if (!data.totals || !data.totals.total || data.totals.total <= 0) {
     errors.push('Valid total amount is required')
   }
@@ -160,8 +160,14 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
 
-    // Generate a single transaction ID for all items
-    const sharedTransactionID = `TXN-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    // ✅ FIXED: Generate more unique transaction and reference IDs
+    const timestamp = Date.now();
+    const randomSuffix = Math.random().toString(36).substr(2, 12); // Longer random string
+    const sharedTransactionID = `TXN-${timestamp}-${randomSuffix}`;
+    const billingReferenceNo = `REF-${timestamp}-${Math.random().toString(36).substr(2, 8)}`;
+
+    console.log('🔍 Generated Transaction ID:', sharedTransactionID);
+    console.log('🔍 Generated Reference No:', billingReferenceNo);
 
     // Store order data for later use (outside transaction)
     orderData = {
@@ -176,10 +182,11 @@ export async function POST(request: NextRequest) {
         // 1. Create billing record
         const billingAmount = body.totals.subtotal - (body.totals.discount || 0) + (body.totals.shippingFee || 0);
         
+        console.log('🔍 Creating billing record...');
         const billing = await tx.billing.create({
           data: {
             mode: body.paymentInfo.method.toUpperCase(),
-            referenceNo: body.paymentInfo.referenceNo || `REF-${Date.now()}`,
+            referenceNo: billingReferenceNo, // ✅ Use the newly generated reference
             sender: `${body.contactInfo.firstName} ${body.contactInfo.lastName}`,
             receiver: 'Burnbox Printing',
             amount: billingAmount,
@@ -192,6 +199,7 @@ export async function POST(request: NextRequest) {
         // 2. Mark voucher as used if applicable
         if (body.voucher?.id) {
           try {
+            console.log('🔍 Processing voucher:', body.voucher.id);
             const existingVoucher = await tx.voucher.findUnique({
               where: { voucherID: body.voucher.id }
             });
@@ -214,6 +222,7 @@ export async function POST(request: NextRequest) {
 
         // 3. Create tracking record for the order
         const totalItems = body.items.reduce((sum, item) => sum + item.quantity, 0);
+        console.log('🔍 Creating tracking record...');
         const tracking = await tx.tracking.create({
           data: {
             status: 'Order Placed',
@@ -224,8 +233,6 @@ export async function POST(request: NextRequest) {
         });
 
         console.log('✅ Tracking record created:', tracking.trackingID);
-
-        // In your app/api/orders/route.ts - Update the transaction creation section
 
         // 4. Create MULTIPLE transaction records - ONE PER CART ITEM
         console.log('🔍 Creating transactions for cart items:', body.items.length);
@@ -247,8 +254,10 @@ export async function POST(request: NextRequest) {
               throw new Error(`Cart item ${item.cartID} not found or doesn't belong to user`);
             }
 
+            console.log('🔍 Cart item verified:', cartItem.cartID);
+
             // ✅ CORRECT: Create the transaction data with ALL required fields
-            const transactionData = {
+            const transactionData: any = {
               transactionID: sharedTransactionID,
               shipMethod: body.shippingInfo.method,
               subtotal: item.subtotal,
@@ -269,13 +278,12 @@ export async function POST(request: NextRequest) {
 
             // Only include voucher if it exists and is not null
             if (body.voucher?.id) {
-              // Add voucher connection using type assertion
-              (transactionData as any).voucher = {
+              transactionData.voucher = {
                 connect: { voucherID: body.voucher.id }
               };
             }
             
-            console.log('🔍 Transaction data:', JSON.stringify(transactionData, null, 2));
+            console.log('🔍 Transaction data prepared for cartID:', item.cartID);
             
             const transaction = await tx.transaction.create({
               data: transactionData
@@ -283,19 +291,26 @@ export async function POST(request: NextRequest) {
             
             transactions.push(transaction);
             console.log('✅ Transaction created for cart:', item.cartID, 'orderID:', transaction.orderID);
-          } catch (itemError) {
+          } catch (itemError: any) {
             console.error(`❌ Failed to create transaction for cartID ${item.cartID}:`, itemError);
+            
+            // Provide more specific error message
+            if (itemError.code === 'P2002') {
+              throw new Error(`Duplicate transaction detected for cart item ${item.cartID}. Please try again.`);
+            }
             throw itemError;
           }
         }
+
         // 5. Update cart items status to 'ordered'
         const cartIDs = body.items.map(item => item.cartID);
+        console.log('🔍 Updating cart items status:', cartIDs);
         const updateResult = await tx.cart.updateMany({
           where: {
             cartID: {
               in: cartIDs
             },
-            clientID: user.clientID // Additional security check
+            clientID: user.clientID
           },
           data: {
             status: 'ordered'
@@ -312,8 +327,20 @@ export async function POST(request: NextRequest) {
           firstOrderId: transactions[0]?.orderID
         }
 
-      } catch (dbError) {
+      } catch (dbError: any) {
         console.error('❌ Database error in transaction:', dbError);
+        
+        // Provide more specific error messages
+        if (dbError.code === 'P2002') {
+          if (dbError.meta?.target?.includes('transactionID')) {
+            throw new Error('Duplicate transaction ID detected. Please try again.');
+          } else if (dbError.meta?.target?.includes('referenceNo')) {
+            throw new Error('Duplicate billing reference detected. Please try again.');
+          } else if (dbError.meta?.target?.includes('cartID')) {
+            throw new Error('Duplicate cart transaction detected. Please try again.');
+          }
+        }
+        
         throw dbError;
       }
     }, {
@@ -354,6 +381,7 @@ export async function POST(request: NextRequest) {
     let pdfGenerationSuccess = false;
 
     try {
+      console.log('🔍 Generating PDF receipt...');
       const pdfResponse = await fetch(`${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/generate-receipt-pdf`, {
         method: 'POST',
         headers: {
@@ -381,6 +409,7 @@ export async function POST(request: NextRequest) {
 
     // Send confirmation email to CUSTOMER
     try {
+      console.log('🔍 Sending customer confirmation email...');
       const receiptUrl = `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/receipts/${result.transactionId}`;
       
       await sendOrderConfirmationEmail({
@@ -401,6 +430,7 @@ export async function POST(request: NextRequest) {
 
     // Send admin notification email
     try {
+      console.log('🔍 Sending admin notification email...');
       await sendAdminOrderNotification({
         orderData: body,
         customerEmail: body.contactInfo.email,
@@ -421,7 +451,7 @@ export async function POST(request: NextRequest) {
       receiptUrl: `${process.env.NEXTAUTH_URL || 'https://ontap.ph/'}/receipts/${result.transactionId}`
     });
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('❌ Order creation error:', error);
     
     let errorMessage = 'Internal server error';
@@ -431,9 +461,9 @@ export async function POST(request: NextRequest) {
       errorMessage = error.message;
       
       // Handle specific Prisma errors
-      if (error.message.includes('Unique constraint')) {
-        errorMessage = 'Duplicate transaction detected. Please try again.';
-        statusCode = 400;
+      if (error.message.includes('Unique constraint') || error.message.includes('Duplicate')) {
+        errorMessage = 'Order processing conflict. Please try again.';
+        statusCode = 409; // Conflict
       } else if (error.message.includes('Foreign key constraint')) {
         errorMessage = 'Invalid data reference. Please check your cart items.';
         statusCode = 400;
