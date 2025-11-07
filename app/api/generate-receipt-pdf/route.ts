@@ -94,8 +94,6 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('PDF generation error:', error);
-    
     // Fallback: return HTML if PDF generation fails
     try {
       const receiptData: ReceiptData = await request.json();

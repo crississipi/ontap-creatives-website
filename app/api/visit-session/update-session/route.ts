@@ -47,8 +47,6 @@ export async function POST(request: NextRequest) {
         error: 'Session not found' 
       })
     }
-    
-    console.error('Session update error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

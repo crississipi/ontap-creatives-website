@@ -116,7 +116,6 @@ export async function sendAdminOrderNotification(data: AdminNotificationData): P
 
   // ✅ ADDED: Error handling for missing admin email
   if (!adminEmail) {
-    console.error('COMPANY_EMAIL not configured in environment variables');
     return;
   }
 
@@ -129,9 +128,7 @@ export async function sendAdminOrderNotification(data: AdminNotificationData): P
       subject: `📦 New Order Received - ${data.transactionId}`,
       html: emailHtml,
     });
-    console.log('Admin notification email sent successfully');
   } catch (error) {
-    console.error('Failed to send admin notification email:', error);
     throw error;
   }
 }

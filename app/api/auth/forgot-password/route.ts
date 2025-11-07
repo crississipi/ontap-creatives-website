@@ -86,7 +86,6 @@ export async function POST(request: NextRequest) {
       { status: 200 }
     )
   } catch (error) {
-    console.error('Password reset error:', error);
     return NextResponse.json(
       { error: 'Failed to process request' },
       { status: 500 }

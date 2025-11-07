@@ -69,7 +69,6 @@ const ProductList = ({editable}: EditProps) => {
           setUser(null);
         }
       } catch (error) {
-        console.error('Failed to fetch user session:', error);
         setUser(null);
       } finally {
         setCheckingAuth(false);

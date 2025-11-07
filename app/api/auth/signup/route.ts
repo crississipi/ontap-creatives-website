@@ -15,11 +15,8 @@ export async function POST(request: NextRequest) {
   try {
     const { name, email, contactNumber, address, password, confirmPassword } = await request.json()
 
-    console.log('🔍 Signup request received:', { name, email, contactNumber, address, passwordLength: password?.length })
-
     // Validate required fields
     if (!name || !email || !password) {
-      console.log('🔍 Missing required fields:', { name: !!name, email: !!email, password: !!password })
       return NextResponse.json(
         { error: 'Name, email, and password are required' },
         { status: 400 }
@@ -29,7 +26,6 @@ export async function POST(request: NextRequest) {
     // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
     if (!emailRegex.test(email)) {
-      console.log('🔍 Invalid email format:', email)
       return NextResponse.json(
         { error: 'Invalid email format' },
         { status: 400 }
@@ -38,7 +34,6 @@ export async function POST(request: NextRequest) {
 
     // Validate password length
     if (password.length < 6) {
-      console.log('🔍 Password too short:', password.length)
       return NextResponse.json(
         { error: 'Password must be at least 6 characters long' },
         { status: 400 }
@@ -47,14 +42,11 @@ export async function POST(request: NextRequest) {
 
     // Validate password confirmation (if provided)
     if (confirmPassword && password !== confirmPassword) {
-      console.log('🔍 Passwords do not match')
       return NextResponse.json(
         { error: 'Passwords do not match' },
         { status: 400 }
       )
     }
-
-    console.log('🔍 Checking for existing user:', email)
 
     // Check if user already exists
     const existingUser = await prisma.client.findUnique({
@@ -62,14 +54,11 @@ export async function POST(request: NextRequest) {
     })
 
     if (existingUser) {
-      console.log('🔍 User already exists:', email)
       return NextResponse.json(
         { error: 'User already exists with this email' },
         { status: 400 }
       )
     }
-
-    console.log('🔍 Creating new user:', email)
 
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 12)
@@ -90,8 +79,6 @@ export async function POST(request: NextRequest) {
       }
     })
 
-    console.log('🔍 User created successfully:', user.email)
-
     // Remove password from response
     const { password: _, ...userWithoutPassword } = user
 
@@ -104,7 +91,6 @@ export async function POST(request: NextRequest) {
     )
 
   } catch (error: any) {
-    console.error('🔍 Signup error:', error)
     
     // Handle specific Prisma errors
     if (error.code === 'P2002') {

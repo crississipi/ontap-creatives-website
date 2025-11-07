@@ -109,7 +109,6 @@
         }
         return null;
         } catch (error) {
-        console.error('Error checking auth status:', error);
         return null;
         }
     };
@@ -136,7 +135,6 @@
                 const data = await response.json();
                 setFeedbackData(data);
             } else {
-                console.error('Failed to fetch feedbacks');
                 setFeedbackData({
                 hasFeedbacks: false,
                 feedbackCount: 0,
@@ -144,7 +142,6 @@
                 });
             }
             } catch (error) {
-            console.error('Error fetching feedbacks:', error);
             setFeedbackData({
                 hasFeedbacks: false,
                 feedbackCount: 0,
@@ -168,80 +165,78 @@
 
         if (userData) {
             try {
-            // First, add the item to cart
-            const cartData = {
+            console.log('🚀 Starting direct purchase process');
+
+            // Prepare direct order data (without cart)
+            const orderData = {
+                contactInfo: {
+                firstName: "test", // You'll get this from your checkout form
+                lastName: "user",
+                companyName: "Test Company",
+                contactNumber: "1234567890",
+                email: userData.email
+                },
+                shippingInfo: {
+                method: "pickup" as const
+                },
+                paymentInfo: {
+                method: "cod" as const
+                },
+                product: {
                 productID: product.productID,
-                clientID: userData.clientID,
+                name: finalProductName,
+                price: priceOption === 'ontap' ? product.price.ontap : product.price.custom!,
                 quantity: quantity,
+                logo: priceOption === 'ontap' ? 'OnTap' : 'Custom',
+                subtotal: priceOption === 'ontap' ? product.price.ontap * quantity : product.price.custom! * quantity
+                },
+                totals: {
                 subtotal: priceOption === 'ontap' ? product.price.ontap * quantity : product.price.custom! * quantity,
-                logo: priceOption === 'ontap' ? 'OnTap' : 'Custom'
+                shippingFee: 0,
+                discount: 0,
+                total: priceOption === 'ontap' ? product.price.ontap * quantity : product.price.custom! * quantity
+                }
             };
 
-            console.log('🛒 Adding to cart:', cartData);
+            console.log('📦 Sending direct order:', orderData);
 
-            const cartResponse = await fetch('/api/cart/add', {
+            const orderResponse = await fetch('/api/orders/direct', {
                 method: 'POST',
                 headers: {
                 'Content-Type': 'application/json',
                 },
-                body: JSON.stringify(cartData),
+                body: JSON.stringify(orderData),
             });
 
-            const cartResult = await cartResponse.json();
-            console.log('🛒 Cart API response:', cartResult);
+            const orderResult = await orderResponse.json();
 
-            if (cartResponse.ok) {
-                // Extract the cartID from the response
-                const cartID = cartResult.cartItem?.cartID;
-                console.log('🛒 Extracted cartID:', cartID);
+            if (orderResponse.ok) {
+                console.log('✅ Direct order successful:', orderResult);
                 
-                if (!cartID) {
-                throw new Error('No cartID returned from cart API');
-                }
-
-                // Success - now prepare for checkout with the actual cart ID
-                const productData = {
-                product: {
-                    productID: product.productID,
-                    name: finalProductName,
-                    price: priceOption === 'ontap' ? product.price.ontap : product.price.custom!,
-                    imgUrl: finalImgUrl || finalFrontImg,
-                    frontUrl: finalFrontImg,
-                    description: product.description,
-                    customPrice: product.price.custom,
-                    category: product.category
-                },
-                cartID: cartID,
-                quantity: quantity,
-                logo: priceOption === 'ontap' ? 'OnTap' : 'Custom',
-                subtotal: priceOption === 'ontap' ? product.price.ontap * quantity : product.price.custom! * quantity,
-                variable: variable,
-                priceOption: priceOption,
-                fileInfo: fileInfo,
-                logoSize: logoSize
-                };
-
-                console.log('🛒 Prepared product data for checkout:', productData);
-
-                // Pass data to parent component and redirect to checkout
-                if (setSelectedProduct) {
-                setSelectedProduct(productData);
-                }
-                if (setGotoCheckout) {
-                setGotoCheckout(true);
-                }
+                // Success - redirect or show success message
+                setShow(true);
+                setIcon('success');
+                setMessage('Order placed successfully!');
+                
+                setTimeout(() => {
                 setInquireItem(false);
+                // Optionally redirect to order confirmation page
+                if (setGotoCheckout) {
+                    setGotoCheckout(true);
+                }
+                }, 1000);
             } else {
-                console.error('🛒 Cart API error:', cartResult);
+                console.error('❌ Direct order failed:', orderResult);
                 setShow(true);
                 setIcon('error');
-                setMessage(`Error: ${cartResult.error || 'Failed to add item to cart'}`);
+                setMessage(`Order failed: ${orderResult.error || 'Unknown error'}`);
             }
+
             } catch (error) {
-            console.error('🛒 Error in handleBuyAction:', error);
+            console.error('❌ Error in direct purchase:', error);
             setShow(true);
             setIcon('error');
-            setMessage('Error preparing order. Please try again.');
+            setMessage('Error placing order. Please try again.');
             }
         } else {
             setShowLogin(true);
@@ -1158,7 +1153,6 @@
                         setUser(userData);
                         // Optionally trigger the original action after login
                         if (userData) {
-                        console.log('User logged in successfully, you can now proceed with purchase');
                         // You can automatically trigger the purchase flow here if desired
                         }
                     });

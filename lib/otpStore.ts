@@ -53,7 +53,6 @@ export async function verifyOtpWithoutDelete(email: string, otp: string): Promis
     // DON'T delete the OTP here - we need it for the password reset step
     return { isValid: true, message: 'OTP verified successfully' }
   } catch (error) {
-    console.error('OTP verification error:', error)
     return { isValid: false, message: 'Internal server error' }
   }
 }
@@ -89,7 +88,6 @@ export async function verifyAndDeleteOtp(email: string, otp: string): Promise<{ 
 
     return { isValid: true, message: 'OTP verified successfully' }
   } catch (error) {
-    console.error('OTP verification error:', error)
     return { isValid: false, message: 'Internal server error' }
   }
 }
@@ -105,6 +103,5 @@ export async function cleanupExpiredOtps(): Promise<void> {
       }
     })
   } catch (error) {
-    console.error('OTP cleanup error:', error)
   }
 }

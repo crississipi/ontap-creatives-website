@@ -60,7 +60,6 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ locations })
   } catch (error) {
-    console.error('Error fetching visitor locations:', error)
     return NextResponse.json(
       { error: 'Failed to fetch visitor locations' },
       { status: 500 }

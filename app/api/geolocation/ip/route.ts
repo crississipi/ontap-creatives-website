@@ -57,7 +57,6 @@ export async function GET(request: NextRequest) {
         });
       }
     } catch (error) {
-      console.log('ipapi.co failed, trying fallback...');
     }
 
     // Fallback to ipwhois
@@ -80,7 +79,6 @@ export async function GET(request: NextRequest) {
         });
       }
     } catch (error) {
-      console.log('ipwhois failed');
     }
 
     // Final fallback - get automatic IP detection
@@ -101,7 +99,6 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('IP Geolocation error:', error);
     return NextResponse.json({ 
       error: 'Failed to get location from IP' 
     }, { status: 500 });

@@ -75,7 +75,6 @@ export default function VisitorTracker() {
         timezone: data.timezone
       };
     } catch (error) {
-      console.error('API geolocation failed:', error);
       return null;
     }
   };
@@ -151,7 +150,6 @@ export default function VisitorTracker() {
       
       return null;
     } catch (error) {
-      console.error('All geolocation methods failed:', error);
       return null;
     }
   };
@@ -234,7 +232,6 @@ export default function VisitorTracker() {
         return result;
       }
     } catch (error) {
-      console.error('Failed to initialize visitor in DB:', error);
     }
   };
 
@@ -331,7 +328,6 @@ export default function VisitorTracker() {
 
       setShowCookies(false);
     } catch (error) {
-      console.error('Error accepting cookies:', error);
       setCookie('cookiesAccepted', 'true', 365);
       if (email) {
         setCookie('marketingEmails', 'true', 365);
