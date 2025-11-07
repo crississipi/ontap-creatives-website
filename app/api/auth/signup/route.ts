@@ -3,7 +3,6 @@ import { NextRequest, NextResponse } from 'next/server'
 import bcrypt from 'bcryptjs'
 import { PrismaClient } from '@prisma/client'
 
-// Use a singleton pattern for Prisma to avoid connection issues
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined
 }
@@ -14,10 +13,13 @@ if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma
 
 export async function POST(request: NextRequest) {
   try {
-    const { name, email, contact, password } = await request.json()
+    const { name, email, contactNumber, address, password, confirmPassword } = await request.json()
+
+    console.log('🔍 Signup request received:', { name, email, contactNumber, address, passwordLength: password?.length })
 
     // Validate required fields
     if (!name || !email || !password) {
+      console.log('🔍 Missing required fields:', { name: !!name, email: !!email, password: !!password })
       return NextResponse.json(
         { error: 'Name, email, and password are required' },
         { status: 400 }
@@ -27,6 +29,7 @@ export async function POST(request: NextRequest) {
     // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
     if (!emailRegex.test(email)) {
+      console.log('🔍 Invalid email format:', email)
       return NextResponse.json(
         { error: 'Invalid email format' },
         { status: 400 }
@@ -35,8 +38,18 @@ export async function POST(request: NextRequest) {
 
     // Validate password length
     if (password.length < 6) {
+      console.log('🔍 Password too short:', password.length)
       return NextResponse.json(
         { error: 'Password must be at least 6 characters long' },
+        { status: 400 }
+      )
+    }
+
+    // Validate password confirmation (if provided)
+    if (confirmPassword && password !== confirmPassword) {
+      console.log('🔍 Passwords do not match')
+      return NextResponse.json(
+        { error: 'Passwords do not match' },
         { status: 400 }
       )
     }
@@ -45,7 +58,7 @@ export async function POST(request: NextRequest) {
 
     // Check if user already exists
     const existingUser = await prisma.client.findUnique({
-      where: { email }
+      where: { email: email.toLowerCase().trim() }
     })
 
     if (existingUser) {
@@ -61,18 +74,19 @@ export async function POST(request: NextRequest) {
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 12)
 
-    // Handle optional contact number
-    const contactNumber = contact ? contact.replace(/\D/g, '') : null
+    // Handle optional contact number - clean it up
+    const cleanContactNumber = contactNumber ? contactNumber.replace(/\D/g, '').slice(0, 20) : null
 
     // Create user
     const user = await prisma.client.create({
       data: {
         clientName: name.trim(),
         email: email.toLowerCase().trim(),
-        contactNumber: contactNumber,
-        address: '',
+        contactNumber: cleanContactNumber,
+        address: address?.trim() || '',
         password: hashedPassword,
-        adsAgree: false
+        adsAgree: false,
+        emailVerified: false // Explicitly set to false for new users
       }
     })
 
