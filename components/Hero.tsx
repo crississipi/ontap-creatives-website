@@ -107,9 +107,6 @@ const Hero = ({ endWarping, editable }: HeroProps) => {
             className='h-full w-full object-cover pt-5 absolute top-1/2 left-1/2 -translate-1/2'
             draggable={false}
         />
-        <span className='w-[200%] aspect-square rounded-full absolute z-10 top-[55%] left-1/2 -translate-x-1/2 bg-gradient-to-b from-white via-5% via-transparent to-transparent'>
-            <span></span>
-        </span>
         <div className='z-30 flex flex-col items-center pt-10 pb-10'>
             <motion.div 
             initial={{scale: 0, filter: 'blur(2px)'}}

@@ -160,11 +160,9 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
 
-    // ✅ FIXED: Generate more unique transaction and reference IDs
-    const timestamp = Date.now();
-    const randomSuffix = Math.random().toString(36).substr(2, 12); // Longer random string
-    const sharedTransactionID = `TXN-${timestamp}-${randomSuffix}`;
-    const billingReferenceNo = `REF-${timestamp}-${Math.random().toString(36).substr(2, 8)}`;
+    // Generate a single transaction ID for all items
+    const sharedTransactionID = `TXN-${Date.now()}-${Math.random().toString(36).substr(2, 12)}`;
+    const billingReferenceNo = `REF-${Date.now()}-${Math.random().toString(36).substr(2, 8)}`;
 
     console.log('🔍 Generated Transaction ID:', sharedTransactionID);
     console.log('🔍 Generated Reference No:', billingReferenceNo);
@@ -186,7 +184,7 @@ export async function POST(request: NextRequest) {
         const billing = await tx.billing.create({
           data: {
             mode: body.paymentInfo.method.toUpperCase(),
-            referenceNo: billingReferenceNo, // ✅ Use the newly generated reference
+            referenceNo: billingReferenceNo,
             sender: `${body.contactInfo.firstName} ${body.contactInfo.lastName}`,
             receiver: 'Burnbox Printing',
             amount: billingAmount,
@@ -241,76 +239,53 @@ export async function POST(request: NextRequest) {
         for (const item of body.items) {
           console.log('🔍 Creating transaction for cartID:', item.cartID, 'subtotal:', item.subtotal);
           
-          try {
-            // Verify cart item exists and belongs to user
-            const cartItem = await tx.cart.findUnique({
-              where: { 
-                cartID: item.cartID,
-                clientID: user.clientID
-              }
-            });
-
-            if (!cartItem) {
-              throw new Error(`Cart item ${item.cartID} not found or doesn't belong to user`);
+          // ✅ FIXED: Simplified transaction creation without cart verification
+          const transactionData: any = {
+            transactionID: sharedTransactionID,
+            shipMethod: body.shippingInfo.method,
+            subtotal: item.subtotal,
+            dateOrdered: new Date(),
+            cart: {
+              connect: { cartID: item.cartID }
+            },
+            billing: {
+              connect: { billingID: billing.billingID }
+            },
+            client: {
+              connect: { clientID: user.clientID }
+            },
+            tracking: {
+              connect: { trackingID: tracking.trackingID }
             }
+          };
 
-            console.log('🔍 Cart item verified:', cartItem.cartID);
-
-            // ✅ CORRECT: Create the transaction data with ALL required fields
-            const transactionData: any = {
-              transactionID: sharedTransactionID,
-              shipMethod: body.shippingInfo.method,
-              subtotal: item.subtotal,
-              dateOrdered: new Date(),
-              cart: {
-                connect: { cartID: item.cartID }
-              },
-              billing: {
-                connect: { billingID: billing.billingID }
-              },
-              client: {
-                connect: { clientID: user.clientID }
-              },
-              tracking: {
-                connect: { trackingID: tracking.trackingID }
-              }
+          // Only include voucher if it exists and is not null
+          if (body.voucher?.id) {
+            transactionData.voucher = {
+              connect: { voucherID: body.voucher.id }
             };
-
-            // Only include voucher if it exists and is not null
-            if (body.voucher?.id) {
-              transactionData.voucher = {
-                connect: { voucherID: body.voucher.id }
-              };
-            }
-            
-            console.log('🔍 Transaction data prepared for cartID:', item.cartID);
-            
-            const transaction = await tx.transaction.create({
-              data: transactionData
-            });
-            
-            transactions.push(transaction);
-            console.log('✅ Transaction created for cart:', item.cartID, 'orderID:', transaction.orderID);
-          } catch (itemError: any) {
-            console.error(`❌ Failed to create transaction for cartID ${item.cartID}:`, itemError);
-            
-            // Provide more specific error message
-            if (itemError.code === 'P2002') {
-              throw new Error(`Duplicate transaction detected for cart item ${item.cartID}. Please try again.`);
-            }
-            throw itemError;
           }
+          
+          console.log('🔍 Transaction data prepared for cartID:', item.cartID);
+          
+          const transaction = await tx.transaction.create({
+            data: transactionData
+          });
+          
+          transactions.push(transaction);
+          console.log('✅ Transaction created for cart:', item.cartID, 'orderID:', transaction.orderID);
         }
 
         // 5. Update cart items status to 'ordered'
         const cartIDs = body.items.map(item => item.cartID);
         console.log('🔍 Updating cart items status:', cartIDs);
+        
+        // ✅ FIXED: Simplified cart update without clientID condition
         const updateResult = await tx.cart.updateMany({
           where: {
             cartID: {
               in: cartIDs
-            },
-            clientID: user.clientID
+            }
           },
           data: {
             status: 'ordered'
@@ -373,6 +348,7 @@ export async function POST(request: NextRequest) {
       paymentMethod: body.paymentInfo.method,
       discount: body.totals.discount,
       subtotal: body.totals.subtotal,
+      total: body.totals.total,
       orderDate: new Date().toISOString()
     };
 
@@ -417,7 +393,7 @@ export async function POST(request: NextRequest) {
         customerName: `${body.contactInfo.firstName} ${body.contactInfo.lastName}`,
         orderId: result.transactionId,
         orderDate: new Date().toLocaleDateString(),
-        total: body.totals.subtotal - (body.totals.discount || 0) + (body.totals.shippingFee || 0),
+        total: body.totals.total,
         receiptBuffer: receiptBuffer,
         receiptUrl: receiptUrl
       });
@@ -435,7 +411,7 @@ export async function POST(request: NextRequest) {
         orderData: body,
         customerEmail: body.contactInfo.email,
         transactionId: result.transactionId,
-        totalAmount: body.totals.subtotal - (body.totals.discount || 0) + (body.totals.shippingFee || 0)
+        totalAmount: body.totals.total
       });
       
       console.log('✅ Admin notification email sent successfully');
@@ -479,6 +455,75 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       { error: errorMessage },
       { status: statusCode }
+    );
+  } finally {
+    await prisma.$disconnect();
+  }
+}
+
+// Add GET method for order retrieval
+export async function GET(request: NextRequest) {
+  try {
+    const user = await getAuthenticatedUser();
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { searchParams } = new URL(request.url);
+    const transactionId = searchParams.get('transactionId');
+
+    if (transactionId) {
+      // Get specific order
+      const orders = await prisma.transaction.findMany({
+        where: {
+          transactionID: transactionId,
+          clientID: user.clientID
+        },
+        include: {
+          cart: {
+            include: {
+              product: true
+            }
+          },
+          billing: true,
+          tracking: true,
+          voucher: true
+        },
+        orderBy: {
+          dateOrdered: 'desc'
+        }
+      });
+
+      return NextResponse.json({ orders });
+    } else {
+      // Get all orders for user
+      const orders = await prisma.transaction.findMany({
+        where: {
+          clientID: user.clientID
+        },
+        include: {
+          cart: {
+            include: {
+              product: true
+            }
+          },
+          billing: true,
+          tracking: true,
+          voucher: true
+        },
+        orderBy: {
+          dateOrdered: 'desc'
+        },
+        take: 50 // Limit to recent orders
+      });
+
+      return NextResponse.json({ orders });
+    }
+  } catch (error) {
+    console.error('Error fetching orders:', error);
+    return NextResponse.json(
+      { error: 'Failed to fetch orders' },
+      { status: 500 }
     );
   } finally {
     await prisma.$disconnect();

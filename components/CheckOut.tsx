@@ -9,6 +9,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 import VoucherRoulette from './VoucherRoullete'
 import ReceiptClient from './ReceiptClient'
 import { useToast } from '@/hooks/useToast'
+import Toast from './Toast';
 
 interface CartItem {
   cartID: number;
@@ -99,6 +100,7 @@ const CheckOut = ({setGotoCheckout, selectedItems, cartItems, user}: CheckOutPro
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formErrors, setFormErrors] = useState<FormErrors>({});
   const { toast, showToast } = useToast();
+  const [isProcessing, setIsProcessing] = useState(false);
   
   // NEW STATE FOR RECEIPT
   const [showReceipt, setShowReceipt] = useState(false);
@@ -284,6 +286,14 @@ const CheckOut = ({setGotoCheckout, selectedItems, cartItems, user}: CheckOutPro
 
     setIsSubmitting(true);
 
+    if (isProcessing || isSubmitting) {
+        showToast('info', 'Order is already being processed. Please wait.');
+        return;
+    }
+
+    setIsProcessing(true);
+    setIsSubmitting(true);
+
     try {
         const orderData = {
         contactInfo: {
@@ -321,7 +331,9 @@ const CheckOut = ({setGotoCheckout, selectedItems, cartItems, user}: CheckOutPro
             shippingFee,
             discount,
             total // ✅ Make sure total is included
-        }
+        },
+        clientTimestamp: Date.now(),
+        clientId: user?.clientID,
         };
 
         console.log('🔍 Sending order data:', orderData);
@@ -345,14 +357,13 @@ const CheckOut = ({setGotoCheckout, selectedItems, cartItems, user}: CheckOutPro
         } else {
         // ✅ IMPROVED: Show specific error message from server
         const errorMessage = result.error || result.details?.[0] || 'Failed to place order. Please try again.';
-        showToast('error', errorMessage);
-        console.error('❌ Order failed:', result);
+        showToast('error', 'Server Error. Please try again.');
         }
     } catch (error) {
-        console.error('❌ Order network error:', error);
         showToast('error', 'Network error. Please check your connection and try again.');
     } finally {
         setIsSubmitting(false);
+        setIsProcessing(false);
     }
   };
 
@@ -386,6 +397,12 @@ const CheckOut = ({setGotoCheckout, selectedItems, cartItems, user}: CheckOutPro
 
   return (
     <div className='h-full lg:h-full w-full flex flex-col pb-0 lg:px-5 gap-5 select-none overflow-hidden fixed inset-0 z-50 bg-white pt-20'>
+        {toast.show && (
+            <Toast 
+            icon={toast.icon}
+            message={toast.message}
+            />
+        )}
         {showVoucher && (
           <VoucherRoulette 
             setRoulette={setShowVoucher} 
