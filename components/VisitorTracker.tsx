@@ -5,6 +5,7 @@ import { useVisitorTracking } from '@/hooks/useVisitorTracking';
 import { useUser } from '@/contexts/UserContext';
 import Cookies from './SaveCookies';
 import { useToast } from '@/hooks/useToast';
+
 // Types for better type safety
 interface EnhancedLocation {
   latitude: number;
@@ -20,20 +21,6 @@ interface EnhancedLocation {
   timezone?: string;
 }
 
-interface GeolocationService {
-  name: string;
-  url: string;
-  token?: string;
-  mapper: (data: any) => Partial<EnhancedLocation>;
-}
-
-interface GeolocationResult {
-  service: string;
-  success: boolean;
-  data?: Partial<EnhancedLocation>;
-  error?: string;
-}
-
 export default function VisitorTracker() {
   const [visitorUUID, setVisitorUUID] = useState<string>('');
   const [showCookies, setShowCookies] = useState<boolean>(false);
@@ -42,51 +29,6 @@ export default function VisitorTracker() {
   const { startSession, endSession, trackPageView } = useVisitorTracking(visitorUUID);
   const { user } = useUser();
   const { toast, showToast } = useToast();
-
-  // Enhanced IP geolocation services configuration
-  const geolocationServices: GeolocationService[] = [
-    {
-      name: 'ipapi.co',
-      url: 'https://ipapi.co/json/',
-      mapper: (data) => ({
-        latitude: data.latitude,
-        longitude: data.longitude,
-        city: data.city,
-        country: data.country_name,
-        region: data.region,
-        isp: data.org,
-        timezone: data.timezone
-      })
-    },
-    {
-      name: 'ipwhois',
-      url: 'https://ipwho.is/',
-      mapper: (data) => ({
-        latitude: data.latitude,
-        longitude: data.longitude,
-        city: data.city,
-        country: data.country,
-        region: data.region,
-        isp: data.connection?.isp,
-        timezone: data.timezone?.id
-      })
-    },
-    {
-      name: 'ipapi.com',
-      url: 'https://ipapi.com/json/',
-      mapper: (data) => ({
-        latitude: data.latitude,
-        longitude: data.longitude,
-        city: data.city,
-        country: data.country_name,
-        region: data.region_name,
-        isp: data.isp,
-        timezone: data.timezone,
-        accuracy: data.latitude && data.longitude ? 'medium' : 'very-low',
-        confidence: 0.7
-      })
-    }
-  ];
 
   useEffect(() => {
     setIsMounted(true);
@@ -107,47 +49,109 @@ export default function VisitorTracker() {
     }
   }, [user, visitorUUID, isMounted]);
 
-  // Enhanced IP-based location with multiple services
-  const getEnhancedLocation = async (): Promise<EnhancedLocation | null> => {
-    
+  // Primary method: Use your own API route (no CORS issues)
+  const getLocationViaAPI = async (): Promise<EnhancedLocation | null> => {
     try {
-      // Try all services in parallel with timeout
-      const locationPromises = geolocationServices.map(async (service): Promise<GeolocationResult> => {
-        try {
-          const response = await fetchWithTimeout(service.url, 5000);
-          if (!response.ok) throw new Error(`HTTP ${response.status}`);
-          const data = await response.json();
-          return {
-            service: service.name,
-            success: true,
-            data: service.mapper(data)
-          };
-        } catch (error) {
-          return {
-            service: service.name,
-            success: false,
-            error: error instanceof Error ? error.message : 'Unknown error'
-          };
-        }
-      });
-
-      const results = await Promise.all(locationPromises);
+      const response = await fetch('/api/geolocation/ip');
+      if (!response.ok) throw new Error('API request failed');
       
-      const successfulResults = results
-        .filter((result): result is GeolocationResult & { success: true; data: Partial<EnhancedLocation> } => 
-          result.success && result.data !== undefined && result.data.latitude !== undefined && result.data.longitude !== undefined
-        )
-        .map(result => result.data);
-
-      if (successfulResults.length === 0) {
-        return null;
+      const data = await response.json();
+      
+      if (data.error) {
+        throw new Error(data.error);
       }
-
-      // Use consensus algorithm to find the best location
-      const bestLocation = calculateBestLocation(successfulResults);
-      return bestLocation;
-
+      
+      return {
+        latitude: data.latitude,
+        longitude: data.longitude,
+        city: data.city,
+        country: data.country,
+        region: data.region,
+        accuracy: 'medium',
+        accuracy_radius: 10000,
+        source: data.source || 'api',
+        confidence: 0.7,
+        isp: data.isp,
+        timezone: data.timezone
+      };
     } catch (error) {
+      console.error('API geolocation failed:', error);
+      return null;
+    }
+  };
+
+  // Fallback: Simple IP geolocation with CORS-friendly services only
+  const getEnhancedLocation = async (): Promise<EnhancedLocation | null> => {
+    // First try our own API (no CORS issues)
+    const apiLocation = await getLocationViaAPI();
+    if (apiLocation) {
+      return apiLocation;
+    }
+
+    // Fallback: Try only reliable, CORS-friendly services
+    const fallbackServices = [
+      {
+        name: 'ipapi.co',
+        url: 'https://ipapi.co/json/',
+        mapper: (data: any) => ({
+          latitude: data.latitude,
+          longitude: data.longitude,
+          city: data.city,
+          country: data.country_name,
+          region: data.region,
+          isp: data.org,
+          timezone: data.timezone
+        })
+      },
+      {
+        name: 'ipwhois',
+        url: 'https://ipwho.is/',
+        mapper: (data: any) => ({
+          latitude: data.latitude,
+          longitude: data.longitude,
+          city: data.city,
+          country: data.country,
+          region: data.region,
+          isp: data.connection?.isp,
+          timezone: data.timezone?.id
+        })
+      }
+    ];
+
+    try {
+      // Try services sequentially to avoid overwhelming
+      for (const service of fallbackServices) {
+        try {
+          const response = await fetchWithTimeout(service.url, 3000);
+          if (!response.ok) continue;
+          
+          const data = await response.json();
+          const mappedData = service.mapper(data);
+          
+          if (mappedData.latitude && mappedData.longitude) {
+            return {
+              latitude: mappedData.latitude,
+              longitude: mappedData.longitude,
+              city: mappedData.city,
+              country: mappedData.country,
+              region: mappedData.region,
+              accuracy: 'medium',
+              accuracy_radius: 10000,
+              source: service.name,
+              confidence: 0.6,
+              isp: mappedData.isp,
+              timezone: mappedData.timezone
+            };
+          }
+        } catch (error) {
+          // Continue to next service
+          continue;
+        }
+      }
+      
+      return null;
+    } catch (error) {
+      console.error('All geolocation methods failed:', error);
       return null;
     }
   };
@@ -160,125 +164,6 @@ export default function VisitorTracker() {
         setTimeout(() => reject(new Error('Request timeout')), timeout)
       )
     ]);
-  };
-
-  // Consensus algorithm to find the most accurate location
-  const calculateBestLocation = (locations: Partial<EnhancedLocation>[]): EnhancedLocation => {
-    if (locations.length === 1) {
-      const location = locations[0];
-      return {
-        latitude: location.latitude!,
-        longitude: location.longitude!,
-        city: location.city,
-        country: location.country,
-        region: location.region,
-        accuracy: 'medium',
-        accuracy_radius: 10000,
-        source: 'ip-single',
-        confidence: 0.7,
-        isp: location.isp,
-        timezone: location.timezone
-      };
-    }
-
-    // Group locations by proximity (within 0.1 degrees ~11km)
-    const locationGroups: Partial<EnhancedLocation>[][] = [];
-    
-    locations.forEach(location => {
-      let addedToGroup = false;
-      
-      for (const group of locationGroups) {
-        const groupAvg = calculateGroupCenter(group);
-        const distance = calculateDistance(
-          groupAvg.latitude, groupAvg.longitude,
-          location.latitude!, location.longitude!
-        );
-        
-        if (distance < 0.1) { // ~11km radius
-          group.push(location);
-          addedToGroup = true;
-          break;
-        }
-      }
-      
-      if (!addedToGroup) {
-        locationGroups.push([location]);
-      }
-    });
-
-    // Find the largest group (consensus)
-    const largestGroup = locationGroups.reduce((largest, group) => 
-      group.length > largest.length ? group : largest, locationGroups[0]
-    );
-
-    // Calculate center of the consensus group
-    const center = calculateGroupCenter(largestGroup);
-    
-    // Determine accuracy based on consensus and data quality
-    const accuracy = determineAccuracy(largestGroup, center);
-    const confidence = Math.min(0.95, 0.5 + (largestGroup.length * 0.15));
-    
-    // Use the most detailed location data from the consensus group
-    const bestData = largestGroup.reduce((best, current) => {
-      const currentScore = calculateDataQualityScore(current);
-      const bestScore = calculateDataQualityScore(best);
-      return currentScore > bestScore ? current : best;
-    }, largestGroup[0]);
-
-    return {
-      latitude: center.latitude,
-      longitude: center.longitude,
-      city: bestData.city,
-      country: bestData.country,
-      region: bestData.region,
-      accuracy: accuracy.level,
-      accuracy_radius: accuracy.radius,
-      source: `ip-consensus-${largestGroup.length}`,
-      confidence: confidence,
-      isp: bestData.isp,
-      timezone: bestData.timezone
-    };
-  };
-
-  // Helper functions for consensus algorithm
-  const calculateGroupCenter = (group: Partial<EnhancedLocation>[]): { latitude: number; longitude: number } => {
-    const avgLat = group.reduce((sum, loc) => sum + loc.latitude!, 0) / group.length;
-    const avgLon = group.reduce((sum, loc) => sum + loc.longitude!, 0) / group.length;
-    return { latitude: avgLat, longitude: avgLon };
-  };
-
-  const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
-    // Simple Euclidean distance for small areas (good enough for consensus)
-    return Math.sqrt(Math.pow(lat2 - lat1, 2) + Math.pow(lon2 - lon1, 2));
-  };
-
-  const calculateDataQualityScore = (location: Partial<EnhancedLocation>): number => {
-    let score = 0;
-    if (location.city) score += 2;
-    if (location.region) score += 1;
-    if (location.country) score += 1;
-    if (location.isp) score += 1;
-    if (location.timezone) score += 1;
-    return score;
-  };
-
-  const determineAccuracy = (group: Partial<EnhancedLocation>[], center: { latitude: number; longitude: number }) => {
-    const groupSize = group.length;
-    
-    // Calculate spread of the group
-    const maxDistance = Math.max(...group.map(loc => 
-      calculateDistance(center.latitude, center.longitude, loc.latitude!, loc.longitude!)
-    ));
-
-    if (groupSize >= 2 && maxDistance < 0.01) { // ~1.1km spread
-      return { level: 'high' as const, radius: 5000 }; // ~5km radius
-    } else if (groupSize >= 2 && maxDistance < 0.05) { // ~5.5km spread
-      return { level: 'medium' as const, radius: 15000 }; // ~15km radius
-    } else if (groupSize >= 2) {
-      return { level: 'medium' as const, radius: 25000 }; // ~25km radius
-    } else {
-      return { level: 'low' as const, radius: 50000 }; // ~50km radius
-    }
   };
 
   const initializeVisitor = async () => {
@@ -344,7 +229,7 @@ export default function VisitorTracker() {
         return result;
       }
     } catch (error) {
-      
+      console.error('Failed to initialize visitor in DB:', error);
     }
   };
 
@@ -370,6 +255,7 @@ export default function VisitorTracker() {
           return;
         }
       } catch (error) {
+        // Continue to try geolocation
       }
     }
     
@@ -440,6 +326,7 @@ export default function VisitorTracker() {
 
       setShowCookies(false);
     } catch (error) {
+      console.error('Error accepting cookies:', error);
       setCookie('cookiesAccepted', 'true', 365);
       if (email) {
         setCookie('marketingEmails', 'true', 365);
