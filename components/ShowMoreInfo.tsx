@@ -177,6 +177,8 @@
                 logo: priceOption === 'ontap' ? 'OnTap' : 'Custom'
             };
 
+            console.log('🛒 Adding to cart:', cartData);
+
             const cartResponse = await fetch('/api/cart/add', {
                 method: 'POST',
                 headers: {
@@ -186,11 +188,17 @@
             });
 
             const cartResult = await cartResponse.json();
+            console.log('🛒 Cart API response:', cartResult);
 
             if (cartResponse.ok) {
                 // Extract the cartID from the response
-                const cartID = cartResult.cartItem.cartID;
+                const cartID = cartResult.cartItem?.cartID;
+                console.log('🛒 Extracted cartID:', cartID);
                 
+                if (!cartID) {
+                throw new Error('No cartID returned from cart API');
+                }
+
                 // Success - now prepare for checkout with the actual cart ID
                 const productData = {
                 product: {
@@ -203,7 +211,7 @@
                     customPrice: product.price.custom,
                     category: product.category
                 },
-                cartID: cartID, // Use the actual cart ID from the response
+                cartID: cartID,
                 quantity: quantity,
                 logo: priceOption === 'ontap' ? 'OnTap' : 'Custom',
                 subtotal: priceOption === 'ontap' ? product.price.ontap * quantity : product.price.custom! * quantity,
@@ -212,6 +220,8 @@
                 fileInfo: fileInfo,
                 logoSize: logoSize
                 };
+
+                console.log('🛒 Prepared product data for checkout:', productData);
 
                 // Pass data to parent component and redirect to checkout
                 if (setSelectedProduct) {
@@ -222,11 +232,13 @@
                 }
                 setInquireItem(false);
             } else {
+                console.error('🛒 Cart API error:', cartResult);
                 setShow(true);
                 setIcon('error');
                 setMessage(`Error: ${cartResult.error || 'Failed to add item to cart'}`);
             }
             } catch (error) {
+            console.error('🛒 Error in handleBuyAction:', error);
             setShow(true);
             setIcon('error');
             setMessage('Error preparing order. Please try again.');

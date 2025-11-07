@@ -183,9 +183,24 @@ export async function POST(request: NextRequest) {
 
     // Check cart items status BEFORE transaction
     const cartIDs = body.items.map(item => item.cartID);
+    console.log('🔍 Checking cart items with IDs:', cartIDs);
+
+    // Let's also check what's actually in the database
+    const actualCartItems = await prisma.cart.findMany({
+      where: {
+        cartID: { in: cartIDs }
+      },
+      select: {
+        cartID: true,
+        status: true,
+        clientID: true
+      }
+    });
+
+    console.log('🔍 Actual cart items in database:', actualCartItems);
+
     const cartStatus = await checkCartItemsStatus(cartIDs, user.clientID);
-    
-    console.log('🔍 Cart status check:', cartStatus);
+    console.log('🔍 Cart status check result:', cartStatus);
 
     // If some items are already ordered, return specific error
     if (cartStatus.alreadyOrdered.length > 0) {
