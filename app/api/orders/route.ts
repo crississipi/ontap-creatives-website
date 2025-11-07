@@ -91,6 +91,8 @@ interface OrderRequest {
     discount: number
     total: number
   }
+  clientTimestamp?: number
+  clientId?: number
 }
 
 function validateOrderData(data: any): { isValid: boolean; errors: string[] } {
@@ -135,6 +137,25 @@ function validateOrderData(data: any): { isValid: boolean; errors: string[] } {
   }
 }
 
+// Check if cart items are already ordered
+async function checkCartItemsStatus(cartIDs: number[], clientID: number) {
+  const cartItems = await prisma.cart.findMany({
+    where: {
+      cartID: { in: cartIDs },
+      clientID: clientID
+    },
+    select: {
+      cartID: true,
+      status: true
+    }
+  });
+
+  const alreadyOrdered = cartItems.filter(item => item.status === 'ordered').map(item => item.cartID);
+  const availableItems = cartItems.filter(item => item.status === 'onCart').map(item => item.cartID);
+
+  return { alreadyOrdered, availableItems, allItemsExist: cartItems.length === cartIDs.length };
+}
+
 export async function POST(request: NextRequest) {
   let orderData: any = null;
   
@@ -148,7 +169,7 @@ export async function POST(request: NextRequest) {
     
     console.log('🔍 Order request received for user:', user.clientID);
     console.log('🔍 Order items:', body.items?.length);
-    console.log('🔍 Order totals:', body.totals);
+    console.log('🔍 Cart IDs:', body.items?.map(item => item.cartID));
     
     // Validate input data
     const validation = validateOrderData(body);
@@ -160,25 +181,51 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
 
-    // Generate a single transaction ID for all items
-    const sharedTransactionID = `TXN-${Date.now()}-${Math.random().toString(36).substr(2, 12)}`;
-    const billingReferenceNo = `REF-${Date.now()}-${Math.random().toString(36).substr(2, 8)}`;
+    // Check cart items status BEFORE transaction
+    const cartIDs = body.items.map(item => item.cartID);
+    const cartStatus = await checkCartItemsStatus(cartIDs, user.clientID);
+    
+    console.log('🔍 Cart status check:', cartStatus);
+
+    // If some items are already ordered, return specific error
+    if (cartStatus.alreadyOrdered.length > 0) {
+      return NextResponse.json({ 
+        error: 'Some items have already been ordered. Please refresh your cart.',
+        details: {
+          alreadyOrdered: cartStatus.alreadyOrdered,
+          availableItems: cartStatus.availableItems
+        }
+      }, { status: 410 }); // 410 Gone - resource no longer available
+    }
+
+    // If not all items exist, return error
+    if (!cartStatus.allItemsExist) {
+      return NextResponse.json({ 
+        error: 'Some cart items are no longer available. Please refresh your cart.'
+      }, { status: 404 });
+    }
+
+    // Generate unique IDs
+    const timestamp = Date.now();
+    const randomSuffix = Math.random().toString(36).substr(2, 12);
+    const sharedTransactionID = `TXN-${timestamp}-${randomSuffix}`;
+    const billingReferenceNo = `REF-${timestamp}-${Math.random().toString(36).substr(2, 8)}`;
 
     console.log('🔍 Generated Transaction ID:', sharedTransactionID);
     console.log('🔍 Generated Reference No:', billingReferenceNo);
 
-    // Store order data for later use (outside transaction)
+    // Store order data for later use
     orderData = {
       body,
       user,
       sharedTransactionID
     };
 
-    // Start transaction - ONLY for database operations
+    // Start transaction
     const result = await prisma.$transaction(async (tx) => {
       try {
         // 1. Create billing record
-        const billingAmount = body.totals.subtotal - (body.totals.discount || 0) + (body.totals.shippingFee || 0);
+        const billingAmount = body.totals.total;
         
         console.log('🔍 Creating billing record...');
         const billing = await tx.billing.create({
@@ -232,14 +279,13 @@ export async function POST(request: NextRequest) {
 
         console.log('✅ Tracking record created:', tracking.trackingID);
 
-        // 4. Create MULTIPLE transaction records - ONE PER CART ITEM
+        // 4. Create MULTIPLE transaction records
         console.log('🔍 Creating transactions for cart items:', body.items.length);
 
         const transactions = [];
         for (const item of body.items) {
-          console.log('🔍 Creating transaction for cartID:', item.cartID, 'subtotal:', item.subtotal);
+          console.log('🔍 Creating transaction for cartID:', item.cartID);
           
-          // ✅ FIXED: Simplified transaction creation without cart verification
           const transactionData: any = {
             transactionID: sharedTransactionID,
             shipMethod: body.shippingInfo.method,
@@ -259,14 +305,11 @@ export async function POST(request: NextRequest) {
             }
           };
 
-          // Only include voucher if it exists and is not null
           if (body.voucher?.id) {
             transactionData.voucher = {
               connect: { voucherID: body.voucher.id }
             };
           }
-          
-          console.log('🔍 Transaction data prepared for cartID:', item.cartID);
           
           const transaction = await tx.transaction.create({
             data: transactionData
@@ -277,15 +320,13 @@ export async function POST(request: NextRequest) {
         }
 
         // 5. Update cart items status to 'ordered'
-        const cartIDs = body.items.map(item => item.cartID);
-        console.log('🔍 Updating cart items status:', cartIDs);
-        
-        // ✅ FIXED: Simplified cart update without clientID condition
+        console.log('🔍 Updating cart items status to ordered');
         const updateResult = await tx.cart.updateMany({
           where: {
             cartID: {
               in: cartIDs
-            }
+            },
+            status: 'onCart' // Only update items that are still in cart
           },
           data: {
             status: 'ordered'
@@ -293,6 +334,11 @@ export async function POST(request: NextRequest) {
         });
 
         console.log('✅ Cart items updated to ordered:', updateResult.count, 'items');
+
+        // Verify all items were updated
+        if (updateResult.count !== cartIDs.length) {
+          throw new Error(`Failed to update all cart items. Expected: ${cartIDs.length}, Updated: ${updateResult.count}`);
+        }
 
         return {
           transactions,
@@ -305,15 +351,22 @@ export async function POST(request: NextRequest) {
       } catch (dbError: any) {
         console.error('❌ Database error in transaction:', dbError);
         
-        // Provide more specific error messages
+        // Handle specific Prisma errors
         if (dbError.code === 'P2002') {
-          if (dbError.meta?.target?.includes('transactionID')) {
-            throw new Error('Duplicate transaction ID detected. Please try again.');
-          } else if (dbError.meta?.target?.includes('referenceNo')) {
+          // Unique constraint violation
+          const target = dbError.meta?.target;
+          if (target?.includes('transactionID')) {
+            throw new Error('Duplicate transaction detected. Please try again.');
+          } else if (target?.includes('referenceNo')) {
             throw new Error('Duplicate billing reference detected. Please try again.');
-          } else if (dbError.meta?.target?.includes('cartID')) {
-            throw new Error('Duplicate cart transaction detected. Please try again.');
+          } else if (target?.includes('cartID')) {
+            throw new Error('Some items are already part of another order. Please refresh your cart.');
           }
+        }
+        
+        // Foreign key constraint violation
+        if (dbError.code === 'P2003') {
+          throw new Error('Invalid cart items detected. Please refresh your cart.');
         }
         
         throw dbError;

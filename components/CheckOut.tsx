@@ -359,8 +359,18 @@ const CheckOut = ({setGotoCheckout, selectedItems, cartItems, user}: CheckOutPro
         const errorMessage = result.error || result.details?.[0] || 'Failed to place order. Please try again.';
         showToast('error', 'Server Error. Please try again.');
         }
-    } catch (error) {
+      } catch (error) {
+    console.error('Order placement error:', error);
+        // If there's a conflict error, refresh the cart
+        if (error instanceof Error && (
+        error.message.includes('already ordered') || 
+        error.message.includes('refresh your cart')
+        )) {
+        // Refresh the page to get updated cart data
+        window.location.reload();
+        } else {
         showToast('error', 'Network error. Please check your connection and try again.');
+        }
     } finally {
         setIsSubmitting(false);
         setIsProcessing(false);
