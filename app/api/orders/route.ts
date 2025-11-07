@@ -247,13 +247,13 @@ export async function POST(request: NextRequest) {
               throw new Error(`Cart item ${item.cartID} not found or doesn't belong to user`);
             }
 
-            // ✅ FIXED: Use the cart relation instead of cartID
-            const transactionData: any = {
+            // ✅ CORRECT: Create the transaction data with ALL required fields
+            const transactionData = {
               transactionID: sharedTransactionID,
               shipMethod: body.shippingInfo.method,
               subtotal: item.subtotal,
               dateOrdered: new Date(),
-              cart: { // ✅ Use 'cart' relation instead of 'cartID'
+              cart: {
                 connect: { cartID: item.cartID }
               },
               billing: {
@@ -269,10 +269,13 @@ export async function POST(request: NextRequest) {
 
             // Only include voucher if it exists and is not null
             if (body.voucher?.id) {
-              transactionData.voucher = {
+              // Add voucher connection using type assertion
+              (transactionData as any).voucher = {
                 connect: { voucherID: body.voucher.id }
               };
             }
+            
+            console.log('🔍 Transaction data:', JSON.stringify(transactionData, null, 2));
             
             const transaction = await tx.transaction.create({
               data: transactionData
@@ -285,7 +288,6 @@ export async function POST(request: NextRequest) {
             throw itemError;
           }
         }
-
         // 5. Update cart items status to 'ordered'
         const cartIDs = body.items.map(item => item.cartID);
         const updateResult = await tx.cart.updateMany({
