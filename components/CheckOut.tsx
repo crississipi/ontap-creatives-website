@@ -23,6 +23,7 @@ interface CartItem {
   product: {
     name: string;
     price: number;
+    customPrice: number;
     imgUrl?: string;
     frontUrl?: string;
   };
@@ -835,9 +836,9 @@ const CheckOut = ({setGotoCheckout, selectedItems, cartItems, user}: CheckOutPro
                                         <p className='text-xs px-2 py-1 rounded-full bg-dark-blue text-white w-max'>{item.logo}</p>
                                     </span>
                                     <span className='flex flex-col ml-auto items-end justify-center'>
-                                        <h4 className='text-xs font-semibold text-neutral-700'>₱ <span className='text-sm'>{inPeso(item.product.price)}</span></h4>
+                                        <h4 className='text-xs font-semibold text-neutral-700'>₱ <span className='text-sm'>{inPeso(item.logo === 'OnTap' ? item.product.price : item.product.customPrice)}</span></h4>
                                         <p className='text-sm text-neutral-700'>x <strong>{item.quantity}</strong></p>
-                                        <h3 className='text-xs text-dark-blue'>₱ <span className='text-base font-extrabold'>{inPeso(item.subtotal)}</span></h3>
+                                        <h3 className='text-xs text-dark-blue text-nowrap'>₱ <span className='text-base font-extrabold'>{inPeso(item.subtotal)}</span></h3>
                                     </span>
                                 </div>
                             ))

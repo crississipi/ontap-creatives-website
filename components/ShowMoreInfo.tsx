@@ -167,38 +167,72 @@
         setCheckingAuth(false);
 
         if (userData) {
-        // User is logged in, prepare product data and redirect to checkout
-        const productData = {
-            product: {
-            productID: product.productID,
-            name: finalProductName,
-            price: priceOption === 'ontap' ? product.price.ontap : product.price.custom!,
-            imgUrl: finalImgUrl || finalFrontImg,
-            frontUrl: finalFrontImg,
-            description: product.description,
-            customPrice: product.price.custom,
-            category: product.category
-            },
-            quantity: quantity,
-            logo: priceOption === 'ontap' ? 'OnTap' : 'Custom',
-            subtotal: priceOption === 'ontap' ? product.price.ontap * quantity : product.price.custom! * quantity,
-            variable: variable,
-            priceOption: priceOption,
-            fileInfo: fileInfo,
-            logoSize: logoSize
-        };
+            try {
+            // First, add the item to cart
+            const cartData = {
+                productID: product.productID,
+                clientID: userData.clientID,
+                quantity: quantity,
+                subtotal: priceOption === 'ontap' ? product.price.ontap * quantity : product.price.custom! * quantity,
+                logo: priceOption === 'ontap' ? 'OnTap' : 'Custom'
+            };
 
-        // Pass data to parent component and redirect to checkout
-        if (setSelectedProduct) {
-            setSelectedProduct(productData);
-        }
-        if (setGotoCheckout) {
-            setGotoCheckout(true);
-        }
-        setInquireItem(false); // Close the product modal
+            const cartResponse = await fetch('/api/cart/add', {
+                method: 'POST',
+                headers: {
+                'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(cartData),
+            });
+
+            const cartResult = await cartResponse.json();
+
+            if (cartResponse.ok) {
+                // Extract the cartID from the response
+                const cartID = cartResult.cartItem.cartID;
+                
+                // Success - now prepare for checkout with the actual cart ID
+                const productData = {
+                product: {
+                    productID: product.productID,
+                    name: finalProductName,
+                    price: priceOption === 'ontap' ? product.price.ontap : product.price.custom!,
+                    imgUrl: finalImgUrl || finalFrontImg,
+                    frontUrl: finalFrontImg,
+                    description: product.description,
+                    customPrice: product.price.custom,
+                    category: product.category
+                },
+                cartID: cartID, // Use the actual cart ID from the response
+                quantity: quantity,
+                logo: priceOption === 'ontap' ? 'OnTap' : 'Custom',
+                subtotal: priceOption === 'ontap' ? product.price.ontap * quantity : product.price.custom! * quantity,
+                variable: variable,
+                priceOption: priceOption,
+                fileInfo: fileInfo,
+                logoSize: logoSize
+                };
+
+                // Pass data to parent component and redirect to checkout
+                if (setSelectedProduct) {
+                setSelectedProduct(productData);
+                }
+                if (setGotoCheckout) {
+                setGotoCheckout(true);
+                }
+                setInquireItem(false);
+            } else {
+                setShow(true);
+                setIcon('error');
+                setMessage(`Error: ${cartResult.error || 'Failed to add item to cart'}`);
+            }
+            } catch (error) {
+            setShow(true);
+            setIcon('error');
+            setMessage('Error preparing order. Please try again.');
+            }
         } else {
-        // User is not logged in, show login modal
-        setShowLogin(true);
+            setShowLogin(true);
         }
     };
 
