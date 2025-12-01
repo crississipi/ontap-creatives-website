@@ -62,7 +62,6 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         }
       }
     } catch (error) {
-      console.error('Session check failed:', error)
     } finally {
       setLoading(false)
     }
@@ -90,13 +89,8 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
             clientID
           })
         })
-        
-        if (response.ok) {
-          console.log('Visitor record updated with client ID:', clientID)
-        }
       }
     } catch (error) {
-      console.error('Failed to update visitor client:', error)
     }
   }
 
@@ -107,7 +101,6 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         credentials: 'include'
       })
     } catch (error) {
-      console.error('Logout API call failed:', error)
     } finally {
       // Always clear client-side state
       setUser(null)

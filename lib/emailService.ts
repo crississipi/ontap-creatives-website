@@ -17,6 +17,7 @@ interface AdminNotificationData {
   totalAmount: number;
 }
 
+<<<<<<< HEAD
 interface StaffCredentialsData {
   staffName: string;
   staffEmail: string;
@@ -25,6 +26,8 @@ interface StaffCredentialsData {
   password: string;
 }
 
+=======
+>>>>>>> ebf4a206820da091b50990d7f9eb3550ad0230a6
 export async function sendOrderConfirmationEmail(data: EmailData): Promise<void> {
   const transporter = nodemailer.createTransport({
     host: process.env.SMTP_HOST,
@@ -122,6 +125,7 @@ export async function sendAdminOrderNotification(data: AdminNotificationData): P
 
   const adminEmail = process.env.COMPANY_EMAIL;
 
+<<<<<<< HEAD
   const emailHtml = generateAdminEmailContent(data);
 
   await transporter.sendMail({
@@ -130,6 +134,25 @@ export async function sendAdminOrderNotification(data: AdminNotificationData): P
     subject: `New Order Received - ${data.transactionId}`,
     html: emailHtml,
   });
+=======
+  // ✅ ADDED: Error handling for missing admin email
+  if (!adminEmail) {
+    return;
+  }
+
+  const emailHtml = generateAdminEmailContent(data);
+
+  try {
+    await transporter.sendMail({
+      from: `"OnTap Creatives Order System" <${process.env.SMTP_USER}>`,
+      to: adminEmail,
+      subject: `📦 New Order Received - ${data.transactionId}`,
+      html: emailHtml,
+    });
+  } catch (error) {
+    throw error;
+  }
+>>>>>>> ebf4a206820da091b50990d7f9eb3550ad0230a6
 }
 
 function generateAdminEmailContent(data: AdminNotificationData): string {
@@ -154,18 +177,32 @@ function generateAdminEmailContent(data: AdminNotificationData): string {
       <div style="max-width: 700px; margin: 0 auto; padding: 0; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden;">
         <!-- Header -->
         <div style="background: linear-gradient(135deg, #5A5CA8, #2563eb); color: white; padding: 30px 20px; text-align: center;">
+<<<<<<< HEAD
           <h1 style="margin: 0 0 10px 0; font-size: 28px;">New Order Received</h1>
             <p style="margin: 0; font-size: 18px; opacity: 0.9;">Order ID: ${transactionId}</p>
             <p style="margin: 10px 0 0 0; font-size: 16px; opacity: 0.9;">${new Date().toLocaleString('en-PH', { 
+=======
+          <h1 style="margin: 0 0 10px 0; font-size: 28px;">📦 New Order Received</h1>
+          <p style="margin: 0; font-size: 18px; opacity: 0.9;">Order ID: ${transactionId}</p>
+          <p style="margin: 10px 0 0 0; font-size: 16px; opacity: 0.9;">${new Date().toLocaleString('en-PH', { 
+>>>>>>> ebf4a206820da091b50990d7f9eb3550ad0230a6
             timeZone: 'Asia/Manila',
             dateStyle: 'full',
             timeStyle: 'medium'
           })}</p>
         </div>
+<<<<<<< HEAD
           <!-- Urgent Alert -->
           <div style="background: #fff3cd; padding: 15px 20px; border-left: 4px solid #ffc107; margin: 0;">
             <strong>Action Required:</strong> Please process this order promptly.
           </div>
+=======
+
+        <!-- Urgent Alert -->
+        <div style="background: #fff3cd; padding: 15px 20px; border-left: 4px solid #ffc107; margin: 0;">
+          <strong>🚀 Action Required:</strong> Please process this order as soon as possible.
+        </div>
+>>>>>>> ebf4a206820da091b50990d7f9eb3550ad0230a6
 
         <div style="padding: 0;">
           <!-- Order Summary -->
@@ -271,6 +308,7 @@ function generateAdminEmailContent(data: AdminNotificationData): string {
       </div>
     </div>
   `;
+<<<<<<< HEAD
 }
 
 // NEW: Send staff account credentials email
@@ -385,4 +423,6 @@ export async function sendStaffCredentialsEmail(data: StaffCredentialsData): Pro
     subject: `Your OnTap Creatives Staff Account - Login Credentials`,
     html: emailHtml,
   });
+=======
+>>>>>>> ebf4a206820da091b50990d7f9eb3550ad0230a6
 }

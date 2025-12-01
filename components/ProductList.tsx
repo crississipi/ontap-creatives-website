@@ -18,7 +18,7 @@ interface DirectPurchaseProduct {
         imgUrl?: string;
         frontUrl?: string;
         description: string;
-        customPrice?: number;
+        customPrice: number;
         category: string;
     };
     quantity: number;
@@ -69,7 +69,6 @@ const ProductList = ({editable}: EditProps) => {
           setUser(null);
         }
       } catch (error) {
-        console.error('Failed to fetch user session:', error);
         setUser(null);
       } finally {
         setCheckingAuth(false);

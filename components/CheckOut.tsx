@@ -9,6 +9,10 @@ import { AnimatePresence, motion } from 'framer-motion'
 import VoucherRoulette from './VoucherRoullete'
 import ReceiptClient from './ReceiptClient'
 import { useToast } from '@/hooks/useToast'
+<<<<<<< HEAD
+=======
+import Toast from './Toast';
+>>>>>>> ebf4a206820da091b50990d7f9eb3550ad0230a6
 
 interface CartItem {
   cartID: number;
@@ -23,6 +27,7 @@ interface CartItem {
   product: {
     name: string;
     price: number;
+    customPrice: number;
     imgUrl?: string;
     frontUrl?: string;
   };
@@ -99,6 +104,10 @@ const CheckOut = ({setGotoCheckout, selectedItems, cartItems, user}: CheckOutPro
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formErrors, setFormErrors] = useState<FormErrors>({});
   const { toast, showToast } = useToast();
+<<<<<<< HEAD
+=======
+  const [isProcessing, setIsProcessing] = useState(false);
+>>>>>>> ebf4a206820da091b50990d7f9eb3550ad0230a6
   
 
 // Validate Philippine phone number
@@ -314,7 +323,10 @@ function isValidPhilippineNumber(phoneNumber: string): boolean {
   };
 
   const handleCompletePurchase = async () => {
+<<<<<<< HEAD
     
+=======
+>>>>>>> ebf4a206820da091b50990d7f9eb3550ad0230a6
     // Validate form
     if (!validateForm()) {
         showToast('info', 'Please fill in all required fields correctly.');
@@ -328,9 +340,20 @@ function isValidPhilippineNumber(phoneNumber: string): boolean {
 
     if (!agreeTerms || !confirmDetails) {
         showToast('info', 'Please agree to the terms and confirm your details.');
+<<<<<<< HEAD
+=======
         return;
     }
 
+    setIsSubmitting(true);
+
+    if (isProcessing || isSubmitting) {
+        showToast('info', 'Order is already being processed. Please wait.');
+>>>>>>> ebf4a206820da091b50990d7f9eb3550ad0230a6
+        return;
+    }
+
+    setIsProcessing(true);
     setIsSubmitting(true);
 
     try {
@@ -372,6 +395,7 @@ function isValidPhilippineNumber(phoneNumber: string): boolean {
             subtotal,
             shippingFee,
             discount,
+<<<<<<< HEAD
             total
         },
         // Add orderType at the root level for direct purchases
@@ -379,6 +403,17 @@ function isValidPhilippineNumber(phoneNumber: string): boolean {
         };
 
         const response = await fetch('https://ontap-creatives-website.vercel.app/api/orders', {
+=======
+            total // ✅ Make sure total is included
+        },
+        clientTimestamp: Date.now(),
+        clientId: user?.clientID,
+        };
+
+        console.log('🔍 Sending order data:', orderData);
+
+        const response = await fetch('/api/orders', {
+>>>>>>> ebf4a206820da091b50990d7f9eb3550ad0230a6
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -388,7 +423,10 @@ function isValidPhilippineNumber(phoneNumber: string): boolean {
 
         const result = await response.json();
 
+        console.log('🔍 Order response:', { status: response.status, data: result });
+
         if (response.ok) {
+<<<<<<< HEAD
           setOrderTransactionId(result.transactionId);
           setShowReceipt(true);
           
@@ -399,8 +437,31 @@ function isValidPhilippineNumber(phoneNumber: string): boolean {
         }
     } catch (error) {
         showToast('error', 'Server Connection Timeout.');
+=======
+        setOrderTransactionId(result.transactionId);
+        setShowReceipt(true);
+        showToast('success', 'Order placed successfully! Receipt displayed.');
+        } else {
+        // ✅ IMPROVED: Show specific error message from server
+        const errorMessage = result.error || result.details?.[0] || 'Failed to place order. Please try again.';
+        showToast('error', 'Server Error. Please try again.');
+        }
+      } catch (error) {
+    console.error('Order placement error:', error);
+        // If there's a conflict error, refresh the cart
+        if (error instanceof Error && (
+        error.message.includes('already ordered') || 
+        error.message.includes('refresh your cart')
+        )) {
+        // Refresh the page to get updated cart data
+        window.location.reload();
+        } else {
+        showToast('error', 'Network error. Please check your connection and try again.');
+        }
+>>>>>>> ebf4a206820da091b50990d7f9eb3550ad0230a6
     } finally {
         setIsSubmitting(false);
+        setIsProcessing(false);
     }
   };
 
@@ -434,6 +495,12 @@ function isValidPhilippineNumber(phoneNumber: string): boolean {
 
   return (
     <div className='h-full lg:h-full w-full flex flex-col pb-0 lg:px-5 gap-5 select-none overflow-hidden fixed inset-0 z-50 bg-white pt-20'>
+        {toast.show && (
+            <Toast 
+            icon={toast.icon}
+            message={toast.message}
+            />
+        )}
         {showVoucher && (
           <VoucherRoulette 
             setRoulette={setShowVoucher} 
@@ -863,9 +930,9 @@ function isValidPhilippineNumber(phoneNumber: string): boolean {
                                         <p className='text-xs px-2 py-1 rounded-full bg-dark-blue text-white w-max'>{item.logo}</p>
                                     </span>
                                     <span className='flex flex-col ml-auto items-end justify-center'>
-                                        <h4 className='text-xs font-semibold text-neutral-700'>₱ <span className='text-sm'>{inPeso(item.product.price)}</span></h4>
+                                        <h4 className='text-xs font-semibold text-neutral-700'>₱ <span className='text-sm'>{inPeso(item.logo === 'OnTap' ? item.product.price : item.product.customPrice)}</span></h4>
                                         <p className='text-sm text-neutral-700'>x <strong>{item.quantity}</strong></p>
-                                        <h3 className='text-xs text-dark-blue'>₱ <span className='text-base font-extrabold'>{inPeso(item.subtotal)}</span></h3>
+                                        <h3 className='text-xs text-dark-blue text-nowrap'>₱ <span className='text-base font-extrabold'>{inPeso(item.subtotal)}</span></h3>
                                     </span>
                                 </div>
                             ))

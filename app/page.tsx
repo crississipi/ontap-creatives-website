@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 "use client";
 
 import { useEffect, useState } from "react";
@@ -5,10 +6,13 @@ import { Mainpage } from "@/components";
 import { Page } from "@/components/admin";
 import { canUseSecretKeyAccess, refreshStoredRoleSession } from "@/utils/adminAccessSession";
 
+=======
+import { Mainpage } from "@/components";
+>>>>>>> ebf4a206820da091b50990d7f9eb3550ad0230a6
 export default function Home() {
-  const [adminLogin, showAdminLogin] = useState(false);
   const editable = false;
 
+<<<<<<< HEAD
   useEffect(() => {
     refreshStoredRoleSession();
   }, []);
@@ -35,6 +39,11 @@ export default function Home() {
       ) : (
         <Mainpage editable={editable} />
       )}
+=======
+  return (
+    <main className='min-h-[100vh] h-auto w-full flex flex-col items-center relative overflow-x-hidden p-0 m-0 select-none'>
+      <Mainpage editable={editable} />
+>>>>>>> ebf4a206820da091b50990d7f9eb3550ad0230a6
     </main>
     
   );

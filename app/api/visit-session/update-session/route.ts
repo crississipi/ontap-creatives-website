@@ -1,3 +1,4 @@
+// app/api/visitor/update-session/route.ts
 import { NextRequest, NextResponse } from 'next/server'
 import { PrismaClient } from '@prisma/client'
 
@@ -46,7 +47,6 @@ export async function POST(request: NextRequest) {
         error: 'Session not found' 
       })
     }
-    
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -54,9 +54,10 @@ export async function POST(request: NextRequest) {
   }
 }
 
+// Optional: Add GET method if needed
 export async function GET() {
   return NextResponse.json(
-    { error: 'Method not allowed' },
+    { error: 'Method not allowed. Use POST.' },
     { status: 405 }
   )
 }

@@ -124,7 +124,6 @@ const PopUp = ({ setShowPopup }: PopupProps) => {
             setMessage(`Error: ${data.message}`);
             }
         } catch (error) {
-            console.error('Error sending email:', error);
             setShow(true);
             setIcon('error');
             setMessage(`Error sending email. Please try again.`);

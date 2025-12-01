@@ -40,7 +40,6 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ cities })
   } catch (error) {
-    console.error('Error fetching city data:', error)
     return NextResponse.json(
       { error: 'Failed to fetch city data' },
       { status: 500 }

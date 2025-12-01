@@ -1,4 +1,5 @@
 "use client"
+
 import React, { useState } from 'react'
 import { motion } from 'framer-motion'
 import { useClickOutside, useScrollLock } from '@/hooks'
@@ -138,11 +139,13 @@ const AccountSignIn = ({ setShowLogin, onSuccess }: AccountSignInProps) => {
   }
 
   const handleSignup = async () => {
+    // Frontend validation
     if (formData.password !== formData.confirmPassword) {
       showToast('error', 'Passwords do not match');
-      return
+      return;
     }
 
+<<<<<<< HEAD
     const response = await fetch('https://ontap-creatives-website.vercel.app/api/auth/signup', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -158,23 +161,73 @@ const AccountSignIn = ({ setShowLogin, onSuccess }: AccountSignInProps) => {
     if (response.ok) {
       // Send verification email and go to verification view
       const verificationResponse = await fetch('https://ontap-creatives-website.vercel.app/api/auth/send-verification', {
+=======
+    if (formData.password.length < 6) {
+      showToast('error', 'Password must be at least 6 characters long');
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      showToast('error', 'Please enter a valid email address');
+      return;
+    }
+
+    if (!formData.name.trim()) {
+      showToast('error', 'Full name is required');
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/auth/signup', {
+>>>>>>> ebf4a206820da091b50990d7f9eb3550ad0230a6
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          email: formData.email,
-          name: formData.name,
+          name: formData.name.trim(),
+          email: formData.email.toLowerCase().trim(),
+          contactNumber: formData.contactNumber,
+          address: formData.address,
+          password: formData.password,
+          confirmPassword: formData.confirmPassword
         }),
-      })
+      });
 
-      if (verificationResponse.ok) {
-        setCurrentView('verify-email')
-        showToast('success', 'Account created! Please verify your email with the OTP sent to your inbox.');
+      const responseData = await response.json();
+
+      if (response.ok) {
+        console.log('✅ Signup successful:', responseData);
+        
+        // Send verification email and go to verification view
+        try {
+          const verificationResponse = await fetch('/api/email-verification/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              email: formData.email,
+              name: formData.name,
+            }),
+          });
+
+          if (verificationResponse.ok) {
+            setCurrentView('verify-email');
+            showToast('success', 'Account created! Please verify your email with the OTP sent to your inbox.');
+          } else {
+            const verificationError = await verificationResponse.json();
+            console.error('❌ Verification email failed:', verificationError);
+            showToast('info', 'Account created but verification email failed. Please contact support.');
+          }
+        } catch (verificationError) {
+          console.error('❌ Verification email error:', verificationError);
+          showToast('info', 'Account created but verification email failed. Please contact support.');
+        }
       } else {
-        showToast('error', 'Account created but failed to send verification email. Please contact support.');
+        console.error('❌ Signup failed:', responseData);
+        showToast('error', responseData.error || 'Registration failed. Please try again.');
       }
-    } else {
-      const errorData = await response.json()
-      showToast('error', 'Registration failed. Please try again.');
+    } catch (error) {
+      console.error('❌ Signup network error:', error);
+      showToast('error', 'Network error. Please check your connection and try again.');
     }
   }
 
@@ -318,7 +371,11 @@ const AccountSignIn = ({ setShowLogin, onSuccess }: AccountSignInProps) => {
   const resendVerificationEmail = async () => {
     setLoading(true)
     try {
+<<<<<<< HEAD
       const response = await fetch('https://ontap-creatives-website.vercel.app/api/auth/email-verification', {
+=======
+      const response = await fetch('/api/email-verification', {
+>>>>>>> ebf4a206820da091b50990d7f9eb3550ad0230a6
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

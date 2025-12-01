@@ -61,7 +61,6 @@ export async function GET(
       feedbacks: productWithFeedbacks.feedbacks
     }, { status: 200 })
   } catch (error) {
-    console.error('Get feedbacks error:', error)
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
