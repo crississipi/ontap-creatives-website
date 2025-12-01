@@ -4,7 +4,7 @@ import { headers } from 'next/headers'
 import jwt from 'jsonwebtoken'
 import { PrismaClient } from '@prisma/client'
 
-import { sendOrderConfirmationEmail } from '@/lib/emailService';
+import { sendAdminOrderNotification, sendOrderConfirmationEmail } from '@/lib/emailService';
 
 const prisma = new PrismaClient()
 
@@ -44,11 +44,12 @@ async function getAuthenticatedUser() {
 
 // Input validation schema
 interface OrderItem {
-  cartID: number
+  cartID: number;
   productID: number
   quantity: number
   logo: string
   subtotal: number
+  orderType?: 'cart' | 'direct'; // Add this optional field
   product: {
     name: string
     price: number
@@ -166,6 +167,30 @@ export async function POST(request: NextRequest) {
     // Start transaction - ONLY for database operations
     const result = await prisma.$transaction(async (tx) => {
       try {
+        // 0. Update client record with provided contact info (save first/last name, contact number, address if provided)
+        try {
+          const clientName = `${body.contactInfo.firstName} ${body.contactInfo.lastName}`.trim();
+          let addressString: string | undefined = undefined;
+          if (body.shippingInfo?.address) {
+            const a = body.shippingInfo.address;
+            const parts = [a.house, a.barangay, a.city, a.region, a.zipCode].filter(Boolean);
+            addressString = parts.join(', ');
+          }
+
+          await tx.client.update({
+            where: { clientID: user.clientID },
+            data: {
+              clientName,
+              contactNumber: body.contactInfo.contactNumber,
+              ...(addressString ? { address: addressString } : {})
+            }
+          });
+        } catch (clientUpdateError) {
+          // Don't fail the whole transaction for a harmless client update error,
+          // but log it for debugging.
+          // console.error('Client update failed:', clientUpdateError);
+        }
+
         // 1. Create billing record
         const billing = await tx.billing.create({
           data: {
@@ -204,7 +229,7 @@ export async function POST(request: NextRequest) {
         const totalItems = body.items.reduce((sum, item) => sum + item.quantity, 0);
         const tracking = await tx.tracking.create({
           data: {
-            status: 'Order Placed',
+            status: 'Newly Ordered',
             info: `You purchased ${totalItems} ${totalItems === 1 ? 'item' : 'items'}`,
             time: new Date(),
             date: new Date()
@@ -213,23 +238,24 @@ export async function POST(request: NextRequest) {
 
         // console.log('Tracking record created:', tracking.trackingID);
 
-        // 4. Create MULTIPLE transaction records
+        // 4. Create MULTIPLE transaction records - ONE PER PRODUCT
         // console.log('Creating transactions for items:', body.items.length);
         
         const transactions = [];
         for (const item of body.items) {
           const itemSubtotal = item.product.price * item.quantity;
           
-          // console.log('Creating transaction for cartID:', item.cartID, 'subtotal:', itemSubtotal);
-          
           const transactionData: any = {
             transactionID: sharedTransactionID,
             shipMethod: body.shippingInfo.method,
             subtotal: itemSubtotal,
             dateOrdered: new Date(),
-            cart: {
-              connect: { cartID: item.cartID }
+            product: {
+              connect: { productID: item.productID }
             },
+            quantity: item.quantity,
+            logo: item.logo || '',
+            orderType: item.orderType || 'cart', // Add orderType here
             billing: {
               connect: { billingID: billing.billingID }
             },
@@ -240,6 +266,13 @@ export async function POST(request: NextRequest) {
               connect: { trackingID: tracking.trackingID }
             }
           };
+
+          // Only connect cartID if this is a cart order
+          if (item.cartID && item.orderType === 'cart') {
+            transactionData.cart = {
+              connect: { cartID: item.cartID }
+            };
+          }
 
           // Only include voucher if it exists and is not null
           if (body.voucher?.id) {
@@ -253,22 +286,29 @@ export async function POST(request: NextRequest) {
           });
           
           transactions.push(transaction);
-          // console.log('Transaction created:', transaction.orderID);
         }
 
-        // 5. Update cart items status to 'ordered'
-        await tx.cart.updateMany({
-          where: {
-            cartID: {
-              in: body.items.map(item => item.cartID)
-            }
-          },
-          data: {
-            status: 'ordered'
-          }
-        });
+        // 5. Only update cart items status if they are cart orders
+        const cartProductIDs = body.items
+          .filter(item => item.orderType === 'cart' && item.cartID)
+          .map(item => item.productID);
 
-        // console.log('Cart items updated to ordered');
+        if (cartProductIDs.length > 0) {
+          await tx.cart.updateMany({
+            where: {
+              clientID: user.clientID,
+              productID: {
+                in: cartProductIDs
+              },
+              status: 'active'
+            },
+            data: {
+              status: 'ordered'
+            }
+          });
+        }
+
+        // console.log('Cart items updated to ordered for products:', productIDs);
 
         return {
           transactions,
@@ -361,10 +401,25 @@ export async function POST(request: NextRequest) {
         receiptUrl: receiptUrl
       });
       
-      // console.log('Confirmation email sent successfully');
+      console.log('Customer confirmation email sent successfully');
     } catch (emailError) {
-      // console.error('Email sending failed:', emailError);
+      console.error('Customer email sending failed:', emailError);
       // Continue even if email fails - don't fail the entire order
+    }
+
+    // NEW: Send admin notification email
+    try {
+      await sendAdminOrderNotification({
+        orderData: body,
+        customerEmail: body.contactInfo.email,
+        transactionId: result.transactionId,
+        totalAmount: body.totals.subtotal - (body.totals.discount || 0) + (body.totals.shippingFee || 0)
+      });
+      
+      console.log('Admin notification email sent successfully');
+    } catch (adminEmailError) {
+      console.error('Admin notification email failed:', adminEmailError);
+      // Continue even if admin email fails - don't fail the entire order
     }
 
     return NextResponse.json({

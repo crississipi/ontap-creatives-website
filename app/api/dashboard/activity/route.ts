@@ -91,13 +91,6 @@ async function getOrdersData(startDate: Date, endDate: Date): Promise<ActivityDa
           contactNumber: true,
           address: true
         }
-      },
-      cart: {
-        select: {
-          quantity: true,
-          subtotal: true,
-          status: true
-        }
       }
     },
     orderBy: {
@@ -107,18 +100,18 @@ async function getOrdersData(startDate: Date, endDate: Date): Promise<ActivityDa
   })
 
   return transactions.map(transaction => ({
-    clientName: transaction.client.clientName || 'N/A',
-    email: transaction.client.email,
-    contact: transaction.client.contactNumber || 'N/A',
+    clientName: transaction.client?.clientName || 'N/A',
+    email: transaction.client?.email || 'N/A',
+    contact: transaction.client?.contactNumber || 'N/A',
     date: transaction.dateOrdered.toLocaleDateString('en-US', {
       month: 'short',
       day: 'numeric',
       year: 'numeric'
     }),
-    quantity: transaction.cart.quantity,
-    total: transaction.cart.subtotal,
-    status: transaction.cart.status,
-    location: transaction.client.address ? 
+    quantity: transaction.quantity || 1,
+    total: transaction.subtotal || 0,
+    status: transaction.status || 'Pending',
+    location: transaction.client?.address ? 
       transaction.client.address.split(',')[0] : 'N/A' // Get first part of address
   }))
 }

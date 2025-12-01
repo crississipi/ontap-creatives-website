@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
+// Load MapLibre CSS globally to avoid dynamic chunk CSS loading errors
+import "maplibre-gl/dist/maplibre-gl.css";
 import { UserProvider } from "@/contexts/UserContext";
 import VisitorTracker from "@/components/VisitorTracker";
 

@@ -25,15 +25,23 @@ export default function ReceiptClient({ orderID }: { orderID: string }) {
     const fetchReceiptData = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`/api/receipts/${cleanOrderID}`);
+        const response = await fetch(`https://ontap-creatives-website.vercel.app/api/receipts/${cleanOrderID}`);
         
         if (!response.ok) {
+          // Try to get error details, but avoid crashing if body isn't JSON
+          let errBody: any = null;
+          try { errBody = await response.json(); } catch (e) { errBody = null }
+
           if (response.status === 404) {
-            showToast('error', 'Receipt Not Found.')
+            showToast('error', 'Receipt Not Found.');
+          } else {
+            showToast('error', errBody?.error || 'Failed to fetch receipt');
           }
-          showToast('error', 'Failed to fetch receipt');
+
+          // Do not set `data` when the server returned an error
+          return;
         }
-        
+
         const receiptData = await response.json();
         setData(receiptData);
       } catch (err) {
@@ -53,7 +61,7 @@ export default function ReceiptClient({ orderID }: { orderID: string }) {
       setDownloading(true);
       setDownloadMethod('server');
       
-      const response = await fetch('/api/generate-receipt-pdf', {
+      const response = await fetch('https://ontap-creatives-website.vercel.app/api/generate-receipt-pdf', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -83,34 +91,74 @@ export default function ReceiptClient({ orderID }: { orderID: string }) {
       });
 
       if (response.ok) {
-        // Get the PDF blob directly
-        const blob = await response.blob();
-        
-        // Validate it's actually a PDF
-        if (blob.type !== 'application/pdf') {
-          showToast('error', 'Server returned non-PDF content.');
+        const contentType = response.headers.get('content-type') || '';
+
+        // If server returned a real PDF binary
+        if (contentType.includes('application/pdf')) {
+          const blob = await response.blob();
+          if (blob.size === 0) {
+            showToast('error', 'Empty PDF received from server');
+            await handleDownloadFallback();
+            return;
+          }
+
+          // Download the PDF
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.style.display = 'none';
+          a.href = url;
+          a.download = `receipt-${data.orderID}.pdf`;
+          document.body.appendChild(a);
+          a.click();
+          setTimeout(() => {
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+          }, 1000);
+
+          showToast('success', `Server-side PDF generated successfully (${Math.round(blob.size / 1024)} KB)`);
+          return;
         }
-        
-        if (blob.size === 0) {
-          showToast('error', 'Empty PDF received from server');
+
+        // If server returned JSON (e.g., { html: '<html>...</html>' }) then
+        // use client-side html2pdf to generate a proper PDF from the HTML string.
+        if (contentType.includes('application/json')) {
+          const json = await response.json();
+          if (json?.html) {
+            try {
+              const html2pdf = (await import('html2pdf.js')).default;
+
+              // Create offscreen container
+              const container = document.createElement('div');
+              container.style.position = 'fixed';
+              container.style.left = '-9999px';
+              container.style.top = '0';
+              container.innerHTML = json.html;
+              document.body.appendChild(container);
+
+              const opt = {
+                margin: 0.5,
+                filename: `receipt-${data.orderID}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true, logging: false, letterRendering: true, backgroundColor: '#ffffff' },
+                jsPDF: { unit: 'in', format: 'a6', orientation: 'portrait' }
+              };
+              
+              showToast('success', 'PDF generated from server HTML successfully');
+
+              // Cleanup
+              document.body.removeChild(container);
+              return;
+            } catch (err) {
+              console.error('Client-side generation from server HTML failed:', err);
+              showToast('error', 'Failed to generate PDF from server HTML.');
+              await handleDownloadFallback();
+              return;
+            }
+          }
         }
-        showToast('success', 'Server-side PDF generated successfully, size: ${blob.size} bytes');
-        
-        // Download the PDF
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.style.display = 'none';
-        a.href = url;
-        a.download = `receipt-${data.orderID}.pdf`;
-        document.body.appendChild(a);
-        a.click();
-        
-        // Clean up
-        setTimeout(() => {
-          window.URL.revokeObjectURL(url);
-          document.body.removeChild(a);
-        }, 100);
-        
+
+        // Unknown content-type, fallback to client-side generation
+        await handleDownloadFallback();
         return;
       }
       await handleDownloadFallback();

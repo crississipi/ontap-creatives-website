@@ -10,6 +10,21 @@ interface EmailData {
   receiptUrl: string;
 }
 
+interface AdminNotificationData {
+  orderData: any;
+  customerEmail: string;
+  transactionId: string;
+  totalAmount: number;
+}
+
+interface StaffCredentialsData {
+  staffName: string;
+  staffEmail: string;
+  staffRole: string;
+  username: string;
+  password: string;
+}
+
 export async function sendOrderConfirmationEmail(data: EmailData): Promise<void> {
   const transporter = nodemailer.createTransport({
     host: process.env.SMTP_HOST,
@@ -29,10 +44,10 @@ export async function sendOrderConfirmationEmail(data: EmailData): Promise<void>
         </div>
         
         <h2 style="color: #2563eb; text-align: center;">Order Confirmation</h2>
-        
-        <p>Hi <strong>${data.customerName}</strong>,</p>
-        
-        <p>Thank you for your order! We're excited to let you know that we've received your order and it's now being processed.</p>
+
+        <p>Dear <strong>${data.customerName}</strong>,</p>
+
+        <p>Thank you for your order. We have received your request and it is now being processed.</p>
         
         <div style="background-color: #f8fafc; padding: 15px; border-radius: 5px; margin: 20px 0;">
           <h3 style="margin-top: 0; color: #2563eb;">Order Details</h3>
@@ -61,14 +76,14 @@ export async function sendOrderConfirmationEmail(data: EmailData): Promise<void>
           <li>For pickup orders, we'll notify you when your order is ready</li>
         </ul>
         
-        <p>If you have any questions about your order, please don't hesitate to contact us:</p>
+        <p>If you have any questions about your order, please contact us:</p>
         <ul>
           <li>Email: ontapcreatives@gmail.com</li>
           <li>Phone: +63 9177008364</li>
           <li>Address: 17 Vatican City Dr, Las Piñas, 1740 Metro Manila</li>
         </ul>
         
-        <p>Thank you for choosing OnTap Creatives!</p>
+        <p>Thank you for choosing OnTap Creatives.</p>
         
         <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e0e0e0; text-align: center; color: #666; font-size: 12px;">
           <p>This is an automated message. Please do not reply to this email.</p>
@@ -90,5 +105,284 @@ export async function sendOrderConfirmationEmail(data: EmailData): Promise<void>
         contentType: 'application/pdf'
       }
     ]
+  });
+}
+
+// NEW: Admin notification function
+export async function sendAdminOrderNotification(data: AdminNotificationData): Promise<void> {
+  const transporter = nodemailer.createTransport({
+    host: process.env.SMTP_HOST,
+    port: parseInt(process.env.SMTP_PORT || '465'),
+    secure: true,
+    auth: {
+      user: process.env.SMTP_USER,
+      pass: process.env.SMTP_PASS,
+    },
+  });
+
+  const adminEmail = process.env.COMPANY_EMAIL;
+
+  const emailHtml = generateAdminEmailContent(data);
+
+  await transporter.sendMail({
+    from: `"OnTap Creatives Order System" <${process.env.SMTP_USER}>`,
+    to: adminEmail,
+    subject: `New Order Received - ${data.transactionId}`,
+    html: emailHtml,
+  });
+}
+
+function generateAdminEmailContent(data: AdminNotificationData): string {
+  const { orderData, customerEmail, transactionId, totalAmount } = data;
+  const { contactInfo, shippingInfo, paymentInfo, items, totals } = orderData;
+
+  const itemsHtml = items.map((item: any) => `
+    <tr>
+      <td style="padding: 12px; border-bottom: 1px solid #e2e8f0;">${item.product.name}</td>
+      <td style="padding: 12px; border-bottom: 1px solid #e2e8f0; text-align: center;">${item.quantity}</td>
+      <td style="padding: 12px; border-bottom: 1px solid #e2e8f0; text-align: right;">₱${item.product.price.toFixed(2)}</td>
+      <td style="padding: 12px; border-bottom: 1px solid #e2e8f0; text-align: right;">₱${item.subtotal.toFixed(2)}</td>
+    </tr>
+  `).join('');
+
+  const shippingAddress = shippingInfo.method === 'delivery' && shippingInfo.address 
+    ? `${shippingInfo.address.house}, ${shippingInfo.address.barangay}, ${shippingInfo.address.city}, ${shippingInfo.address.region} ${shippingInfo.address.zipCode}`
+    : 'Store Pickup';
+
+  return `
+    <div style="font-family: system-ui, sans-serif, Arial; font-size: 14px; line-height: 1.6; color: #333;">
+      <div style="max-width: 700px; margin: 0 auto; padding: 0; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden;">
+        <!-- Header -->
+        <div style="background: linear-gradient(135deg, #5A5CA8, #2563eb); color: white; padding: 30px 20px; text-align: center;">
+          <h1 style="margin: 0 0 10px 0; font-size: 28px;">New Order Received</h1>
+            <p style="margin: 0; font-size: 18px; opacity: 0.9;">Order ID: ${transactionId}</p>
+            <p style="margin: 10px 0 0 0; font-size: 16px; opacity: 0.9;">${new Date().toLocaleString('en-PH', { 
+            timeZone: 'Asia/Manila',
+            dateStyle: 'full',
+            timeStyle: 'medium'
+          })}</p>
+        </div>
+          <!-- Urgent Alert -->
+          <div style="background: #fff3cd; padding: 15px 20px; border-left: 4px solid #ffc107; margin: 0;">
+            <strong>Action Required:</strong> Please process this order promptly.
+          </div>
+
+        <div style="padding: 0;">
+          <!-- Order Summary -->
+          <div style="padding: 25px; border-bottom: 1px solid #e2e8f0;">
+            <h2 style="color: #5A5CA8; margin-top: 0; border-bottom: 2px solid #5A5CA8; padding-bottom: 8px;">Order Summary</h2>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+              <div>
+                <p style="margin: 8px 0;"><strong>Transaction ID:</strong><br>${transactionId}</p>
+                <p style="margin: 8px 0;"><strong>Total Amount:</strong><br>₱${totalAmount.toFixed(2)}</p>
+              </div>
+              <div>
+                <p style="margin: 8px 0;"><strong>Payment Method:</strong><br>${paymentInfo.method.toUpperCase()}</p>
+                <p style="margin: 8px 0;"><strong>Shipping Method:</strong><br>${shippingInfo.method.toUpperCase()}</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Customer Information -->
+          <div style="padding: 25px; border-bottom: 1px solid #e2e8f0;">
+            <h2 style="color: #5A5CA8; margin-top: 0; border-bottom: 2px solid #5A5CA8; padding-bottom: 8px;">Customer Information</h2>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+              <div>
+                <p style="margin: 8px 0;"><strong>Name:</strong><br>${contactInfo.firstName} ${contactInfo.lastName}</p>
+                <p style="margin: 8px 0;"><strong>Email:</strong><br>${customerEmail}</p>
+              </div>
+              <div>
+                <p style="margin: 8px 0;"><strong>Contact Number:</strong><br>${contactInfo.contactNumber}</p>
+                ${contactInfo.companyName ? `<p style="margin: 8px 0;"><strong>Company:</strong><br>${contactInfo.companyName}</p>` : ''}
+              </div>
+            </div>
+          </div>
+
+          <!-- Shipping Details -->
+          <div style="padding: 25px; border-bottom: 1px solid #e2e8f0;">
+            <h2 style="color: #5A5CA8; margin-top: 0; border-bottom: 2px solid #5A5CA8; padding-bottom: 8px;">Shipping Details</h2>
+            <p style="margin: 8px 0;"><strong>Address:</strong><br>${shippingAddress}</p>
+            ${shippingInfo.timeAvailability ? `
+              <p style="margin: 8px 0;"><strong>Time Availability:</strong><br>${shippingInfo.timeAvailability.from} - ${shippingInfo.timeAvailability.to}</p>
+            ` : ''}
+          </div>
+
+          <!-- Order Items -->
+          <div style="padding: 25px; border-bottom: 1px solid #e2e8f0;">
+            <h2 style="color: #5A5CA8; margin-top: 0; border-bottom: 2px solid #5A5CA8; padding-bottom: 8px;">Order Items</h2>
+            <table style="width: 100%; border-collapse: collapse; margin: 15px 0;">
+              <thead>
+                <tr style="background: #f8fafc;">
+                  <th style="padding: 12px; text-align: left; border-bottom: 2px solid #e2e8f0;">Product</th>
+                  <th style="padding: 12px; text-align: center; border-bottom: 2px solid #e2e8f0;">Qty</th>
+                  <th style="padding: 12px; text-align: right; border-bottom: 2px solid #e2e8f0;">Price</th>
+                  <th style="padding: 12px; text-align: right; border-bottom: 2px solid #e2e8f0;">Subtotal</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${itemsHtml}
+              </tbody>
+              <tfoot style="background: #f8fafc;">
+                <tr>
+                  <td colspan="3" style="padding: 12px; text-align: right; border-top: 2px solid #e2e8f0;"><strong>Subtotal:</strong></td>
+                  <td style="padding: 12px; text-align: right; border-top: 2px solid #e2e8f0;"><strong>₱${totals.subtotal.toFixed(2)}</strong></td>
+                </tr>
+                ${totals.discount > 0 ? `
+                <tr>
+                  <td colspan="3" style="padding: 12px; text-align: right;"><strong>Discount:</strong></td>
+                  <td style="padding: 12px; text-align: right;"><strong>-₱${totals.discount.toFixed(2)}</strong></td>
+                </tr>
+                ` : ''}
+                <tr>
+                  <td colspan="3" style="padding: 12px; text-align: right;"><strong>Shipping Fee:</strong></td>
+                  <td style="padding: 12px; text-align: right;"><strong>₱${totals.shippingFee.toFixed(2)}</strong></td>
+                </tr>
+                <tr style="background: #e8f4fd;">
+                  <td colspan="3" style="padding: 12px; text-align: right; border-top: 2px solid #5A5CA8;"><strong>Total Amount:</strong></td>
+                  <td style="padding: 12px; text-align: right; border-top: 2px solid #5A5CA8;"><strong>₱${totalAmount.toFixed(2)}</strong></td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+
+          <!-- Next Steps -->
+          <div style="padding: 25px; background: #f8fafc;">
+            <h2 style="color: #5A5CA8; margin-top: 0;">Next Steps</h2>
+            <ol style="margin: 15px 0; padding-left: 20px;">
+              <li style="margin-bottom: 8px;">Review order details and verify payment</li>
+              <li style="margin-bottom: 8px;">Contact customer if additional information is needed: <strong>${contactInfo.contactNumber}</strong></li>
+              <li style="margin-bottom: 8px;">Update order status in the system</li>
+              <li style="margin-bottom: 8px;">Begin production/order processing</li>
+              <li>Schedule delivery or prepare for pickup</li>
+            </ol>
+            
+            <div style="margin-top: 20px; padding: 15px; background: white; border-radius: 5px; border-left: 4px solid #5A5CA8;">
+              <p style="margin: 0;"><strong>Customer Contact:</strong> ${contactInfo.contactNumber}</p>
+              <p style="margin: 5px 0 0 0;"><strong>Customer Email:</strong> ${customerEmail}</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <div style="background: #1e293b; color: white; padding: 20px; text-align: center; font-size: 12px;">
+          <p style="margin: 0;">This is an automated notification from OnTap Creatives Order System</p>
+          <p style="margin: 5px 0 0 0;">&copy; ${new Date().getFullYear()} OnTap Creatives. All rights reserved.</p>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// NEW: Send staff account credentials email
+export async function sendStaffCredentialsEmail(data: StaffCredentialsData): Promise<void> {
+  const transporter = nodemailer.createTransport({
+    host: process.env.SMTP_HOST,
+    port: parseInt(process.env.SMTP_PORT || '465'),
+    secure: true,
+    auth: {
+      user: process.env.SMTP_USER,
+      pass: process.env.SMTP_PASS,
+    },
+  });
+
+  const emailHtml = `
+    <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 14px; line-height: 1.6; color: #333;">
+      <div style="max-width: 600px; margin: 0 auto; padding: 0; border: 1px solid #e0e0e0; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+        
+        <!-- Header -->
+        <div style="background: linear-gradient(135deg, #5A5CA8 0%, #2563eb 100%); color: white; padding: 40px 20px; text-align: center;">
+          <img src="https://github.com/burnboxprinting/ontap-website/raw/main/logo-ontap.png" alt="OnTap Creatives" style="max-width: 140px; margin-bottom: 15px;">
+          <h1 style="margin: 0; font-size: 28px; font-weight: bold;">Welcome to OnTap Creatives</h1>
+          <p style="margin: 10px 0 0 0; font-size: 16px; opacity: 0.95;">Your Staff Account Has Been Created</p>
+        </div>
+
+        <!-- Content -->
+        <div style="padding: 40px 20px;">
+          
+          <p style="margin: 0 0 20px 0; font-size: 16px;">
+            Hello <strong>${data.staffName}</strong>,
+          </p>
+
+          <p style="margin: 0 0 20px 0;">
+            Welcome to the OnTap Creatives team! Your staff account has been successfully created. Below are your login credentials. Please keep them secure and change your password upon first login.
+          </p>
+
+          <!-- Credentials Box -->
+          <div style="background: linear-gradient(135deg, #f8f9ff 0%, #f0f4ff 100%); padding: 25px; border-radius: 8px; border-left: 4px solid #5A5CA8; margin: 30px 0;">
+            <h3 style="margin: 0 0 15px 0; color: #5A5CA8; font-size: 18px;">Your Login Credentials</h3>
+            
+            <div style="background: white; padding: 15px; border-radius: 6px; margin-bottom: 12px; border: 1px solid #e0e0e0;">
+              <p style="margin: 0 0 8px 0; color: #666; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px;">Email / Username</p>
+              <p style="margin: 0; font-size: 15px; font-weight: bold; color: #1e293b; word-break: break-all;">${data.username}</p>
+            </div>
+
+            <div style="background: white; padding: 15px; border-radius: 6px; border: 1px solid #e0e0e0;">
+              <p style="margin: 0 0 8px 0; color: #666; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px;">Password</p>
+              <p style="margin: 0; font-size: 15px; font-weight: bold; color: #1e293b; font-family: 'Courier New', monospace; word-break: break-all;">${data.password}</p>
+            </div>
+
+            <p style="margin: 15px 0 0 0; font-size: 12px; color: #e74c3c; font-weight: bold;">
+              ⚠️ Do not share your credentials with anyone. Keep them confidential.
+            </p>
+          </div>
+
+          <!-- Account Details -->
+          <div style="background: #f8fafc; padding: 20px; border-radius: 8px; margin: 25px 0;">
+            <h3 style="margin: 0 0 15px 0; color: #5A5CA8; font-size: 16px;">Account Details</h3>
+            <table style="width: 100%; border-collapse: collapse;">
+              <tr style="border-bottom: 1px solid #e0e0e0;">
+                <td style="padding: 10px 0; color: #666;"><strong>Full Name:</strong></td>
+                <td style="padding: 10px 0; text-align: right; color: #1e293b;">${data.staffName}</td>
+              </tr>
+              <tr style="border-bottom: 1px solid #e0e0e0;">
+                <td style="padding: 10px 0; color: #666;"><strong>Email:</strong></td>
+                <td style="padding: 10px 0; text-align: right; color: #1e293b;">${data.staffEmail}</td>
+              </tr>
+              <tr>
+                <td style="padding: 10px 0; color: #666;"><strong>Role:</strong></td>
+                <td style="padding: 10px 0; text-align: right; color: #1e293b;">${data.staffRole}</td>
+              </tr>
+            </table>
+          </div>
+
+          <!-- Next Steps -->
+          <div style="background: #e8f4fd; padding: 20px; border-radius: 8px; margin: 25px 0; border-left: 4px solid #2563eb;">
+            <h3 style="margin: 0 0 12px 0; color: #1e293b;">Next Steps:</h3>
+            <ol style="margin: 0; padding-left: 20px; color: #1e293b;">
+              <li style="margin-bottom: 8px;">Log in to the admin dashboard using your credentials</li>
+              <li style="margin-bottom: 8px;"><strong>Change your password</strong> to something secure (recommended)</li>
+              <li style="margin-bottom: 8px;">Configure your profile and preferences</li>
+              <li>Start managing orders and content</li>
+            </ol>
+          </div>
+
+          <!-- Support -->
+          <p style="margin: 25px 0 0 0; padding: 20px 0; border-top: 1px solid #e0e0e0;">
+            If you have any questions or need assistance, please contact your administrator or reply to this email.
+          </p>
+
+          <p style="margin: 15px 0 0 0; color: #666;">
+            Best regards,<br>
+            <strong>OnTap Creatives Admin Team</strong>
+          </p>
+
+        </div>
+
+        <!-- Footer -->
+        <div style="background: #1e293b; color: white; padding: 20px; text-align: center; font-size: 12px;">
+          <p style="margin: 0;">This is an automated message. Please do not reply directly.</p>
+          <p style="margin: 5px 0 0 0;">&copy; ${new Date().getFullYear()} OnTap Creatives. All rights reserved.</p>
+          <p style="margin: 8px 0 0 0; opacity: 0.8;">17 Vatican City Dr, Las Piñas, 1740 Metro Manila</p>
+        </div>
+
+      </div>
+    </div>
+  `;
+
+  await transporter.sendMail({
+    from: `"OnTap Creatives Admin" <${process.env.SMTP_USER}>`,
+    to: data.staffEmail,
+    subject: `Your OnTap Creatives Staff Account - Login Credentials`,
+    html: emailHtml,
   });
 }

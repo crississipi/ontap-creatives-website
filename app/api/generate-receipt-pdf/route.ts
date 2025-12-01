@@ -1,4 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
+import PDFDocument from 'pdfkit';
+import path from 'path';
+import fs from 'fs';
 
 interface ReceiptData {
   orderID: string;
@@ -39,18 +42,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Generate HTML content
-    const htmlContent = generateReceiptHTML(receiptData);
-    
-    // Return HTML content that can be used by html2pdf on the client side
-    return NextResponse.json(
-      { 
-        success: true,
-        html: htmlContent,
-        orderID: receiptData.orderID
-      },
-      { status: 200 }
-    );
+    // Generate PDF binary using PDFKit and return as application/pdf
+    const pdfBuffer = await generatePdfBuffer(receiptData);
+
+    return new NextResponse(pdfBuffer, {
+      status: 200,
+      headers: {
+        'Content-Type': 'application/pdf',
+        'Content-Disposition': `attachment; filename="receipt-${receiptData.orderID}.pdf"`,
+        'Content-Length': String(pdfBuffer.length)
+      }
+    });
 
   } catch (error) {
     console.error('PDF generation error:', error);
@@ -276,4 +278,124 @@ export async function GET() {
     },
     { status: 405 }
   );
+}
+
+// Generate PDF buffer from receipt data using PDFKit
+function generateSimpleTableRow(doc: PDFKit.PDFDocument, left: string, right: string) {
+  doc.fontSize(10).text(left, { continued: true });
+  doc.text(right, { align: 'right' });
+}
+
+function generatePdfBuffer(data: ReceiptData): Promise<Uint8Array> {
+  return new Promise((resolve, reject) => {
+    try {
+      const doc = new PDFDocument({ size: 'A4', margin: 40 });
+      const chunks: Uint8Array[] = [];
+
+      doc.on('data', (chunk) => chunks.push(chunk));
+      doc.on('end', () => {
+        const pdf = Buffer.concat(chunks as any);
+        resolve(new Uint8Array(pdf));
+      });
+
+        // Header with logo
+        const logoPath = path.resolve(process.cwd(), 'public', 'images', 'ontap-logo.png');
+        if (fs.existsSync(logoPath)) {
+          try { doc.image(logoPath, 40, 45, { width: 80 }); } catch (e) { /* ignore image errors */ }
+        }
+
+        doc.fontSize(18).fillColor('#0b69d1').text('OnTap Creatives', 140, 50, { align: 'left' });
+        doc.fontSize(9).fillColor('#444').text('17 Vatican City Dr, Las Piñas, 1740 Metro Manila', 140, 72);
+        doc.text('ontapcreatives@gmail.com | +63 9177008364', 140, 84);
+        doc.moveDown(3);
+
+      // Order info
+        // Order info box
+        const startY = doc.y;
+        doc.rect(40, startY, doc.page.width - 80, 70).stroke('#e6e9ef');
+        doc.fontSize(11).fillColor('#000').text(`Order ID: ${data.orderID}`, 50, startY + 8);
+        doc.fontSize(10).fillColor('#555').text(`Date: ${new Date(data.orderDate).toLocaleString()}`, 50, startY + 26);
+        doc.fontSize(10).fillColor('#555').text(`Payment: ${data.paymentMethod.toUpperCase()}`, 50, startY + 44);
+        doc.moveDown(5);
+
+      // Customer
+        // Customer
+        doc.moveDown(0.5);
+        doc.fontSize(12).fillColor('#0b69d1').text('Customer Information');
+        doc.moveDown(0.3);
+        doc.fontSize(10).fillColor('#222').text(`Name: ${data.customerName}`);
+        if (data.companyName) doc.text(`Company: ${data.companyName}`);
+        doc.text(`Contact: ${data.contactNumber}`);
+        doc.text(`Email: ${data.email}`);
+        doc.text(`Delivery Address: ${data.deliveryAddress}`);
+        doc.moveDown();
+
+      // Items table header
+        // Items table header
+        doc.fontSize(12).fillColor('#0b69d1').text('Order Items');
+        doc.moveDown(0.5);
+
+        const tableTop = doc.y;
+        const columnPositions = {
+          name: 50,
+          logo: 300,
+          qty: 380,
+          price: 430,
+          subtotal: 500
+        };
+
+        // Header row
+        doc.fontSize(10).fillColor('#ffffff');
+        doc.rect(40, tableTop - 4, doc.page.width - 80, 20).fill('#0b69d1');
+        doc.fillColor('#fff').text('Item', columnPositions.name, tableTop);
+        doc.text('Logo', columnPositions.logo, tableTop);
+        doc.text('Qty', columnPositions.qty, tableTop);
+        doc.text('Price', columnPositions.price, tableTop);
+        doc.text('Subtotal', columnPositions.subtotal, tableTop);
+        doc.moveDown(1.2);
+
+        // Rows
+        let rowY = doc.y;
+        data.items.forEach((item, idx) => {
+          const isEven = idx % 2 === 0;
+          if (!isEven) {
+            doc.rect(40, rowY - 2, doc.page.width - 80, 18).fill('#f6f8fb');
+            doc.fillColor('#222');
+          } else {
+            doc.fillColor('#222');
+          }
+
+          doc.text(item.name, columnPositions.name, rowY);
+          doc.text(item.logo || '-', columnPositions.logo, rowY);
+          doc.text(String(item.qty), columnPositions.qty, rowY);
+          doc.text(`₱${(item.price || 0).toFixed(2)}`, columnPositions.price, rowY);
+          doc.text(`₱${(item.subtotal || 0).toFixed(2)}`, columnPositions.subtotal, rowY);
+
+          rowY += 18;
+          doc.y = rowY;
+        });
+
+        doc.moveTo(40, rowY).stroke();
+        doc.moveDown();
+
+      
+      // Totals
+      doc.fontSize(10);
+      generateSimpleTableRow(doc, 'Subtotal:', `₱${(data.subtotal || 0).toFixed(2)}`);
+      generateSimpleTableRow(doc, 'Shipping Fee:', `₱${(data.shippingFee || 0).toFixed(2)}`);
+      if (data.discount && data.discount > 0) {
+        generateSimpleTableRow(doc, 'Discount:', `-₱${(data.discount || 0).toFixed(2)}`);
+      }
+      const grandTotal = (data.subtotal || 0) - (data.discount || 0) + (data.shippingFee || 0);
+      doc.moveDown(0.5);
+      doc.fontSize(12).text(`Total: ₱${grandTotal.toFixed(2)}`, { align: 'right' });
+
+      doc.moveDown(2);
+      doc.fontSize(10).fillColor('#666').text('Thank you for your order! For inquiries contact ontapcreatives@gmail.com', { align: 'center' });
+
+      doc.end();
+    } catch (err) {
+      reject(err);
+    }
+  });
 }

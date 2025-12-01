@@ -34,7 +34,7 @@ const WebAnalysis = ({ dataType = 'duration', timeFilter = 'Today' }: WebAnalysi
     const fetchEngagementData = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`/api/dashboard/engagement?filter=${timeFilter}`);
+        const response = await fetch(`https://ontap-creatives-website.vercel.app/api/dashboard/engagement?filter=${timeFilter}`);
         
         if (response.ok) {
           const result = await response.json();

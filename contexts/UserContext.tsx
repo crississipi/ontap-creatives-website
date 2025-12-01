@@ -44,7 +44,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       }
 
       // If no localStorage, check server session
-      const response = await fetch('/api/auth/session', {
+      const response = await fetch('https://ontap-creatives-website.vercel.app/api/auth/session', {
         credentials: 'include',
         headers: {
           'Cache-Control': 'no-cache',
@@ -80,7 +80,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     try {
       const visitorUUID = getCookie('visitorUUID')
       if (visitorUUID) {
-        const response = await fetch('/api/visitor/update-client', {
+        const response = await fetch('https://ontap-creatives-website.vercel.app/api/visitor/update-client', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -102,7 +102,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
   const logout = async () => {
     try {
-      await fetch('/api/auth/logout', {
+      await fetch('https://ontap-creatives-website.vercel.app/api/auth/logout', {
         method: 'POST',
         credentials: 'include'
       })

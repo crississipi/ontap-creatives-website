@@ -26,7 +26,7 @@ const ActivitySlip = ({ activityFilter, timeFilter, index = 0 }: ActivitySlipPro
       try {
         setLoading(true)
         const response = await fetch(
-          `/api/dashboard/activity?filter=${timeFilter}&activityType=${activityFilter}`
+          `https://ontap-creatives-website.vercel.app/api/dashboard/activity?filter=${timeFilter}&activityType=${activityFilter}`
         )
         
         if (response.ok) {
@@ -35,14 +35,11 @@ const ActivitySlip = ({ activityFilter, timeFilter, index = 0 }: ActivitySlipPro
             setActivityData(result.data[index])
           } else {
             // Use fallback data if no real data available
-            setActivityData(getFallbackData(activityFilter, index))
           }
         } else {
-          setActivityData(getFallbackData(activityFilter, index))
         }
       } catch (error) {
         console.error('Failed to fetch activity data:', error)
-        setActivityData(getFallbackData(activityFilter, index))
       } finally {
         setLoading(false)
       }
@@ -50,43 +47,6 @@ const ActivitySlip = ({ activityFilter, timeFilter, index = 0 }: ActivitySlipPro
 
     fetchActivityData()
   }, [activityFilter, timeFilter, index])
-
-  // Fallback data generator
-  const getFallbackData = (filter: 'Orders' | 'Registered', idx: number): ActivityData => {
-    const names = ['John Doe', 'Jane Smith', 'Mike Johnson', 'Sarah Wilson', 'Chris Brown']
-    const emails = ['john@example.com', 'jane@example.com', 'mike@example.com', 'sarah@example.com', 'chris@example.com']
-    const locations = ['Manila', 'Cebu', 'Davao', 'Cavite', 'Laguna']
-    const statuses = ['Completed', 'Pending', 'Processing', 'Shipped']
-
-    if (filter === 'Orders') {
-      return {
-        clientName: names[idx % names.length],
-        email: emails[idx % emails.length],
-        contact: `+63${9000000000 + idx}`,
-        date: new Date(Date.now() - idx * 86400000).toLocaleDateString('en-US', {
-          month: 'short',
-          day: 'numeric',
-          year: 'numeric'
-        }),
-        quantity: Math.floor(Math.random() * 5) + 1,
-        total: Math.floor(Math.random() * 5000) + 500,
-        status: statuses[idx % statuses.length],
-        location: locations[idx % locations.length]
-      }
-    } else {
-      return {
-        clientName: names[idx % names.length],
-        email: emails[idx % emails.length],
-        contact: `+63${9000000000 + idx}`,
-        date: new Date(Date.now() - idx * 86400000).toLocaleDateString('en-US', {
-          month: 'short',
-          day: 'numeric',
-          year: 'numeric'
-        }),
-        location: locations[idx % locations.length]
-      }
-    }
-  }
 
   const formatCurrency = (amount: number) => {
     return `₱${amount.toLocaleString('en-US', {

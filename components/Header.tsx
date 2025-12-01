@@ -66,8 +66,8 @@ const Header = ({ setPage }: HeaderProps) => {
 
   return (
     <>
-      <div className='h-16 w-full bg-white flex fixed top-0 font-semibold z-9999 items-center left-0'>
-        <div className='w-full h-full md:w-auto flex items-center z-50 bg-white'>
+      <div className='h-16 w-full bg-translate border-b border-black/20 shadow-md flex fixed top-0 font-semibold z-9999 items-center left-0 text-dark-blue bg-white'>
+        <div className='w-full h-full md:w-auto flex items-center z-50 bg-translate'>
             <button 
                 type="button"
                 className='h-full w-auto flex items-center px-3 group'
@@ -78,8 +78,8 @@ const Header = ({ setPage }: HeaderProps) => {
                     height={2048}
                     width={2048}
                     alt='ontap creatives logo'
-                    src='/images/ontap-logo.png'
-                    className='max-h-14 w-14 object-contain group-focus:scale-110 ease-out duration-200'
+                    src='/images/logo.png'
+                    className='max-h-20 w-20 object-contain group-focus:scale-110 ease-out duration-200'
                     draggable={false}
                 />
             </button>
@@ -236,10 +236,13 @@ const Header = ({ setPage }: HeaderProps) => {
               <div className='relative flex mr-5'>
                 <button 
                   type='button' 
-                  className='w-max px-3 flex items-center gap-2 text-lg hover:bg-dark-blue focus:bg-violet hover:text-white focus:text-white ease-out duration-200' 
+                  className='w-max px-3 aspect-square flex items-center justify-center gap-2 text-lg relative hover:bg-dark-blue focus:bg-violet hover:text-white focus:text-white ease-out duration-200' 
                   onClick={() => setShowMoreOptions(!showMoreOptions)}
                 >
-                  <RiUser5Fill className='text-2xl'/> {user.clientName?.split(' ')[0] || 'Profile'}
+                  <RiUser5Fill className='text-2xl'/> 
+                  <span className='absolute px-3 rounded-full top-full border border-black/20 -mt-3 left-1/2 -translate-x-1/2 bg-white/20 backdrop-blur-lg shadow-md text-white'>
+                    {user.clientName?.split(' ')[0] || 'Profile'}
+                  </span>
                 </button>
                 {showMoreOptions && (
                   <span ref={outsideClickRef} className='min-w-40 rounded-md border border-black/30 flex flex-col absolute top-full right-0 bg-white overflow-hidden mt-2'>

@@ -7,12 +7,25 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model Process {
+  processID    Int           @id @default(autoincrement())
+  processName  String        @db.VarChar(100)
+  description  String?       @db.Text
+  orderIndex   Int           @default(0)
+  isActive     Boolean       @default(true)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  transactions transaction[]
+
+  @@map("process")
+}
+
 model visitor {
   visitorID   Int       @id @default(autoincrement())
   clientID    Int?
   visitorUUID String    @unique @db.VarChar(255)
-  latitude    Float?    
-  longitude   Float?    
+  latitude    Float?
+  longitude   Float?
   city        String?   @db.VarChar(100)
   region      String?   @db.VarChar(100)
   country     String?   @db.VarChar(100)
@@ -21,27 +34,25 @@ model visitor {
   firstVisit  DateTime  @default(now())
   lastVisit   DateTime  @default(now())
   isActive    Boolean   @default(true)
-  
-  // Relations
-  client     client?    @relation(fields: [clientID], references: [clientID], onDelete: Cascade)
-  sessions   session[]  // Changed from activities to sessions
-  
+  sessions    session[]
+  client      client?   @relation(fields: [clientID], references: [clientID], onDelete: Cascade)
+
+  @@index([clientID], map: "visitor_clientID_fkey")
   @@map("visitor")
 }
 
 model session {
-  sessionID   Int      @id @default(autoincrement())
+  sessionID   Int       @id @default(autoincrement())
   visitorID   Int
-  pageUrl     String?  @db.Text
-  pageTitle   String?  @db.VarChar(255)
-  dateVisited DateTime @default(now()) @db.DateTime(0)
+  pageUrl     String?   @db.Text
+  pageTitle   String?   @db.VarChar(255)
+  dateVisited DateTime  @default(now()) @db.DateTime(0)
   dateLeft    DateTime? @db.DateTime(0)
-  duration    Int?     // Duration in seconds
-  metadata    String?  @db.Text // Store additional data as JSON
-  
-  // Relations
-  visitor visitor @relation(fields: [visitorID], references: [visitorID], onDelete: Cascade)
-  
+  duration    Int?
+  metadata    String?   @db.Text
+  visitor     visitor   @relation(fields: [visitorID], references: [visitorID], onDelete: Cascade)
+
+  @@index([visitorID], map: "session_visitorID_fkey")
   @@map("session")
 }
 
@@ -57,71 +68,77 @@ model client {
   adsAgree      Boolean
   emailVerified Boolean       @default(false)
   dateCreated   DateTime      @default(now()) @map("dateCreated")
-  
-  // Relations
   carts         cart[]
   feedbacks     feedback[]
   transactions  transaction[]
-  vouchers      voucher[]
   visitors      visitor[]
-  
+  vouchers      voucher[]
+
   @@map("client")
 }
 
-model cart {
-  cartID       Int           @id @default(autoincrement())
-  clientID     Int
-  productID    Int
-  quantity     Int
-  subtotal     Float         @db.Float
-  logo         String        @default("Default") @db.VarChar(100)
-  status       String        @db.VarChar(100)
-  dateAdded    DateTime      @default(now()) @map("dateAdded")
-  client       client        @relation(fields: [clientID], references: [clientID])
-  product      products      @relation(fields: [productID], references: [productID])
-  transactions transaction[]
-
-  @@index([clientID], map: "cart_clientID_fkey")
-  @@index([productID], map: "cart_productID_fkey")
-}
-
 model tracking {
-  trackingID Int      @id @default(autoincrement())
-  status     String   @db.VarChar(100)
-  info       String?  @db.VarChar(100)
-  time       DateTime? @db.Time(0)
-  date       DateTime @default(now())
-  
-  // Relations
+  trackingID   Int           @id @default(autoincrement())
+  status       String        @db.VarChar(100)
+  info         String?       @db.VarChar(100)
+  time         DateTime?     @db.Time(0)
+  date         DateTime      @default(now())
   transactions transaction[]
-  
+
   @@map("tracking")
 }
 
+model cart {
+  cartID       Int          @id @default(autoincrement())
+  clientID     Int
+  productID    Int
+  quantity     Int
+  subtotal     Float        @db.Float
+  logo         String       @default("Default") @db.VarChar(100)
+  status       String       @db.VarChar(100)
+  dateAdded    DateTime     @default(now()) @map("dateAdded")
+  client       client       @relation(fields: [clientID], references: [clientID])
+  product      products     @relation(fields: [productID], references: [productID])
+  transactions transaction?
+
+  @@index([clientID], map: "cart_clientID_fkey")
+  @@index([productID], map: "cart_productID_fkey")
+  @@map("cart")
+}
+
 model transaction {
-  orderID       Int      @id @default(autoincrement())
-  transactionID String   @unique(map: "transactionID") @db.VarChar(255)
-  cartID        Int
+  orderID       Int       @id @default(autoincrement())
+  transactionID String    @unique(map: "transactionID") @db.VarChar(255)
   billingID     Int?
   voucherID     Int?
   trackingID    Int
-  clientID      Int      // Added clientID to track who owns the order
-  shipMethod    String   @db.VarChar(100)
-  subtotal      Float    @db.Float
-  dateOrdered   DateTime @default(now()) @map("dateOrdered")
-  
-  // Relations
+  clientID      Int
+  shipMethod    String    @db.VarChar(100)
+  subtotal      Float     @db.Float
+  dateOrdered   DateTime  @default(now()) @map("dateOrdered")
+  productID     Int?
+  status        String    @default("Newly Ordered") @db.VarChar(100)
+  logo          String?   @db.VarChar(255)
+  quantity      Int?
+  cartID        Int?      @unique
+  orderType     String    @default("cart") @db.VarChar(50)
+  processID     Int?
   billing       billing?  @relation(fields: [billingID], references: [billingID])
-  cart          cart     @relation(fields: [cartID], references: [cartID])
-  tracking      tracking @relation(fields: [trackingID], references: [trackingID])
-  client        client   @relation(fields: [clientID], references: [clientID])
+  cart          cart?     @relation(fields: [cartID], references: [cartID])
+  client        client    @relation(fields: [clientID], references: [clientID])
+  process       Process?  @relation(fields: [processID], references: [processID])
+  product       products? @relation(fields: [productID], references: [productID])
+  tracking      tracking  @relation(fields: [trackingID], references: [trackingID])
   voucher       voucher?  @relation(fields: [voucherID], references: [voucherID])
 
   @@index([billingID], map: "transaction_billingID_fkey")
-  @@index([cartID], map: "transaction_cartID_fkey")
+  @@index([productID], map: "transaction_productID_fkey")
   @@index([trackingID], map: "transaction_trackingID_fkey")
   @@index([voucherID], map: "transaction_voucherID_fkey")
   @@index([clientID], map: "transaction_clientID_fkey")
+  @@index([cartID], map: "transaction_cartID_fkey")
+  @@index([processID], map: "transaction_processID_fkey")
+  @@map("transaction")
 }
 
 model Otp {
@@ -175,29 +192,40 @@ model feedback {
 }
 
 model products {
-  productID        Int        @id @default(autoincrement())
-  name             String     @db.VarChar(255)
-  price            Float      @db.Float
-  description      String     @db.Text
-  frontUrl         String?    @db.Text
-  backUrl          String?    @db.Text
-  imgUrl           String?    @db.Text
-  dateAdded        DateTime   @default(now()) @map("dateAdded")
-  category         String     @default("Business Cards") @db.VarChar(100)
-  customPrice      Float?     @db.Float
-  variableBackImg  String?    @db.Text
-  variableFrontImg String?    @db.Text
+  productID        Int           @id @default(autoincrement())
+  name             String        @db.VarChar(255)
+  price            Float         @db.Float
+  description      String        @db.Text
+  frontUrl         String?       @db.Text
+  backUrl          String?       @db.Text
+  imgUrl           String?       @db.Text
+  dateAdded        DateTime      @default(now()) @map("dateAdded")
+  category         String        @default("Business Cards") @db.VarChar(100)
+  customPrice      Float?        @db.Float
+  variableBackImg  String?       @db.Text
+  variableFrontImg String?       @db.Text
   carts            cart[]
   feedbacks        feedback[]
+  transactions     transaction[]
 }
 
-model admin {
-  adminID    Int      @id @default(autoincrement())
-  authLevel  Int
-  email      String   @unique
-  password   String
-  status     String
-  dateCreated DateTime @default(now())
+model staff {
+  staffID        Int       @id @default(autoincrement())
+  firstName      String    @db.VarChar(100)
+  lastName       String    @db.VarChar(100)
+  email          String    @db.VarChar(100)
+  role           String    @db.VarChar(100)
+  dateAdded      DateTime  @default(now())
+  viewDashboard  Boolean   @default(false)
+  viewOrders     Boolean   @default(false)
+  viewClients    Boolean   @default(false)
+  viewAffiliates Boolean   @default(false)
+  addProducts    Boolean   @default(false)
+  changeContent  Boolean   @default(false)
+  addOffers      Boolean   @default(false)
+  password       String?   @db.VarChar(255)
+  age            Int?
+  birthday       DateTime?
 
-  @@map("admin")
+  @@map("staff")
 }

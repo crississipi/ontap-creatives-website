@@ -60,7 +60,7 @@ const ProductList = ({editable}: EditProps) => {
     const fetchUserSession = async () => {
       try {
         setCheckingAuth(true);
-        const response = await fetch('/api/auth/session');
+        const response = await fetch('https://ontap-creatives-website.vercel.app/api/auth/session');
         
         if (response.ok) {
           const data = await response.json();
@@ -83,7 +83,7 @@ const ProductList = ({editable}: EditProps) => {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const response = await fetch('/api/products');
+        const response = await fetch('https://ontap-creatives-website.vercel.app/api/products');
         const data = await response.json();
         
         if (data.success) {
@@ -110,7 +110,7 @@ const ProductList = ({editable}: EditProps) => {
       if (clickedProductId) {
         setProductDataLoading(true);
         try {
-          const response = await fetch(`/api/products/${clickedProductId}`);
+          const response = await fetch(`https://ontap-creatives-website.vercel.app/api/products/${clickedProductId}`);
           const data = await response.json();
           
           if (data.success) {

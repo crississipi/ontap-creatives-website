@@ -20,17 +20,14 @@ export async function GET(
 
     // console.log('🔍 Processing transaction ID:', orderid);
 
-    // Fetch transaction data
+    // Fetch transaction data. Use the `product` relation (exists on transaction)
+    // The previous code referenced a non-existent `cart` relation which caused runtime errors.
     const transactions = await prisma.transaction.findMany({
       where: {
         transactionID: orderid
       },
       include: {
-        cart: {
-          include: {
-            product: true
-          }
-        },
+        product: true,
         client: true,
         billing: true,
         voucher: true
@@ -70,15 +67,26 @@ export async function GET(
       deliveryAddress: firstTransaction.shipMethod === 'delivery' 
         ? (firstTransaction.client.address || 'Address not specified')
         : 'Store Pickup - 17 Vatican City Dr, Las Piñas, 1740 Metro Manila',
-      items: transactions.map(t => ({
-        imgUrl: t.cart.product.imgUrl || '',
-        frontImg: t.cart.product.frontUrl || '',
-        name: t.cart.product.name,
-        qty: t.cart.quantity,
-        price: t.cart.product.price,
-        subtotal: t.subtotal,
-        logo: t.cart.logo
-      })),
+      // Build items from the transaction-product relation. Some fields (quantity, logo)
+      // were previously taken from `cart` which doesn't exist on the `transaction` model.
+      items: transactions.map(t => {
+        const prod = t.product as any || {};
+        // Infer quantity from subtotal/price when possible, otherwise default to 1
+        let qty = 1;
+        if (prod.price && prod.price !== 0) {
+          qty = Math.max(1, Math.round((t.subtotal || 0) / prod.price));
+        }
+
+        return {
+          imgUrl: prod.imgUrl || '',
+          frontImg: prod.frontUrl || '',
+          name: prod.name || 'Product',
+          qty,
+          price: prod.price || 0,
+          subtotal: t.subtotal,
+          logo: ''
+        }
+      }),
       shippingMethod: firstTransaction.shipMethod,
       shippingFee: shippingFee,
       paymentMethod: firstTransaction.billing!.mode.toLowerCase(),

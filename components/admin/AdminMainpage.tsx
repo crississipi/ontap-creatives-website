@@ -3,50 +3,58 @@
 import { EditProps, HeaderProps } from '@/types'
 import React, { JSX, useState } from 'react'
 import Image from 'next/image'
-import { RiArrowLeftDoubleLine, RiCloseLargeFill, RiCoupon2Line, RiDashboardLine, RiDiscountPercentLine, RiGalleryLine, RiLogoutBoxLine, RiMenuFill, RiPaintBrushLine, RiSettings6Line, RiShoppingBag4Line, RiText } from 'react-icons/ri'
-import { AffiliateInfo, AffiliatesPage, Content, Customization, Dashboard, ProductPage, Promos, UserInfo, VisitorsPage } from '.'
+import { RiArrowLeftDoubleLine, RiCloseLargeFill, RiDashboardLine, RiLogoutBoxLine, RiMenuFill, RiSettings6Line, RiShoppingBag4Line, RiText } from 'react-icons/ri'
+import { AffiliatesPage, Dashboard, VisitorsPage } from '.'
 import { LuBriefcaseBusiness } from 'react-icons/lu'
 import { HiViewGridAdd } from 'react-icons/hi'
 import { AnimatePresence, motion } from 'framer-motion'
 import Settings from './Settings'
+import { StaffProvider, useStaff } from '@/contexts/StaffContext'
 
 const Navigations = [
     {
         icon: <RiDashboardLine />,
-        name: 'Dashboard'
+        name: 'Dashboard',
+        permission: 'viewDashboard'
     },
     {
         icon: <RiShoppingBag4Line />,
-        name: 'Orders'
+        name: 'Orders',
+        permission: 'viewOrders'
     },
     {
         icon: <LuBriefcaseBusiness />,
-        name: 'Affiliates'
+        name: 'Affiliates',
+        permission: 'viewAffiliates'
     },
     {
-        icon: <RiCoupon2Line />,
-        name: 'Promos'
+        icon: <RiText />,
+        name: 'Page Customization',
+        permission: 'changeContent'
     },
+    {
+        icon: <RiSettings6Line />,
+        name: 'Settings',
+        permission: 'always'
+    }
 ];
 
 type MainpageProps = HeaderProps & EditProps;
 
-const AdminMainpage = ({ setPage, editable }: MainpageProps) => {
+const AdminMainpage = ({ setPage}: MainpageProps) => {
   const [minimized, isMinimized] = useState(false);
   const [page, changePage] = useState(0);
-  const [child, setChild] = useState(<Promos />);
-  const [tag, setTag] = useState('promos')
   const pages: Record<number, JSX.Element> = {
     0: <Dashboard />,
     1: <VisitorsPage changePage={changePage}/>,
     2: <AffiliatesPage changePage={changePage}/>,
-    3: <Customization child={child} tag={tag} />,
-    4: <UserInfo />,
-    5: <AffiliateInfo />,
-    6: <Settings />
+    // 3: <Customization />,
+    4: <Settings />
   };
   const [showMore, setShowMore] = useState(false);
   const [showMoreOptions, setShowMoreOption] = useState(false);
+
+  const { permissions, loading } = useStaff();
 
   return (
     <div className='h-full w-full flex md:overflow-hidden relative bg-white'>
@@ -64,81 +72,32 @@ const AdminMainpage = ({ setPage, editable }: MainpageProps) => {
                     <RiArrowLeftDoubleLine className={`hidden md:block ${minimized ? 'rotate-180' : ''}`}/>
                 </button>
                 <div className='hidden md:flex w-full flex-col mt-20 justify-center items-center relative'>
-                    {Navigations.map((nav, i) => (
-                        <button 
-                        key={`navigation_${i}`} 
-                        type="button"
-                        className={`w-full flex items-center ${minimized && 'justify-center'} group hover:bg-light-blue text-dark-blue font-semibold focus:bg-violet focus:text-white ease-out duration-200`}
-                        onClick={() => 
-                            {i < 3 ? changePage(i) : 
-                                setShowMore(!showMore); 
-                                changePage(i)
-                            }}
-                        >
-                            <span className={`text-2xl p-3 ${!minimized && 'pl-5'}`}>
-                                {nav.icon}
-                            </span>
-                            {!minimized && (
-                                <span className='pr-10 mr-auto'>
-                                    {nav.name}
-                                </span>
-                            )}
-                            
-                        </button>
-                    ))}
-                    {showMore && (
-                        <div className='w-full flex flex-col absolute top-full bg-light-blue/50'>
+                    {Navigations.map((nav, i) => {
+                        if (loading) {
+                            return <div key={`nav_loader_${i}`} className="w-full h-[52px] bg-gray-200 animate-pulse my-1 rounded-md"></div>;
+                        }
+
+                        const hasPermission = nav.permission === 'always' || (permissions && permissions[nav.permission as keyof typeof permissions]);
+
+                        return hasPermission ? (
                             <button 
+                                key={`navigation_${i}`} 
                                 type="button"
                                 className={`w-full flex items-center ${minimized && 'justify-center'} group hover:bg-light-blue text-dark-blue font-semibold focus:bg-violet focus:text-white ease-out duration-200`}
-                                onClick={() => {setChild(<Promos />); setTag('promos')}}
+                                onClick={() => changePage(i)}
                             >
-                                <span className={`text-xl p-3 ${!minimized && 'pl-5'}`}>
-                                    <RiDiscountPercentLine />
+                                <span className={`text-2xl p-3 ${!minimized && 'pl-5'}`}>
+                                    {nav.icon}
                                 </span>
                                 {!minimized && (
-                                    <span className='pr-10 mr-auto'>
-                                        Promos
+                                    <span className='pr-10 mr-auto text-nowrap'>
+                                        {nav.name}
                                     </span>
                                 )}
                             </button>
-                            <button 
-                                type="button"
-                                className={`w-full flex items-center ${minimized && 'justify-center'} group hover:bg-light-blue text-dark-blue font-semibold focus:bg-violet focus:text-white ease-out duration-200`}
-                                onClick={() => {setChild(<ProductPage />); setTag('productpage')}}
-                            >
-                                <span className={`text-xl p-3 ${!minimized && 'pl-5'}`}>
-                                    <RiGalleryLine />
-                                </span>
-                                {!minimized && (
-                                    <span className='pr-10 mr-auto'>
-                                        Products
-                                    </span>
-                                )}
-                            </button>
-                            <button 
-                                type="button"
-                                className={`w-full flex items-center ${minimized && 'justify-center'} group hover:bg-light-blue text-dark-blue font-semibold focus:bg-violet focus:text-white ease-out duration-200`}
-                                onClick={() => {setChild(<Content />); setTag('content');}}
-                            >
-                                <span className={`text-xl p-3 ${!minimized && 'pl-5'}`}>
-                                    <RiText />
-                                </span>
-                                {!minimized && (
-                                    <span className='pr-10 mr-auto'>
-                                        Content
-                                    </span>
-                                )}
-                            </button>
-                        </div>
-                    )}
+                        ) : null;
+                    })}
                 </div>
-                <button 
-                    type="button" 
-                    className='flex w-full items-center gap-3 p-3 text-dark-blue font-semibold pl-5 hover:bg-light-blue focus:bg-violet
-                    focus:text-white ease-out duration-200' 
-                    onClick={() => changePage(6)}
-                 ><RiSettings6Line className='text-2xl'/>Settings</button>
                 <button type="button" className='hidden md:flex items-center gap-3 mt-auto w-9/10 rounded-md bg-light-blue/50 text-dark-blue p-3 font-semibold hover:bg-light-blue focus:bg-violet focus:text-white ease-out duration-200' onClick={() => setPage(0)}>
                     <RiLogoutBoxLine className='text-xl'/>
                     {!minimized && <span className='pr-5'>Log Out</span>}
@@ -163,7 +122,7 @@ const AdminMainpage = ({ setPage, editable }: MainpageProps) => {
                         {Array.from({length:7}).map((_,i) => (
                             <button key={i} type='button' className='col-span-1 rounded-sm border flex items-center px-2 gap-3 text-white/50 hover:border-blue hover:text-blue focus:rounded-lg focus:bg-dark-blue focus:text-white ease-out duration-300'><RiText /> Content</button>
                         ))}
-                        <span className='h-5 -mt-1 w-5 rounded-sm rotate-45 absolute top-full bg-footer-bg left-1/2 -translate-1/2'></span>
+                        <span className='h-5 -mt-3.5 w-5 rounded-sm rotate-45 absolute top-full bg-footer-bg right-1.5'></span>
                     </motion.div>
                 )}
                 {showMore && (
@@ -175,62 +134,64 @@ const AdminMainpage = ({ setPage, editable }: MainpageProps) => {
                         duration: 0.3,
                         ease: 'easeOut'
                     }}
-                    className='fixed md:hidden z-[99] min-w-2/3 w-max left-1/2 -translate-x-1/2 h-16 bottom-3 gap-0 grid grid-cols-5 items-center rounded-xl bg-footer-bg shadow-md shadow-black/30 overflow-hidden p-1'
+                    className='fixed md:hidden z-[99] min-w-2/3 w-max left-3 h-16 bottom-3 gap-0 grid grid-cols-6 items-center rounded-xl bg-footer-bg shadow-md shadow-black/30 overflow-hidden p-1'
                     >
-                        {Array.from({length: 5}).map((_,i) => (
+                        {Array.from({length: 4}).map((_,i) => (
                             <button 
                             key={`nav-${i}`} 
                             type='button' 
                             className='col-span-1 h-full flex flex-col items-center justify-evenly text-white/50 text-2xl p-1 border-x border-transparent group hover:border-blue hover:text-blue focus:rounded-lg focus:bg-dark-blue focus:text-white ease-out duration-300'
-                            onClick={() => {i !== 2 ? changePage(i < 2 ? i : i - 1): setShowMoreOption(!showMoreOptions)}}
+                            onClick={() => changePage(i)}
                             >
-                                {i < 2 ? (
-                                    <>
-                                        {Navigations[i].icon}
-                                        <span className='text-xs'>{Navigations[i].name}</span>
-                                    </>
-                                ) : i === 2 ? (
-                                    <>
-                                        {showMoreOptions ? 
-                                        <motion.span 
-                                        initial={{rotateZ: '0deg'}}
-                                        animate={{rotateZ: '180deg'}}
-                                        exit={{rotateZ: '0deg'}}
-                                        transition={{
-                                            ease:'easeOut',
-                                            duration: 0.3
-                                        }}
-                                        className='group-hover:scale-101'
-                                        >
-                                            <RiCloseLargeFill/>
-                                        </motion.span>
-                                        : 
-                                        <motion.span 
-                                        initial={{rotateZ: '0deg'}}
-                                        animate={{rotateZ: '180deg'}}
-                                        exit={{rotateZ: '0deg'}}
-                                        transition={{
-                                            ease:'easeOut',
-                                            duration: 0.3
-                                        }}
-                                        className='group-hover:scale-101'
-                                        >
-                                            <HiViewGridAdd/>
-                                        </motion.span>
-                                        }
-                                        <span className='text-xs'>{showMoreOptions ? 'Close' : 'More'}</span>
-                                    </>
-                                ) : (
-                                    <>
-                                        {Navigations[i - 1].icon}
-                                        <span className='text-xs'>{Navigations[i - 1].name}</span>
-                                    </>
-                                )}
+                                {Navigations[i].icon}
+                                <span className='text-xs'>{Navigations[i].name}</span>
                             </button>
                         ))}
+                        <button 
+                            type="button"
+                            className='col-span-1 h-full flex flex-col items-center justify-evenly text-white/50 text-2xl p-1 border-x border-transparent group hover:border-blue hover:text-blue focus:rounded-lg focus:bg-dark-blue focus:text-white ease-out duration-300'
+                            onClick={() => changePage(4)} // Corrected index for Settings
+                        >
+                            <RiSettings6Line />
+                            <span className='text-xs'>Settings</span>
+                        </button>
+                        <button 
+                            type='button' 
+                            className='col-span-1 h-full flex flex-col items-center justify-evenly text-white/50 text-2xl p-1 border-x border-transparent group hover:border-blue hover:text-blue focus:rounded-lg focus:bg-dark-blue focus:text-white ease-out duration-300'
+                            onClick={() => setShowMoreOption(!showMoreOptions)}
+                        >
+                            {showMoreOptions ? 
+                                <motion.span 
+                                    initial={{rotateZ: '0deg'}}
+                                    animate={{rotateZ: '180deg'}}
+                                    exit={{rotateZ: '0deg'}}
+                                    transition={{
+                                        ease:'easeOut',
+                                        duration: 0.3
+                                    }}
+                                    className='group-hover:scale-101'
+                                >
+                                    <RiCloseLargeFill/>
+                                </motion.span>
+                                : 
+                                <motion.span 
+                                    initial={{rotateZ: '0deg'}}
+                                    animate={{rotateZ: '180deg'}}
+                                    exit={{rotateZ: '0deg'}}
+                                    transition={{
+                                        ease:'easeOut',
+                                        duration: 0.3
+                                    }}
+                                    className='group-hover:scale-101'
+                                >
+                                    <HiViewGridAdd/>
+                                </motion.span>
+                            }
+                            <span className='text-xs'>{showMoreOptions ? 'Close' : 'More'}</span>
+                        </button>
                     </motion.div>
                 )}
-                <button type="button" className='fixed h-12 lg:hidden aspect-square rounded-lg shadow-md shadow-black/20 bottom-5 right-5 flex items-center justify-center text-2xl bg-footer-bg text-white ring-2 ring-transparent hover:ring-blue focus:bg-dark-blue focus:text-white ease-out duration-200' onClick={() => setShowMore(!showMore)}>
+                <button type="button" className='fixed h-10 z-99 lg:hidden aspect-square rounded-lg shadow-md shadow-black/20 bottom-5 right-3 flex items-center justify-center text-2xl bg-footer-bg text-white ring-2 ring-transparent hover:ring-blue focus:bg-dark-blue focus:text-white ease-out duration-200' onClick={() => setShowMore(!showMore)}>
                     {showMore ? <RiCloseLargeFill /> : <RiMenuFill />}
                 </button>
             </>
@@ -239,4 +200,10 @@ const AdminMainpage = ({ setPage, editable }: MainpageProps) => {
   )
 }
 
-export default AdminMainpage
+const AdminMainpageWithProvider = (props: MainpageProps) => (
+    <StaffProvider>
+      <AdminMainpage {...props} />
+    </StaffProvider>
+);
+
+export default AdminMainpageWithProvider;

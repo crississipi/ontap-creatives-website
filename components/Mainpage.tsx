@@ -5,6 +5,7 @@ import { About, AboutUs, AffiliateProgramPage, CartPage, ClientList, FAQs, FillU
 import { AnimatePresence, motion } from 'framer-motion'
 import { BsQuestionLg } from 'react-icons/bs'
 import { EditProps } from '@/types'
+import Funnel from './Funnel'
 
 const Mainpage = ({ editable }: EditProps) => {
   const [page, setPage] = useState(0);
@@ -43,6 +44,7 @@ const Mainpage = ({ editable }: EditProps) => {
   return (
     <div className='h-auto w-full flex flex-col items-center relative overflow-x-hidden'>
         <Header setPage={setPage}/>
+          {/* <Funnel /> */}
           {page === 0 ? (
             <>
               <AnimatePresence mode='wait'>{!endWarping && (<Starting />)}</AnimatePresence>

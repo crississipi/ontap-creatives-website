@@ -8,6 +8,7 @@ import { RiMapPin2Fill, RiStore2Line, RiTruckLine } from 'react-icons/ri'
 import { AnimatePresence, motion } from 'framer-motion'
 import VoucherRoulette from './VoucherRoullete'
 import ReceiptClient from './ReceiptClient'
+import { useToast } from '@/hooks/useToast'
 
 interface CartItem {
   cartID: number;
@@ -18,6 +19,7 @@ interface CartItem {
   logo: string;
   status: string;
   dateAdded: string;
+  orderType?: 'cart' | 'direct'; // Add this optional field
   product: {
     name: string;
     price: number;
@@ -83,7 +85,6 @@ function inPeso(num: number, locale = 'en-US') {
     maximumFractionDigits: 2
   });
 }
-
 const CheckOut = ({setGotoCheckout, selectedItems, cartItems, user}: CheckOutProps) => {
   const [modeOfPayment, setModeOfPayment] = React.useState<'cod' | 'card' | 'ewallet' | 'bank'>('cod');
   const [shippingMethod, setShippingMethod] = React.useState<'pickup' | 'delivery' | null>(null);
@@ -97,7 +98,16 @@ const CheckOut = ({setGotoCheckout, selectedItems, cartItems, user}: CheckOutPro
   const [selectedVoucher, setSelectedVoucher] = useState<Voucher | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formErrors, setFormErrors] = useState<FormErrors>({});
+  const { toast, showToast } = useToast();
   
+
+// Validate Philippine phone number
+function isValidPhilippineNumber(phoneNumber: string): boolean {
+    // Only accept numeric local format starting with 09 and 11 digits total
+    const cleaned = phoneNumber.replace(/\D/g, '');
+    return /^09\d{9}$/.test(cleaned);
+}
+
   // NEW STATE FOR RECEIPT
   const [showReceipt, setShowReceipt] = useState(false);
   const [orderTransactionId, setOrderTransactionId] = useState<string | null>(null);
@@ -132,7 +142,7 @@ const CheckOut = ({setGotoCheckout, selectedItems, cartItems, user}: CheckOutPro
     const fetchVouchers = async () => {
       if (user?.clientID) {
         try {
-          const response = await fetch(`/api/voucher?clientID=${user.clientID}`);
+          const response = await fetch(`https://ontap-creatives-website.vercel.app/api/voucher?clientID=${user.clientID}`);
           if (response.ok) {
             const data = await response.json();
             if (data.vouchers) {
@@ -149,7 +159,7 @@ const CheckOut = ({setGotoCheckout, selectedItems, cartItems, user}: CheckOutPro
             }
           }
         } catch (error) {
-          console.error('Failed to fetch vouchers:', error);
+          showToast('error', 'Failed to fetch vouchers.');
         }
       }
     };
@@ -174,7 +184,11 @@ const CheckOut = ({setGotoCheckout, selectedItems, cartItems, user}: CheckOutPro
     // Contact information validation
     if (!formData.firstName.trim()) errors.firstName = 'First name is required';
     if (!formData.lastName.trim()) errors.lastName = 'Last name is required';
-    if (!formData.contactNumber.trim()) errors.contactNumber = 'Contact number is required';
+        if (!formData.contactNumber.trim()) {
+            errors.contactNumber = 'Contact number is required';
+        } else if (!isValidPhilippineNumber(formData.contactNumber)) {
+            errors.contactNumber = 'Please enter a valid Philippine phone number (e.g., +639XXXXXXXXX, 09XXXXXXXXX)';
+        }
     if (!formData.email.trim()) errors.email = 'Email is required';
     if (formData.email && !/^\S+@\S+\.\S+$/.test(formData.email)) {
       errors.email = 'Valid email is required';
@@ -208,18 +222,54 @@ const CheckOut = ({setGotoCheckout, selectedItems, cartItems, user}: CheckOutPro
   };
 
   const handleInputChange = (field: keyof FormData, value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }));
+        // If editing contact number, sanitize and enforce numeric-only + PH formatting
+        const sanitizeContact = (raw: string) => {
+            let digits = raw.replace(/\D/g, '');
+
+            // Normalize international prefixes to local 0XXXXXXXXXX form
+            if (digits.startsWith('63') && digits.length >= 3 && digits[2] === '9') {
+                digits = '0' + digits.slice(2);
+            } else if (digits.startsWith('9')) {
+                digits = '0' + digits;
+            }
+
+            // Only accept values that start with '09' or empty
+            if (digits === '') return '';
+            if (!digits.startsWith('09')) {
+                // try to find a substring that starts with 09
+                const idx = digits.indexOf('09');
+                if (idx !== -1) digits = digits.slice(idx);
+                else return '';
+            }
+
+            // Enforce max length of 11 digits
+            if (digits.length > 11) digits = digits.slice(0, 11);
+
+            return digits;
+        };
+
+        if (field === 'contactNumber') {
+            const normalized = sanitizeContact(value);
+            setFormData(prev => ({ ...prev, contactNumber: normalized }));
+            // Clear error when user starts typing
+            if (formErrors.contactNumber) {
+                setFormErrors(prev => ({ ...prev, contactNumber: '' }));
+            }
+            return;
+        }
+
+        setFormData(prev => ({
+            ...prev,
+            [field]: value
+        }));
     
     // Clear error when user starts typing
-    if (formErrors[field]) {
-      setFormErrors(prev => ({
-        ...prev,
-        [field]: ''
-      }));
-    }
+        if (formErrors[field]) {
+            setFormErrors(prev => ({
+                ...prev,
+                [field]: ''
+            }));
+        }
   };
 
   const handleClick = (method: "pickup" | "delivery") => {
@@ -264,19 +314,20 @@ const CheckOut = ({setGotoCheckout, selectedItems, cartItems, user}: CheckOutPro
   };
 
   const handleCompletePurchase = async () => {
+    
+    // Validate form
+    if (!validateForm()) {
+        showToast('info', 'Please fill in all required fields correctly.');
+        return;
+    }
+
     if (!doubleCheck) {
         setDoubleCheck(true);
         return;
     }
 
     if (!agreeTerms || !confirmDetails) {
-        alert('Please agree to the terms and confirm your details.');
-        return;
-    }
-
-    // Validate form
-    if (!validateForm()) {
-        alert('Please fill in all required fields correctly.');
+        showToast('info', 'Please agree to the terms and confirm your details.');
         return;
     }
 
@@ -309,7 +360,10 @@ const CheckOut = ({setGotoCheckout, selectedItems, cartItems, user}: CheckOutPro
             method: modeOfPayment,
             referenceNo: modeOfPayment !== 'cod' ? `PAY-${Date.now()}` : undefined
         },
-        items: filteredCartItems,
+        items: filteredCartItems.map(item => ({
+            ...item,
+            orderType: 'cart' // Add orderType for cart items
+        })),
         voucher: selectedVoucher ? {
             id: selectedVoucher.id,
             discount: selectedVoucher.discount || 0
@@ -319,12 +373,12 @@ const CheckOut = ({setGotoCheckout, selectedItems, cartItems, user}: CheckOutPro
             shippingFee,
             discount,
             total
-        }
+        },
+        // Add orderType at the root level for direct purchases
+        orderType: filteredCartItems.some(item => item.orderType === 'direct') ? 'direct' : 'cart'
         };
 
-        console.log('Sending order data:', orderData);
-
-        const response = await fetch('/api/orders', {
+        const response = await fetch('https://ontap-creatives-website.vercel.app/api/orders', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -335,19 +389,16 @@ const CheckOut = ({setGotoCheckout, selectedItems, cartItems, user}: CheckOutPro
         const result = await response.json();
 
         if (response.ok) {
-          // SUCCESS: Show receipt instead of alert and closing checkout
           setOrderTransactionId(result.transactionId);
           setShowReceipt(true);
           
-          console.log('Order placed successfully! Receipt displayed.');
+          showToast('success', 'Order placed successfully! Receipt displayed.');
           
         } else {
-        console.error('API Error Response:', result);
-        throw new Error(result.error || result.details?.join(', ') || 'Failed to place order');
+        showToast('error', 'Server Connection Timeout.');
         }
     } catch (error) {
-        console.error('Order placement error:', error);
-        alert(`Failed to place order: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        showToast('error', 'Server Connection Timeout.');
     } finally {
         setIsSubmitting(false);
     }
@@ -457,16 +508,23 @@ const CheckOut = ({setGotoCheckout, selectedItems, cartItems, user}: CheckOutPro
                 {/* Contact Number */}
                 <span className='flex flex-col col-span-1 gap-1'>
                     <label htmlFor="contactNumber" className='uppercase tracking-wide text-xs font-extrabold text-dark-blue'>Contact Number *</label>
-                    <input 
-                        id="contactNumber"
-                        type="text" 
-                        placeholder='Contact Number' 
-                        value={formData.contactNumber}
-                        onChange={(e) => handleInputChange('contactNumber', e.target.value)}
-                        className={`px-3 py-2.5 rounded-md border ${
-                            formErrors.contactNumber ? 'border-red-500' : 'border-black/30'
-                        } hover:border-black focus:border-dark-blue focus:bg-sky-100 ease-out duration-200`}
-                    />
+                                        <input 
+                                                id="contactNumber"
+                                                type="tel" 
+                                                inputMode="numeric"
+                                                pattern="[0-9]*"
+                                                placeholder='e.g., 09XXXXXXXXX' 
+                                                value={formData.contactNumber}
+                                                onChange={(e) => handleInputChange('contactNumber', e.target.value)}
+                                                onPaste={(e) => {
+                                                    e.preventDefault();
+                                                    const paste = (e.clipboardData || (window as any).clipboardData).getData('text');
+                                                    handleInputChange('contactNumber', paste);
+                                                }}
+                                                className={`px-3 py-2.5 rounded-md border ${
+                                                        formErrors.contactNumber ? 'border-red-500' : 'border-black/30'
+                                                } hover:border-black focus:border-dark-blue focus:bg-sky-100 ease-out duration-200`}
+                                        />
                     {formErrors.contactNumber && <span className="text-red-500 text-xs">{formErrors.contactNumber}</span>}
                 </span>
                 
@@ -708,15 +766,32 @@ const CheckOut = ({setGotoCheckout, selectedItems, cartItems, user}: CheckOutPro
                 )}
 
                 <h2 className='col-span-full font-black text-lg mt-5'>Payment Method</h2>
-                <button type="button" className={`col-span-1 px-3 py-2 gap-2 rounded-md border ${modeOfPayment === 'cod' ? 'bg-violet text-white border-light-blue' : 'border-black/30 hover:border-black focus:border-dark-blue focus:bg-sky-100 ease-out duration-200'} flex items-center justify-between font-bold`} onClick={() => setModeOfPayment('cod')}>
+                <button 
+                type="button" 
+                className={`col-span-1 px-3 py-2 gap-2 rounded-md border ${modeOfPayment === 'cod' ? 'bg-violet text-white border-light-blue' : 'border-black/30 hover:border-black focus:border-dark-blue focus:bg-sky-100 ease-out duration-200'} flex items-center justify-between font-bold`} 
+                onClick={() => setModeOfPayment('cod')}
+                >
                     Cash on Delivery
                     <FaHandHoldingDollar className={`ml-auto text-xl ${modeOfPayment === 'cod' ? 'text-white': 'text-dark-blue'}`}/>
                     <FaTruckRampBox className={`text-xl ${modeOfPayment === 'cod' ? 'text-white': 'text-dark-blue'}`}/>
                 </button>
-                <button type="button" className={`col-span-1 px-3 py-2 rounded-md border ${modeOfPayment === 'card' ? 'bg-violet text-white border-light-blue' : 'border-black/30 hover:border-black focus:border-dark-blue focus:bg-sky-100 ease-out duration-200'} flex items-center justify-between font-bold`} onClick={() => setModeOfPayment('card')}>Credit / Debit Card
+                <button 
+                type="button" 
+                className={`col-span-1 px-3 py-2 rounded-md border ${modeOfPayment === 'card' ? 'bg-violet text-white border-light-blue' : 'border-black/30 hover:border-black focus:border-dark-blue focus:bg-sky-100 ease-out duration-200'} flex items-center justify-between font-bold disabled:border-black/20 disabled:text-black/30 disabled-button relative`} 
+                onClick={() => setModeOfPayment('card')}
+                disabled
+                >
+                    <span className='py-1 w-full text-center absolute top-1/2 left-0 -translate-y-1/2 bg-rose-500/30 text-red-500 border-y-2 border-red-600/50 backdrop-blur-sm'>CURRENTLY UNAVAILABLE</span>
+                    Credit / Debit Card
                     <img src="https://www.paypalobjects.com/webstatic/mktg/logo/pp_cc_mark_37x23.jpg" alt="PayPal Logo" className='h-7 w-auto'/>
                 </button>
-                <button type="button" className={`col-span-1 px-3 py-2 rounded-md border ${modeOfPayment === 'ewallet' ? 'bg-violet text-white border-light-blue' : 'border-black/30 hover:border-black focus:border-dark-blue focus:bg-sky-100 ease-out duration-200'} flex items-center justify-between font-bold`}  onClick={() => setModeOfPayment('ewallet')}>
+                <button 
+                    type="button" 
+                    className={`col-span-1 px-3 py-2 rounded-md border ${modeOfPayment === 'ewallet' ? 'bg-violet text-white border-light-blue' : 'border-black/30 hover:border-black focus:border-dark-blue focus:bg-sky-100 ease-out duration-200'} flex items-center justify-between font-bold disabled:border-black/20 disabled:text-black/30 disabled-button relative`}  
+                    onClick={() => setModeOfPayment('ewallet')}
+                    disabled
+                >
+                    <span className='py-1 w-full text-center absolute top-1/2 left-0 -translate-y-1/2 bg-rose-500/30 text-red-500 border-y-2 border-red-600/50 backdrop-blur-sm'>CURRENTLY UNAVAILABLE</span>
                     E-Wallet
                     <Image
                         height={2048}
@@ -733,7 +808,13 @@ const CheckOut = ({setGotoCheckout, selectedItems, cartItems, user}: CheckOutPro
                         className='h-7 w-auto object-contain object-center ml-1'
                     />
                 </button>
-                <button type="button" className={`col-span-1 px-3 py-2 rounded-md border ${modeOfPayment === 'bank' ? 'bg-violet text-white border-light-blue' : 'border-black/30 hover:border-black focus:border-dark-blue focus:bg-sky-100 ease-out duration-200'} flex items-center justify-between font-bold`}  onClick={() => setModeOfPayment('bank')}>
+                <button 
+                    type="button" 
+                    className={`col-span-1 px-3 py-2 rounded-md border ${modeOfPayment === 'bank' ? 'bg-violet text-white border-light-blue' : 'border-black/30 hover:border-black focus:border-dark-blue focus:bg-sky-100 ease-out duration-200'} flex items-center justify-between font-bold disabled:border-black/20 disabled:text-black/30 disabled-button relative`} 
+                    onClick={() => setModeOfPayment('bank')}
+                    disabled
+                >
+                    <span className='py-1 w-full text-center absolute top-1/2 left-0 -translate-y-1/2 bg-rose-500/30 text-red-500 border-y-2 border-red-600/50 backdrop-blur-sm'>CURRENTLY UNAVAILABLE</span>
                     Bank Transfer
                     <span className='ml-auto p-1 bg-[#004ea8]'>
                         <Image

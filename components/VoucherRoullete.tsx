@@ -52,7 +52,7 @@ export default function VoucherRoulette({setRoulette, onVoucherWon}: VoucherRoul
   const initializeClient = async () => {
     try {
       // Get user session
-      const sessionResponse = await fetch('/api/auth/session');
+      const sessionResponse = await fetch('https://ontap-creatives-website.vercel.app/api/auth/session');
       
       if (!sessionResponse.ok) {
         throw new Error('Failed to get session');
@@ -65,7 +65,7 @@ export default function VoucherRoulette({setRoulette, onVoucherWon}: VoucherRoul
         setClientID(sessionData.user.clientID);
 
         // Check voucher eligibility
-        const vouchersResponse = await fetch(`/api/voucher?clientID=${sessionData.user.clientID}`);
+        const vouchersResponse = await fetch(`https://ontap-creatives-website.vercel.app/api/voucher?clientID=${sessionData.user.clientID}`);
         
         if (vouchersResponse.ok) {
           const vouchersData = await vouchersResponse.json();
@@ -108,7 +108,7 @@ export default function VoucherRoulette({setRoulette, onVoucherWon}: VoucherRoul
     
     if (selectedVoucher && clientID) {
       try {
-        const response = await fetch('/api/voucher', {
+        const response = await fetch('https://ontap-creatives-website.vercel.app/api/voucher', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({

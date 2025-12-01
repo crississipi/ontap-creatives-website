@@ -170,7 +170,7 @@ const OrderPage: React.FC = () => {
     try {
         setLoading(true);
         
-        const response = await fetch('/api/transaction');
+        const response = await fetch('https://ontap-creatives-website.vercel.app/api/transaction');
         
         if (!response.ok) {
           showToast('error', 'Failed to fetch orders.')

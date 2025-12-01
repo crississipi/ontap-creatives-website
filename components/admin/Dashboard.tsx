@@ -7,18 +7,27 @@ import WebAnalysis from './WebAnalysis'
 import dynamic from "next/dynamic";
 import { useClickOutside } from '@/hooks'
 import { ActivitySlip, ResizableContainer, ResizableCard } from '.'
-import { useVisitorLocation } from '@/hooks/useVisitorLocation'
+import { useLocationTracking } from '@/hooks/useLocationTracking'
 import { TbArrowUpDashed } from 'react-icons/tb'
-import { Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, LabelList, Legend, PolarAngleAxis, PolarGrid, PolarRadiusAxis, Radar, RadarChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
+import { Area, AreaChart, Bar, BarChart, Cell, LabelList, ResponsiveContainer, Tooltip, XAxis } from 'recharts'
 
 const WorldMap = dynamic(() => import("./WorldMap"), { ssr: false });
 
+type MetricKey = 'visits' | 'earnings' | 'orders' | 'registered';
+
+interface MetricTrend {
+  difference: number;
+  percent: number;
+}
+
 interface DashboardStats {
   visits: number;
+  earnings: number;
   averageDuration: string;
   orders: number;
   pendingOrders: number;
   registered: number;
+  trends: Record<MetricKey, MetricTrend>;
   activeSessions: Array<{
     visitorId: string;
     timeStarted: string;
@@ -37,7 +46,7 @@ interface CardConfig {
   title: string;
   subTitle: string;
   count: number | string;
-  key: keyof DashboardStats;
+  key: MetricKey;
 }
 
 interface BarChartItem {
@@ -52,15 +61,15 @@ const Cards: CardConfig[] = [
         icon: <RiLoginBoxLine />,
         title: 'Total Visitors',
         subTitle: '',
-        count: 99,
+        count: 0,
         key: 'visits'
     },
     {
         icon: <RiTimerLine />,
         title: 'Earnings',
-        subTitle: 'Average Duration',
-        count: '0s',
-        key: 'averageDuration'
+        subTitle: 'Total Revenue',
+        count: 0,
+        key: 'earnings'
     },
     {
         icon: <RiQuestionAnswerLine />,
@@ -198,7 +207,29 @@ const defaultRegions = [
     longitude: 124.24216,
     count: 0
   }
-];
+]
+
+const regionColors = [
+  { bg: 'rgba(239, 68, 68, 0.3)', hover: 'rgba(239, 68, 68, 0.5)', text: 'text-red-800' }, // NCR
+  { bg: 'rgba(34, 197, 94, 0.3)', hover: 'rgba(34, 197, 94, 0.5)', text: 'text-green-800' }, // CAR
+  { bg: 'rgba(59, 130, 246, 0.3)', hover: 'rgba(59, 130, 246, 0.5)', text: 'text-blue-800' }, // Region I
+  { bg: 'rgba(168, 85, 247, 0.3)', hover: 'rgba(168, 85, 247, 0.5)', text: 'text-purple-800' }, // Region II
+  { bg: 'rgba(236, 72, 153, 0.3)', hover: 'rgba(236, 72, 153, 0.5)', text: 'text-pink-800' }, // Region III
+  { bg: 'rgba(249, 115, 22, 0.3)', hover: 'rgba(249, 115, 22, 0.5)', text: 'text-orange-800' }, // Region IV-A
+  { bg: 'rgba(132, 204, 22, 0.3)', hover: 'rgba(132, 204, 22, 0.5)', text: 'text-lime-800' }, // Region IV-B
+  { bg: 'rgba(20, 184, 166, 0.3)', hover: 'rgba(20, 184, 166, 0.5)', text: 'text-teal-800' }, // Region V
+  { bg: 'rgba(139, 69, 19, 0.3)', hover: 'rgba(139, 69, 19, 0.5)', text: 'text-amber-900' }, // Region VI
+  { bg: 'rgba(99, 102, 241, 0.3)', hover: 'rgba(99, 102, 241, 0.5)', text: 'text-indigo-800' }, // Region VII
+  { bg: 'rgba(14, 165, 233, 0.3)', hover: 'rgba(14, 165, 233, 0.5)', text: 'text-cyan-800' }, // Region VIII
+  { bg: 'rgba(232, 121, 249, 0.3)', hover: 'rgba(232, 121, 249, 0.5)', text: 'text-fuchsia-800' }, // Region IX
+  { bg: 'rgba(190, 18, 60, 0.3)', hover: 'rgba(190, 18, 60, 0.5)', text: 'text-rose-800' }, // Region X
+  { bg: 'rgba(6, 182, 212, 0.3)', hover: 'rgba(6, 182, 212, 0.5)', text: 'text-cyan-800' }, // Region XI
+  { bg: 'rgba(217, 119, 6, 0.3)', hover: 'rgba(217, 119, 6, 0.5)', text: 'text-amber-800' }, // Region XII
+  { bg: 'rgba(101, 163, 13, 0.3)', hover: 'rgba(101, 163, 13, 0.5)', text: 'text-lime-800' }, // Region XIII
+  { bg: 'rgba(180, 83, 9, 0.3)', hover: 'rgba(180, 83, 9, 0.5)', text: 'text-orange-900' }, // BARMM
+]
+
+type RegionDefinition = (typeof defaultRegions)[number];
 
 const Dashboard = () => {
   const [showMap, setShowMap] = useState(true);
@@ -208,6 +239,7 @@ const Dashboard = () => {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [regions, setRegions] = useState(defaultRegions);
+  const [selectedRegionName, setSelectedRegionName] = useState<string | null>(null);
 
   const [filter, setFilter] = useState(false);
   const [currFilter, setCurrFilter] = useState('Today');
@@ -215,10 +247,24 @@ const Dashboard = () => {
   const [activityOptions, showActivityOptions] = useState(false);
   const [activityFilter, setActivityFilter] = useState<'Orders' | 'Registered'>('Orders');
 
-  const location = useVisitorLocation();
+  const { location: locationData, loading: locationLoading, requestLocation } = useLocationTracking();
+  
+  // Request location on mount
+  useEffect(() => {
+    requestLocation();
+  }, [requestLocation]);
+  
+  // Convert location format for compatibility
+  const location = {
+    latitude: locationData?.latitude || null,
+    longitude: locationData?.longitude || null,
+    accuracy: null,
+    loading: locationLoading,
+    error: locationData?.error || null,
+    method: locationData?.method || null
+  };
   
   // State for all resizable components
-  const [cardSizes, setCardSizes] = useState<number[]>([1, 1, 1, 1]);
   const [mainContentSize, setMainContentSize] = useState(4);
   const [sidebarSize, setSidebarSize] = useState(2);
   const [userEngagementHeight, setUserEngagementHeight] = useState(1);
@@ -240,28 +286,16 @@ const Dashboard = () => {
   const fetchDashboardData = async (filterParam: string) => {
     try {
       setLoading(true);
-      const response = await fetch(`/api/dashboard/stats?filter=${filterParam}`);
+      const response = await fetch(`https://ontap-creatives-website.vercel.app/api/dashboard/stats?filter=${filterParam}`);
       
       if (response.ok) {
         const data = await response.json();
         if (data.success) {
           setStats(data.data);
-          
-          const updatedRegions = defaultRegions.map(region => {
-            const foundRegion = data.data.regionalData.find((r: any) => 
-              r.region?.toLowerCase().includes(region.region.toLowerCase()) ||
-              region.region.toLowerCase().includes(r.region?.toLowerCase() || '')
-            );
-            return {
-              ...region,
-              count: foundRegion?.count || 0
-            };
-          });
-          setRegions(updatedRegions);
         }
       }
     } catch (error) {
-      console.error('Failed to fetch dashboard data:', error);
+      // console.error('Failed to fetch dashboard data:', error);
     } finally {
       setLoading(false);
     }
@@ -286,16 +320,16 @@ const Dashboard = () => {
     try {
       setLoading(true)
       const days = getDaysFromFilter(filter)
-      const response = await fetch(`/api/dashboard/popular-items?days=${days}&limit=8`)
+      const response = await fetch(`https://ontap-creatives-website.vercel.app/api/dashboard/popular-items?days=${days}&limit=8`)
       const result = await response.json()
       
       if (response.ok) {
         setData(result.data)
       } else {
-        console.error('Failed to fetch popular items:', result.error)
+        // console.error('Failed to fetch popular items:', result.error)
       }
     } catch (error) {
-      console.error('Error fetching popular items:', error)
+      // console.error('Error fetching popular items:', error)
     } finally {
       setLoading(false)
     }
@@ -313,8 +347,17 @@ const Dashboard = () => {
     
     const value = stats[card.key];
     
+    if (card.key === 'earnings' && typeof value === 'number') {
+      return value.toLocaleString('en-PH', {
+        style: 'currency',
+        currency: 'PHP',
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      });
+    }
+
     if (typeof value === 'number') {
-      return value.toString();
+      return value.toLocaleString('en-US');
     } else if (typeof value === 'string') {
       return value;
     }
@@ -322,12 +365,34 @@ const Dashboard = () => {
     return '...';
   };
 
-  const handleCardResize = (index: number, newSize: number) => {
-    setCardSizes(prev => {
-      const newSizes = [...prev];
-      newSizes[index] = newSize;
-      return newSizes;
-    });
+  const getTrend = (key: MetricKey): MetricTrend => {
+    if (!stats?.trends?.[key]) {
+      return { difference: 0, percent: 0 };
+    }
+    return stats.trends[key];
+  };
+
+  const formatDifference = (key: MetricKey, trend: MetricTrend) => {
+    if (!trend) return '+0';
+    if (trend.difference === 0) return '+0';
+    const prefix = trend.difference > 0 ? '+' : '-';
+    const absValue = Math.abs(trend.difference);
+    if (key === 'earnings') {
+      return `${prefix}${absValue.toLocaleString('en-PH', {
+        style: 'currency',
+        currency: 'PHP',
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      })}`;
+    }
+    return `${prefix}${absValue.toLocaleString('en-US')}`;
+  };
+
+  const formatPercent = (trend: MetricTrend) => {
+    if (!trend) return '0%';
+    if (trend.percent === 0) return '0%';
+    const prefix = trend.percent > 0 ? '+' : '';
+    return `${prefix}${trend.percent.toFixed(1)}%`;
   };
 
   const handleMainContentResize = (newSize: number) => {
@@ -336,11 +401,62 @@ const Dashboard = () => {
     setSidebarSize(6 - newSize);
   };
 
+  // Fetch region data with visitor counts
+  useEffect(() => {
+    const fetchRegionData = async () => {
+      try {
+        const days = getDaysFromFilter(currFilter);
+        const response = await fetch(`https://ontap-creatives-website.vercel.app/api/visitor/regions?days=${days}`)
+        const data = await response.json()
+        
+        if (data.regions) {
+          // Match regions with actual data, handling case-insensitive and partial matches
+          const updatedRegions = defaultRegions.map(defaultRegion => {
+            const matchedRegion = data.regions.find((r: any) => {
+              const defaultRegionName = defaultRegion.region.toLowerCase();
+              const apiRegionName = (r.region || '').toLowerCase();
+              return (
+                defaultRegionName === apiRegionName ||
+                defaultRegionName.includes(apiRegionName) ||
+                apiRegionName.includes(defaultRegionName) ||
+                defaultRegion.abbr.toLowerCase() === (r.abbr || '').toLowerCase()
+              );
+            });
+            return {
+              ...defaultRegion,
+              count: matchedRegion?.count || 0
+            };
+          });
+          setRegions(updatedRegions);
+        }
+      } catch (error) {
+        console.error('Error fetching region data:', error)
+      }
+    }
+
+    fetchRegionData()
+    // Refresh data every 30 seconds
+    const interval = setInterval(fetchRegionData, 30000)
+    return () => clearInterval(interval)
+  }, [currFilter])
+
+  const handleRegionClick = (region: RegionDefinition) => {
+    setSelectedRegionName(prev => {
+      // If clicking the same region, clear the selection
+      if (prev === region.region) {
+        return null;
+      }
+      // Otherwise select the new region
+      return region.region;
+    });
+  };
+
+  const clearRegionSelection = () => setSelectedRegionName(null);
 
   return (
-    <div className='w-full h-full max-h-[100vh] bg-neutral-100 px-5 py-10 pb-5 gap-5 flex flex-col md:overflow-hidden'>
+    <div className='w-full h-full md:max-h-[100vh] bg-neutral-100 px-5 py-10 pb-5 gap-5 flex flex-col overflow-x-hidden md:pl-10 2xl:pl-5'>
         <div className='w-full flex items-center justify-between lg:pr-5'>
-            <h1 className='text-2xl font-semibold pl-8'>Dashboard</h1>
+            <h1 className='text-2xl font-semibold'>Dashboard</h1>
             <div className='flex gap-3 text-sm md:text-base'>
                 <div className='relative'>
                     <button type='button' className='p-2 px-4 pr-2.5 flex items-center gap-2 rounded-lg border border-neutral-400 hover:border-dark-blue hover:text-dark-blue focus:border-violet focus:text-violet ease-out duration-200' onClick={() => setFilter(!filter)}>
@@ -388,7 +504,7 @@ const Dashboard = () => {
                 <button type="button" className='flex items-center gap-3 rounded-lg bg-blue text-white px-4 py-2 hover:bg-violet focus:bg-dark-blue ease-out duration-200'><RiExportFill />Export</button>
             </div>
         </div>
-        <div className='w-full h-auto lg:h-full grid grid-cols-6 gap-3 lg:overflow-hidden'>
+        <div className='w-full h-max lg:h-full grid grid-cols-6 gap-3 lg:overflow-hidden'>
             <div className='col-span-full lg:col-span-4 flex flex-col gap-5 lg:overflow-hidden'>
               <ResizableContainer
                 defaultSize={mainContentSize}
@@ -398,8 +514,14 @@ const Dashboard = () => {
                 direction="horizontal"
                 className="flex flex-col gap-5 overflow-hidden"
               >
-                <div className='w-full flex gap-3 items-center flex-nowrap'>
-                    {Cards.map((card, i) => (
+                <div className='w-full grid grid-cols-2 lg:flex gap-3 items-center flex-nowrap'>
+                    {Cards.map((card, i) => {
+                      const trend = getTrend(card.key);
+                      const differenceLabel = formatDifference(card.key, trend);
+                      const percentLabel = formatPercent(trend);
+                      const isPositive = trend.difference >= 0;
+                      const percentColor = isPositive ? 'text-emerald-500' : 'text-rose-500';
+                      return (
                         <div key={`dashboard-card_${i}`} className='rounded-md p-3 shadow-md shadow-neutral-200 bg-white items-stretch h-full md:h-auto w-full flex flex-col relative'>
                           <div className='flex gap-2 items-start justify-between'>
                             <div className='flex flex-col'>
@@ -408,16 +530,21 @@ const Dashboard = () => {
                                 <p className='md:text-xl font-semibold lg:text-3xl lg:font-extrabold'>
                                   {loading ? '...' : getCardValue(card)}
                                 </p>
-                                <span className='text-xs text-neutral-400 font-extrabold mb-1'>+23</span>
+                                <span className={`text-xs font-extrabold mb-1 ${isPositive ? 'text-emerald-500' : 'text-rose-500'}`}>
+                                  {differenceLabel}
+                                </span>
                               </span>
                             </div>
                             <span className='text-2xl text-dark-blue'>{card.icon}</span>
                           </div>
                           <div className='flex mt-3'>
-                            <span className='flex gap-0.5 items-center font-bold text-sm text-sky-500'><TbArrowUpDashed /> 10%</span>
+                            <span className={`flex gap-0.5 items-center font-bold text-sm ${percentColor}`}>
+                              <TbArrowUpDashed className={!isPositive ? 'rotate-180' : ''}/>
+                              {percentLabel}
+                            </span>
                           </div>
                           <div className='absolute z-10 h-14 w-30 right-1 bottom-1 flex items-center justify-end overflow-hidden rounded-sm'>
-                          <ResponsiveContainer width="100%" height="100%">
+                            <ResponsiveContainer width="100%" height="100%">
                               <AreaChart
                                 data={data}
                                 margin={{
@@ -430,9 +557,10 @@ const Dashboard = () => {
                                 <Area type="monotone" dataKey="pv" stroke="#00a6f4" fill="#00a6f4" fillOpacity={0.2} />
                               </AreaChart>
                             </ResponsiveContainer>
+                          </div>
                         </div>
-                        </div>
-                    ))}
+                      );
+                    })}
                 </div>
                 
                 <div className='min-h-2/5 w-full grid grid-cols-5 gap-3'>
@@ -443,7 +571,7 @@ const Dashboard = () => {
                       maxSize={3}
                       onResize={setUserEngagementHeight}
                       direction="vertical"
-                      className="flex flex-col rounded-lg col-span-3"
+                      className="flex flex-col h-68 lg:h-auto rounded-lg col-span-full lg:col-span-3"
                       resizeEdges={['right']}
                   >
                       <div className='flex w-full items-center justify-between pr-3'>
@@ -469,7 +597,7 @@ const Dashboard = () => {
                     maxSize={3}
                     onResize={setUserEngagementHeight}
                     direction="vertical"
-                    className="flex flex-col rounded-lg col-span-2"
+                    className="flex flex-col rounded-lg col-span-full lg:col-span-2"
                     resizeEdges={['right']}
                   >
                     <div className='flex w-full items-center justify-between pr-3'>
@@ -573,7 +701,7 @@ const Dashboard = () => {
               maxSize={4}
               onResize={setSidebarSize}
               direction="horizontal"
-              className="flex flex-col gap-3 overflow-hidden pb-10 md:pb-0 col-span-2"
+              className="flex flex-col gap-3 overflow-hidden pb-10 md:pb-0 col-span-full lg:col-span-2"
             >
               {/* World Map Card */}
               <ResizableCard
@@ -582,21 +710,29 @@ const Dashboard = () => {
                 maxSize={4}
                 onResize={() => {}}
                 direction="vertical"
-                className="rounded-lg lg:overflow-hidden"
+                className="rounded-lg lg:overflow-hidden max-h-100 lg:h-auto"
                 resizeEdges={['bottom']}
               >
                 <div className="w-full h-full">
                   {showMap && (
                     <WorldMap 
-                      days={30}
+                      selectedRegion={selectedRegionName}
                       viewMode="points"
+                      days={getDaysFromFilter(currFilter)}
+                      onClearRegion={clearRegionSelection}
                     />
                   )}
                   {location.loading && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-80">
-                      <div className="text-sm">Detecting your location...</div>
-                    </div>
-                  )}
+                      <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-80 z-10">
+                        <div className="text-lg">Loading visitor data...</div>
+                      </div>
+                    )}
+
+                    {!location.loading && regions.every(region => region.count === 0) && (
+                      <div className="col-span-full text-center py-8 text-gray-500">
+                        No visitor location data available for the selected period.
+                      </div>
+                    )}
                 </div>
               </ResizableCard>
 
@@ -612,22 +748,31 @@ const Dashboard = () => {
               >
                 <div className='flex w-full items-center justify-between p-0 pb-3 pr-3'>
                   <h3 className='font-semibold text-sm'>Visitor's Area Locations</h3>
-                  <button type="button" className='p-2 rounded-md border border-transparent hover:border-violet focus:bg-dark-blue focus:text-white ease-out duration-200'>
-                    <HiDotsHorizontal />
-                  </button>
                 </div>
-                <div className='w-full h-auto grid grid-cols-3 overflow-x-hidden px-5'>
-                  {regions.map((val,i) => (
+                <div className='w-full h-auto grid grid-cols-3 overflow-x-hidden px-5 gap-3'>
+                  {regions.map((region, i) => {
+                    const color = regionColors[i % regionColors.length];
+                    const isSelected = selectedRegionName === region.region;
+                    return (
                     <button 
-                      key={i} 
+                      key={region.abbr}
                       type='button' 
-                      className='px-3 lg:px-1 py-2 flex items-center gap-3 text-black hover:bg-light-blue focus:bg-dark-blue focus:text-white ease-out duration-200'
-                      // onClick={() => changeLoc(val.latitude, val.longitude, 7)}
+                      className={`px-2 py-3 flex flex-col items-center justify-center gap-1 rounded-md transition-all duration-200 hover:scale-105 ${
+                        isSelected ? 'ring-2 ring-blue-500 ring-offset-2 shadow-lg shadow-blue-200' : ''
+                      }`}
+                      style={{
+                        backgroundColor: color.bg,
+                      }}
+                      onClick={() => handleRegionClick(region)}
                     >
-                      <span className='font-semibold'>{val.count}</span>
-                      <span className='lg:text-sm 2xl:text-base'>{val.abbr}</span>
+                      <span className={`font-bold text-lg ${color.text}`}>
+                        {region.count.toLocaleString()}
+                      </span>
+                      <span className={`text-xs font-medium ${color.text}`}>
+                        {region.abbr}
+                      </span>
                     </button>
-                  ))}
+                  )})}
                 </div>
               </ResizableCard>
             </ResizableContainer>

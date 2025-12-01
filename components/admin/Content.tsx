@@ -33,8 +33,8 @@ const Content = () => {
             <p className='text-neutral-400'>You are accessing the website in <strong>experimental mode</strong></p>
           </span>
           <div className='flex gap-3'>
-            <button type="button" className='flex items-center gap-3 rounded-lg border border-neutral-600 text-neutral-400 px-4 py-2 hover:border-white hover:text-white focus:bg-light-blue focus:text-violet ease-out duration-200'>Cancel</button>
-            <button type="button" className='flex items-center gap-3 rounded-lg bg-blue text-white px-4 pl-2 py-2 hover:bg-violet focus:bg-dark-blue ease-out duration-200'><RiCheckboxCircleLine  className='text-2xl'/>Apply Changes</button>
+            <button type="button" className='flex text-xs items-center gap-3 rounded-lg border border-neutral-600 text-neutral-400 px-4 py-2 hover:border-white hover:text-white focus:bg-light-blue focus:text-violet ease-out duration-200'>Cancel</button>
+            <button type="button" className='flex text-xs items-center gap-3 rounded-lg bg-blue text-white px-4 pl-2 py-2 hover:bg-violet focus:bg-dark-blue ease-out duration-200'><RiCheckboxCircleLine  className='text-2xl'/>Apply Changes</button>
           </div>
         </motion.div>
         <Mainpage editable={true} />

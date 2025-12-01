@@ -95,7 +95,7 @@
       // Function to check if user is logged in
     const checkAuthStatus = async (): Promise<User | null> => {
         try {
-        const response = await fetch('/api/auth/session', {
+        const response = await fetch('https://ontap-creatives-website.vercel.app/api/auth/session', {
             method: 'GET',
             headers: {
             'Content-Type': 'application/json',
@@ -129,7 +129,7 @@
         const fetchFeedbacks = async () => {
             try {
             setLoadingFeedbacks(true);
-            const response = await fetch(`/api/feedbacks/${product.productID}`);
+            const response = await fetch(`https://ontap-creatives-website.vercel.app/api/feedbacks/${product.productID}`);
             
             if (response.ok) {
                 const data = await response.json();
@@ -166,17 +166,17 @@
         setCheckingAuth(false);
 
         if (userData) {
-        // User is logged in, prepare product data and redirect to checkout
-        const productData = {
+            // User is logged in, prepare product data and redirect to checkout
+            const productData = {
             product: {
-            productID: product.productID,
-            name: finalProductName,
-            price: priceOption === 'ontap' ? product.price.ontap : product.price.custom!,
-            imgUrl: finalImgUrl || finalFrontImg,
-            frontUrl: finalFrontImg,
-            description: product.description,
-            customPrice: product.price.custom,
-            category: product.category
+                productID: product.productID,
+                name: finalProductName,
+                price: priceOption === 'ontap' ? product.price.ontap : product.price.custom!,
+                imgUrl: finalImgUrl || finalFrontImg,
+                frontUrl: finalFrontImg,
+                description: product.description,
+                customPrice: product.price.custom,
+                category: product.category
             },
             quantity: quantity,
             logo: priceOption === 'ontap' ? 'OnTap' : 'Custom',
@@ -184,20 +184,20 @@
             variable: variable,
             priceOption: priceOption,
             fileInfo: fileInfo,
-            logoSize: logoSize
-        };
+            logoSize: logoSize,
+            orderType: 'direct' // Add this field to indicate direct purchase
+            };
 
-        // Pass data to parent component and redirect to checkout
-        if (setSelectedProduct) {
+            // Pass data to parent component and redirect to checkout
+            if (setSelectedProduct) {
             setSelectedProduct(productData);
-        }
-        if (setGotoCheckout) {
+            }
+            if (setGotoCheckout) {
             setGotoCheckout(true);
-        }
-        setInquireItem(false); // Close the product modal
+            }
+            setInquireItem(false);
         } else {
-        // User is not logged in, show login modal
-        setShowLogin(true);
+            setShowLogin(true);
         }
     };
 
@@ -217,7 +217,7 @@
                     logo: priceOption === 'ontap' ? 'OnTap' : 'Custom'
                 }
 
-                const response = await fetch('/api/cart/add', {
+                const response = await fetch('https://ontap-creatives-website.vercel.app/api/cart/add', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',

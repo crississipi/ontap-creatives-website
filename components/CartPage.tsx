@@ -51,7 +51,7 @@ const CartPage = () => {
   useEffect(() => {
     const fetchUserSession = async () => {
       try {
-        const response = await fetch('/api/auth/session');
+        const response = await fetch('https://ontap-creatives-website.vercel.app/api/auth/session');
         const data = await response.json();
         
         if (data.user) {
@@ -81,7 +81,7 @@ const CartPage = () => {
       }
 
       try {
-        const response = await fetch(`/api/cart/client/${user.clientID}`);
+        const response = await fetch(`https://ontap-creatives-website.vercel.app/api/cart/client/${user.clientID}`);
         const data = await response.json();
         
         if (data.cartItems) {
@@ -150,7 +150,7 @@ const CartPage = () => {
         )
       );
 
-      const response = await fetch('/api/cart/update', {
+      const response = await fetch('https://ontap-creatives-website.vercel.app/api/cart/update', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -189,7 +189,7 @@ const CartPage = () => {
       setCartItems(prev => prev.filter(item => item.cartID !== cartID));
       setSelectedItems(prev => prev.filter(id => id !== cartID));
 
-      const response = await fetch(`/api/cart/item/${cartID}`, {
+      const response = await fetch(`https://ontap-creatives-website.vercel.app/api/cart/item/${cartID}`, {
         method: 'DELETE',
       });
 
@@ -205,7 +205,7 @@ const CartPage = () => {
       
       // Revert optimistic update on error by refetching cart
       if (user) {
-        const response = await fetch(`/api/cart/${user.clientID}`);
+        const response = await fetch(`https://ontap-creatives-website.vercel.app/api/cart/${user.clientID}`);
         const data = await response.json();
         if (data.cartItems) {
           setCartItems(data.cartItems);
@@ -234,7 +234,7 @@ const CartPage = () => {
 
       // Remove items one by one from the backend
       const removePromises = itemsToRemove.map(cartID =>
-        fetch(`/api/cart/item/${cartID}`, { method: 'DELETE' })
+        fetch(`https://ontap-creatives-website.vercel.app/api/cart/item/${cartID}`, { method: 'DELETE' })
       );
 
       const results = await Promise.allSettled(removePromises);
@@ -253,7 +253,7 @@ const CartPage = () => {
       
       // Revert optimistic update on error by refetching cart
       if (user) {
-        const response = await fetch(`/api/cart/${user.clientID}`);
+        const response = await fetch(`https://ontap-creatives-website.vercel.app/api/cart/${user.clientID}`);
         const data = await response.json();
         if (data.cartItems) {
           setCartItems(data.cartItems);
