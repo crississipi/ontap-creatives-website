@@ -109,9 +109,6 @@ model cart {
 model transaction {
   orderID       Int       @id @default(autoincrement())
   transactionID String    @unique(map: "transactionID") @db.VarChar(255)
-  orderID       Int      @id @default(autoincrement())
-  transactionID String   @db.VarChar(255)  // Remove unique constraint here
-  cartID        Int      // Remove unique constraint - allow multiple transactions per cart
   billingID     Int?
   voucherID     Int?
   trackingID    Int
@@ -132,15 +129,6 @@ model transaction {
   process       Process?  @relation(fields: [processID], references: [processID])
   product       products? @relation(fields: [productID], references: [productID])
   tracking      tracking  @relation(fields: [trackingID], references: [trackingID])
-  shipMethod    String   @db.VarChar(100)
-  subtotal      Float    @db.Float
-  dateOrdered   DateTime @default(now()) @map("dateOrdered")
-  
-  // Relations
-  billing       billing?  @relation(fields: [billingID], references: [billingID])
-  cart          cart      @relation(fields: [cartID], references: [cartID])
-  tracking      tracking  @relation(fields: [trackingID], references: [trackingID])
-  client        client    @relation(fields: [clientID], references: [clientID])
   voucher       voucher?  @relation(fields: [voucherID], references: [voucherID])
 
   @@index([billingID], map: "transaction_billingID_fkey")
@@ -151,7 +139,6 @@ model transaction {
   @@index([cartID], map: "transaction_cartID_fkey")
   @@index([processID], map: "transaction_processID_fkey")
   @@map("transaction")
-  @@unique([transactionID, cartID]) // Add composite unique constraint instead
 }
 
 model Otp {
