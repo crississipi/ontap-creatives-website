@@ -6,7 +6,7 @@ import { RiArrowDownSLine, RiCalendarLine, RiExportFill, RiLoginBoxLine, RiQuest
 import WebAnalysis from './WebAnalysis'
 import dynamic from "next/dynamic";
 import { useClickOutside } from '@/hooks'
-import { ActivitySlip, ResizableContainer, ResizableCard } from '.'
+import { ActivitySlip } from '.'
 import { useLocationTracking } from '@/hooks/useLocationTracking'
 import { TbArrowUpDashed } from 'react-icons/tb'
 import { Area, AreaChart, Bar, BarChart, Cell, LabelList, ResponsiveContainer, Tooltip, XAxis } from 'recharts'
@@ -506,12 +506,7 @@ const Dashboard = () => {
         </div>
         <div className='w-full h-max lg:h-full grid grid-cols-6 gap-3 lg:overflow-hidden'>
             <div className='col-span-full lg:col-span-4 flex flex-col gap-5 lg:overflow-hidden'>
-              <ResizableContainer
-                defaultSize={mainContentSize}
-                minSize={2}
-                maxSize={5}
-                onResize={handleMainContentResize}
-                direction="horizontal"
+              <div
                 className="flex flex-col gap-5 overflow-hidden"
               >
                 <div className='w-full grid grid-cols-2 lg:flex gap-3 items-center flex-nowrap'>
@@ -565,14 +560,8 @@ const Dashboard = () => {
                 
                 <div className='min-h-2/5 w-full grid grid-cols-5 gap-3'>
                   {/* User Engagement - Resizable Height */}
-                  <ResizableCard
-                      defaultSize={userEngagementHeight}
-                      minSize={0.5}
-                      maxSize={3}
-                      onResize={setUserEngagementHeight}
-                      direction="vertical"
+                  <div
                       className="flex flex-col h-68 lg:h-auto rounded-lg col-span-full lg:col-span-3"
-                      resizeEdges={['right']}
                   >
                       <div className='flex w-full items-center justify-between pr-3'>
                           <h3 className='font-bold text-base pb-3'>User Engagement</h3>
@@ -589,16 +578,10 @@ const Dashboard = () => {
                       <div className='h-full w-full flex-1'>
                           <WebAnalysis dataType={dataType} timeFilter={currFilter}/>
                       </div>
-                  </ResizableCard>
+                  </div>
 
-                  <ResizableCard
-                    defaultSize={userEngagementHeight}
-                    minSize={0.5}
-                    maxSize={3}
-                    onResize={setUserEngagementHeight}
-                    direction="vertical"
+                  <div
                     className="flex flex-col rounded-lg col-span-full lg:col-span-2"
-                    resizeEdges={['right']}
                   >
                     <div className='flex w-full items-center justify-between pr-3'>
                       <h3 className='font-bold text-base pb-3'>Popular Items</h3>
@@ -638,18 +621,12 @@ const Dashboard = () => {
                         </BarChart>
                       </ResponsiveContainer>
                     </div>
-                  </ResizableCard>
+                  </div>
                 </div>
                 
                 {/* Activity Section - Resizable Height */}
-                <ResizableCard
-                    defaultSize={activityHeight}
-                    minSize={0.8}
-                    maxSize={3}
-                    onResize={setActivityHeight}
-                    direction="vertical"
+                <div
                     className="flex flex-col rounded-lg overflow-hidden"
-                    resizeEdges={['bottom']}
                 >
                     <div className='flex w-full items-center justify-between pr-3'>
                         <h3 className='font-bold text-base pb-3'><strong>Recent Activity <span className='text-sm font-black'>&gt;</span> {activityFilter === 'Orders' ? 'Orders' : 'Registered'}</strong></h3>
@@ -690,28 +667,17 @@ const Dashboard = () => {
                             </div>
                         </div>
                     </div>
-                </ResizableCard>
-            </ResizableContainer>
+                </div>
+            </div>
             </div>
 
             {/* Sidebar Area - Resizable */}
-            <ResizableContainer
-              defaultSize={sidebarSize}
-              minSize={1}
-              maxSize={4}
-              onResize={setSidebarSize}
-              direction="horizontal"
+            <div
               className="flex flex-col gap-3 overflow-hidden pb-10 md:pb-0 col-span-full lg:col-span-2"
             >
               {/* World Map Card */}
-              <ResizableCard
-                defaultSize={2}
-                minSize={1}
-                maxSize={4}
-                onResize={() => {}}
-                direction="vertical"
+              <div
                 className="rounded-lg lg:overflow-hidden max-h-100 lg:h-auto"
-                resizeEdges={['bottom']}
               >
                 <div className="w-full h-full">
                   {showMap && (
@@ -734,17 +700,11 @@ const Dashboard = () => {
                       </div>
                     )}
                 </div>
-              </ResizableCard>
+              </div>
 
               {/* Rest of your component remains the same */}
-              <ResizableCard
-                defaultSize={1}
-                minSize={0.8}
-                maxSize={3}
-                onResize={() => {}}
-                direction="vertical"
+              <div
                 className="rounded-lg lg:overflow-x-hidden"
-                resizeEdges={['bottom']}
               >
                 <div className='flex w-full items-center justify-between p-0 pb-3 pr-3'>
                   <h3 className='font-semibold text-sm'>Visitor's Area Locations</h3>
@@ -774,8 +734,8 @@ const Dashboard = () => {
                     </button>
                   )})}
                 </div>
-              </ResizableCard>
-            </ResizableContainer>
+              </div>
+            </div>
         </div>
     </div>
   )

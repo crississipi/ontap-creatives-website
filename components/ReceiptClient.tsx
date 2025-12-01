@@ -12,6 +12,7 @@ export default function ReceiptClient({ orderID }: { orderID: string }) {
   const [data, setData] = useState<ReceiptData | null>(null);
   const [loading, setLoading] = useState(true);
   const [downloading, setDownloading] = useState(false);
+  const [downloadMethod, setDownloadMethod] = useState<'server' | 'client' | null>(null);
   const receiptRef = useRef<HTMLDivElement>(null);
   const { toast, showToast } = useToast();
 
@@ -54,11 +55,10 @@ export default function ReceiptClient({ orderID }: { orderID: string }) {
   }, [cleanOrderID]); // Use cleanOrderID as dependency
 
   const handleDownload = async () => {
-    if (!receiptRef.current || !data) return;
+    if (!data) return;
 
     try {
       setDownloading(true);
-<<<<<<< HEAD
       setDownloadMethod('server');
       
       const response = await fetch('https://ontap-creatives-website.vercel.app/api/generate-receipt-pdf', {
@@ -188,27 +188,41 @@ export default function ReceiptClient({ orderID }: { orderID: string }) {
       
 
       // Dynamic import to reduce bundle size
-=======
->>>>>>> ebf4a206820da091b50990d7f9eb3550ad0230a6
       const html2pdf = (await import("html2pdf.js")).default;
 
       const element = receiptRef.current.cloneNode(true) as HTMLElement;
+      
+      // Ensure proper styling for PDF
       element.style.display = "block";
+      element.style.width = "100%";
+      element.style.background = "white";
+      element.style.padding = "20px";
+      element.style.fontFamily = "Arial, sans-serif";
 
+      // FIXED: Proper type definitions for html2pdf options
       const opt = {
-        margin: 0,
-        filename: `receipt-${data.orderID}.pdf`,
-        image: { type: "jpeg" as const, quality: 1 },
-        html2canvas: { scale: 2 },
-        jsPDF: { unit: "in", format: "a6", orientation: "portrait" as const },
+        margin: 0.5,
+        filename: `receipt-${orderID}.pdf`,
+        image: { 
+          type: "jpeg" as const, // Fixed: using string literal type
+          quality: 0.98 
+        },
+        html2canvas: { 
+          scale: 2,
+          useCORS: true,
+          logging: true,
+          letterRendering: true,
+          backgroundColor: "#ffffff"
+        },
+        jsPDF: { 
+          unit: "in" as const, // Fixed: using string literal type
+          format: "a6" as const, // Fixed: using string literal type
+          orientation: "portrait" as const // Fixed: using string literal type
+        }
       };
-
       await html2pdf().set(opt).from(element).save();
-    } catch (error) {
-      showToast('error', 'Failed to download PDF. Please try again.');
-    } finally {
-      setDownloading(false);
-    }
+      showToast('success', 'Client-side PDF generation successful');
+    } catch (err) { showToast('error', 'Client-side PDF generation failed.'); }
   };
 
   // Show loading state
@@ -255,7 +269,7 @@ export default function ReceiptClient({ orderID }: { orderID: string }) {
             />
           </div>
           
-          {/* Hidden Receipt for PDF Generation */}
+          {/* Hidden element for client-side PDF generation */}
           <div ref={receiptRef} className="h-full w-full flex" style={{display:'none'}}>
             <ReceiptTemplate 
               orderID={data.orderID}
@@ -277,7 +291,7 @@ export default function ReceiptClient({ orderID }: { orderID: string }) {
         </>
       )}
       
-      {/* Download Button */}
+      {/* Download Button with enhanced status */}
       <button
         onClick={handleDownload}
         disabled={downloading}
@@ -289,7 +303,7 @@ export default function ReceiptClient({ orderID }: { orderID: string }) {
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
             </svg>
-            Generating PDF...
+            {downloadMethod === 'client' ? 'Client PDF...' : 'Server PDF...'}
           </>
         ) : (
           <>
@@ -300,6 +314,13 @@ export default function ReceiptClient({ orderID }: { orderID: string }) {
           </>
         )}
       </button>
+
+      {/* Debug info (optional - remove in production) */}
+      {process.env.NODE_ENV === 'development' && (
+        <div className="fixed bottom-4 right-4 bg-gray-800 text-white text-xs p-2 rounded opacity-75">
+          PDF Method: {downloadMethod || 'Not attempted'}
+        </div>
+      )}
     </main>
   );
 }

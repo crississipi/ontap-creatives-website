@@ -37,19 +37,15 @@ async function getAuthenticatedUser() {
     })
     return user
   } catch (error) {
-    console.error('Auth error:', error)
+    // console.error('Auth error:', error)
     return null
   }
 }
 
 // Input validation schema
 interface OrderItem {
-<<<<<<< HEAD
   cartID: number;
   productID: number
-=======
-  cartID: number
->>>>>>> ebf4a206820da091b50990d7f9eb3550ad0230a6
   quantity: number
   logo: string
   subtotal: number
@@ -95,10 +91,7 @@ interface OrderRequest {
     subtotal: number
     shippingFee: number
     discount: number
-    total: number
   }
-  clientTimestamp?: number
-  clientId?: number
 }
 
 function validateOrderData(data: any): { isValid: boolean; errors: string[] } {
@@ -133,33 +126,12 @@ function validateOrderData(data: any): { isValid: boolean; errors: string[] } {
   if (!data.paymentInfo?.method) errors.push('Payment method is required')
 
   // Totals validation
-  if (!data.totals || !data.totals.total || data.totals.total <= 0) {
-    errors.push('Valid total amount is required')
-  }
+  if (!data.totals || data.totals.total <= 0) errors.push('Valid total amount is required')
 
   return {
     isValid: errors.length === 0,
     errors
   }
-}
-
-// Check if cart items are already ordered
-async function checkCartItemsStatus(cartIDs: number[], clientID: number) {
-  const cartItems = await prisma.cart.findMany({
-    where: {
-      cartID: { in: cartIDs },
-      clientID: clientID
-    },
-    select: {
-      cartID: true,
-      status: true
-    }
-  });
-
-  const alreadyOrdered = cartItems.filter(item => item.status === 'ordered').map(item => item.cartID);
-  const availableItems = cartItems.filter(item => item.status === 'onCart').map(item => item.cartID);
-
-  return { alreadyOrdered, availableItems, allItemsExist: cartItems.length === cartIDs.length };
 }
 
 export async function POST(request: NextRequest) {
@@ -173,76 +145,26 @@ export async function POST(request: NextRequest) {
 
     const body: OrderRequest = await request.json();
     
-    console.log('🔍 Order request received for user:', user.clientID);
-    console.log('🔍 Order items:', body.items?.length);
-    console.log('🔍 Cart IDs:', body.items?.map(item => item.cartID));
-    
     // Validate input data
     const validation = validateOrderData(body);
     if (!validation.isValid) {
-      console.log('🔍 Validation failed:', validation.errors);
       return NextResponse.json({ 
         error: 'Validation failed', 
         details: validation.errors 
       }, { status: 400 });
     }
 
-    // Check cart items status BEFORE transaction
-    const cartIDs = body.items.map(item => item.cartID);
-    console.log('🔍 Checking cart items with IDs:', cartIDs);
+    // Generate a single transaction ID for all items
+    const sharedTransactionID = `TXN-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
-    // Let's also check what's actually in the database
-    const actualCartItems = await prisma.cart.findMany({
-      where: {
-        cartID: { in: cartIDs }
-      },
-      select: {
-        cartID: true,
-        status: true,
-        clientID: true
-      }
-    });
-
-    console.log('🔍 Actual cart items in database:', actualCartItems);
-
-    const cartStatus = await checkCartItemsStatus(cartIDs, user.clientID);
-    console.log('🔍 Cart status check result:', cartStatus);
-
-    // If some items are already ordered, return specific error
-    if (cartStatus.alreadyOrdered.length > 0) {
-      return NextResponse.json({ 
-        error: 'Some items have already been ordered. Please refresh your cart.',
-        details: {
-          alreadyOrdered: cartStatus.alreadyOrdered,
-          availableItems: cartStatus.availableItems
-        }
-      }, { status: 410 }); // 410 Gone - resource no longer available
-    }
-
-    // If not all items exist, return error
-    if (!cartStatus.allItemsExist) {
-      return NextResponse.json({ 
-        error: 'Some cart items are no longer available. Please refresh your cart.'
-      }, { status: 404 });
-    }
-
-    // Generate unique IDs
-    const timestamp = Date.now();
-    const randomSuffix = Math.random().toString(36).substr(2, 12);
-    const sharedTransactionID = `TXN-${timestamp}-${randomSuffix}`;
-    const billingReferenceNo = `REF-${timestamp}-${Math.random().toString(36).substr(2, 8)}`;
-
-    console.log('🔍 Generated Transaction ID:', sharedTransactionID);
-    console.log('🔍 Generated Reference No:', billingReferenceNo);
-
-    // Store order data for later use
+    // Store order data for later use (outside transaction)
     orderData = {
       body,
       user,
       sharedTransactionID
     };
 
-    // Start transaction
+    // Start transaction - ONLY for database operations
     const result = await prisma.$transaction(async (tx) => {
       try {
         // 0. Update client record with provided contact info (save first/last name, contact number, address if provided)
@@ -270,49 +192,41 @@ export async function POST(request: NextRequest) {
         }
 
         // 1. Create billing record
-        const billingAmount = body.totals.total;
-        
-        console.log('🔍 Creating billing record...');
         const billing = await tx.billing.create({
           data: {
             mode: body.paymentInfo.method.toUpperCase(),
-            referenceNo: billingReferenceNo,
+            referenceNo: body.paymentInfo.referenceNo || `REF-${Date.now()}`,
             sender: `${body.contactInfo.firstName} ${body.contactInfo.lastName}`,
             receiver: 'Burnbox Printing',
-            amount: billingAmount,
+            amount: body.totals.subtotal - (body.totals.discount || 0) + (body.totals.shippingFee || 0),
             dateAdded: new Date()
           }
         });
 
-        console.log('✅ Billing created:', billing.billingID);
+        // console.log('Billing created:', billing.billingID);
 
         // 2. Mark voucher as used if applicable
         if (body.voucher?.id) {
-          try {
-            console.log('🔍 Processing voucher:', body.voucher.id);
-            const existingVoucher = await tx.voucher.findUnique({
-              where: { voucherID: body.voucher.id }
-            });
+          // First check if the voucher exists
+          const existingVoucher = await tx.voucher.findUnique({
+            where: { voucherID: body.voucher.id }
+          });
 
-            if (existingVoucher && !existingVoucher.isUsed) {
-              await tx.voucher.update({
-                where: { voucherID: body.voucher.id },
-                data: { isUsed: true }
-              });
-              console.log('✅ Voucher marked as used:', body.voucher.id);
-            } else if (existingVoucher?.isUsed) {
-              console.warn('⚠️ Voucher already used:', body.voucher.id);
-            } else {
-              console.warn('⚠️ Voucher not found:', body.voucher.id);
-            }
-          } catch (voucherError) {
-            console.warn('⚠️ Voucher processing failed, continuing without voucher:', voucherError);
+          if (existingVoucher && !existingVoucher.isUsed) {
+            await tx.voucher.update({
+              where: { voucherID: body.voucher.id },
+              data: { isUsed: true }
+            });
+            // console.log('Voucher marked as used:', body.voucher.id);
+          } else if (existingVoucher?.isUsed) {
+            // console.warn('Voucher already used:', body.voucher.id);
+          } else {
+            // console.warn('Voucher not found:', body.voucher.id);
           }
         }
 
         // 3. Create tracking record for the order
         const totalItems = body.items.reduce((sum, item) => sum + item.quantity, 0);
-        console.log('🔍 Creating tracking record...');
         const tracking = await tx.tracking.create({
           data: {
             status: 'Newly Ordered',
@@ -322,28 +236,19 @@ export async function POST(request: NextRequest) {
           }
         });
 
-        console.log('✅ Tracking record created:', tracking.trackingID);
+        // console.log('Tracking record created:', tracking.trackingID);
 
-<<<<<<< HEAD
         // 4. Create MULTIPLE transaction records - ONE PER PRODUCT
         // console.log('Creating transactions for items:', body.items.length);
         
         const transactions = [];
         for (const item of body.items) {
           const itemSubtotal = item.product.price * item.quantity;
-=======
-        // 4. Create MULTIPLE transaction records
-        console.log('🔍 Creating transactions for cart items:', body.items.length);
-
-        const transactions = [];
-        for (const item of body.items) {
-          console.log('🔍 Creating transaction for cartID:', item.cartID);
->>>>>>> ebf4a206820da091b50990d7f9eb3550ad0230a6
           
           const transactionData: any = {
             transactionID: sharedTransactionID,
             shipMethod: body.shippingInfo.method,
-            subtotal: item.subtotal,
+            subtotal: itemSubtotal,
             dateOrdered: new Date(),
             product: {
               connect: { productID: item.productID }
@@ -362,7 +267,6 @@ export async function POST(request: NextRequest) {
             }
           };
 
-<<<<<<< HEAD
           // Only connect cartID if this is a cart order
           if (item.cartID && item.orderType === 'cart') {
             transactionData.cart = {
@@ -371,8 +275,6 @@ export async function POST(request: NextRequest) {
           }
 
           // Only include voucher if it exists and is not null
-=======
->>>>>>> ebf4a206820da091b50990d7f9eb3550ad0230a6
           if (body.voucher?.id) {
             transactionData.voucher = {
               connect: { voucherID: body.voucher.id }
@@ -384,7 +286,6 @@ export async function POST(request: NextRequest) {
           });
           
           transactions.push(transaction);
-<<<<<<< HEAD
         }
 
         // 5. Only update cart items status if they are cart orders
@@ -408,31 +309,6 @@ export async function POST(request: NextRequest) {
         }
 
         // console.log('Cart items updated to ordered for products:', productIDs);
-=======
-          console.log('✅ Transaction created for cart:', item.cartID, 'orderID:', transaction.orderID);
-        }
-
-        // 5. Update cart items status to 'ordered'
-        console.log('🔍 Updating cart items status to ordered');
-        const updateResult = await tx.cart.updateMany({
-          where: {
-            cartID: {
-              in: cartIDs
-            },
-            status: 'onCart' // Only update items that are still in cart
-          },
-          data: {
-            status: 'ordered'
-          }
-        });
-
-        console.log('✅ Cart items updated to ordered:', updateResult.count, 'items');
-
-        // Verify all items were updated
-        if (updateResult.count !== cartIDs.length) {
-          throw new Error(`Failed to update all cart items. Expected: ${cartIDs.length}, Updated: ${updateResult.count}`);
-        }
->>>>>>> ebf4a206820da091b50990d7f9eb3550ad0230a6
 
         return {
           transactions,
@@ -442,36 +318,18 @@ export async function POST(request: NextRequest) {
           firstOrderId: transactions[0]?.orderID
         }
 
-      } catch (dbError: any) {
-        console.error('❌ Database error in transaction:', dbError);
-        
-        // Handle specific Prisma errors
-        if (dbError.code === 'P2002') {
-          // Unique constraint violation
-          const target = dbError.meta?.target;
-          if (target?.includes('transactionID')) {
-            throw new Error('Duplicate transaction detected. Please try again.');
-          } else if (target?.includes('referenceNo')) {
-            throw new Error('Duplicate billing reference detected. Please try again.');
-          } else if (target?.includes('cartID')) {
-            throw new Error('Some items are already part of another order. Please refresh your cart.');
-          }
-        }
-        
-        // Foreign key constraint violation
-        if (dbError.code === 'P2003') {
-          throw new Error('Invalid cart items detected. Please refresh your cart.');
-        }
-        
+      } catch (dbError) {
+        // console.error('Database error in transaction:', dbError);
         throw dbError;
       }
     }, {
+      // Increase transaction timeout to 10 seconds
       maxWait: 10000,
       timeout: 10000,
     });
 
     // ✅ SUCCESS: Database operations completed
-    console.log('✅ Order transaction completed successfully');
+    // Now perform time-consuming tasks OUTSIDE the transaction
 
     // Generate receipt data for PDF and email
     const receiptData = {
@@ -495,7 +353,6 @@ export async function POST(request: NextRequest) {
       paymentMethod: body.paymentInfo.method,
       discount: body.totals.discount,
       subtotal: body.totals.subtotal,
-      total: body.totals.total,
       orderDate: new Date().toISOString()
     };
 
@@ -504,7 +361,7 @@ export async function POST(request: NextRequest) {
     let pdfGenerationSuccess = false;
 
     try {
-      console.log('🔍 Generating PDF receipt...');
+      // console.log('🔄 Attempting server-side PDF generation...');
       const pdfResponse = await fetch(`${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/generate-receipt-pdf`, {
         method: 'POST',
         headers: {
@@ -515,24 +372,23 @@ export async function POST(request: NextRequest) {
 
       if (pdfResponse.ok && pdfResponse.headers.get('content-type')?.includes('application/pdf')) {
         const arrayBuffer = await pdfResponse.arrayBuffer();
+        // Convert ArrayBuffer to Buffer properly
         receiptBuffer = Buffer.from(arrayBuffer);
+        // console.log('✅ PDF receipt generated successfully via API');
         pdfGenerationSuccess = true;
-        console.log('✅ PDF receipt generated successfully');
       } else {
         const errorText = await pdfResponse.text();
-        console.warn('⚠️ PDF API returned non-PDF response:', errorText);
+        // console.error('❌ PDF API returned error:', errorText);
         throw new Error('PDF API returned non-PDF response');
       }
     } catch (pdfError) {
-      console.error('❌ PDF generation failed:', pdfError);
+      // console.error('❌ PDF generation failed:', pdfError);
       receiptBuffer = Buffer.from('');
       pdfGenerationSuccess = false;
-      // Continue without PDF - don't fail the entire order
     }
 
-    // Send confirmation email to CUSTOMER
+    // Send confirmation email (outside transaction)
     try {
-      console.log('🔍 Sending customer confirmation email...');
       const receiptUrl = `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/receipts/${result.transactionId}`;
       
       await sendOrderConfirmationEmail({
@@ -540,12 +396,11 @@ export async function POST(request: NextRequest) {
         customerName: `${body.contactInfo.firstName} ${body.contactInfo.lastName}`,
         orderId: result.transactionId,
         orderDate: new Date().toLocaleDateString(),
-        total: body.totals.total,
+        total: body.totals.subtotal - (body.totals.discount || 0) + (body.totals.shippingFee || 0),
         receiptBuffer: receiptBuffer,
         receiptUrl: receiptUrl
       });
       
-<<<<<<< HEAD
       console.log('Customer confirmation email sent successfully');
     } catch (emailError) {
       console.error('Customer email sending failed:', emailError);
@@ -554,36 +409,16 @@ export async function POST(request: NextRequest) {
 
     // NEW: Send admin notification email
     try {
-=======
-      console.log('✅ Customer confirmation email sent successfully');
-    } catch (emailError) {
-      console.error('❌ Customer email sending failed:', emailError);
-      // Continue even if email fails - don't fail the entire order
-    }
-
-    // Send admin notification email
-    try {
-      console.log('🔍 Sending admin notification email...');
->>>>>>> ebf4a206820da091b50990d7f9eb3550ad0230a6
       await sendAdminOrderNotification({
         orderData: body,
         customerEmail: body.contactInfo.email,
         transactionId: result.transactionId,
-<<<<<<< HEAD
         totalAmount: body.totals.subtotal - (body.totals.discount || 0) + (body.totals.shippingFee || 0)
       });
       
       console.log('Admin notification email sent successfully');
     } catch (adminEmailError) {
       console.error('Admin notification email failed:', adminEmailError);
-=======
-        totalAmount: body.totals.total
-      });
-      
-      console.log('✅ Admin notification email sent successfully');
-    } catch (adminEmailError) {
-      console.error('❌ Admin notification email failed:', adminEmailError);
->>>>>>> ebf4a206820da091b50990d7f9eb3550ad0230a6
       // Continue even if admin email fails - don't fail the entire order
     }
 
@@ -594,102 +429,27 @@ export async function POST(request: NextRequest) {
       receiptUrl: `${process.env.NEXTAUTH_URL || 'https://ontap.ph/'}/receipts/${result.transactionId}`
     });
 
-  } catch (error: any) {
-    console.error('❌ Order creation error:', error);
+  } catch (error) {
+    // console.error('Order creation error:', error);
     
+    // Provide more specific error messages
     let errorMessage = 'Internal server error';
-    let statusCode = 500;
     
     if (error instanceof Error) {
       errorMessage = error.message;
       
       // Handle specific Prisma errors
-      if (error.message.includes('Unique constraint') || error.message.includes('Duplicate')) {
-        errorMessage = 'Order processing conflict. Please try again.';
-        statusCode = 409; // Conflict
+      if (error.message.includes('Unique constraint')) {
+        errorMessage = 'Duplicate transaction detected. Please try again.';
       } else if (error.message.includes('Foreign key constraint')) {
         errorMessage = 'Invalid data reference. Please check your cart items.';
-        statusCode = 400;
       } else if (error.message.includes('Transaction already closed')) {
         errorMessage = 'Order processing took too long. Please try again.';
-        statusCode = 408;
-      } else if (error.message.includes('Cart item') && error.message.includes('not found')) {
-        errorMessage = 'Some cart items are no longer available. Please refresh your cart.';
-        statusCode = 400;
       }
     }
     
     return NextResponse.json(
       { error: errorMessage },
-      { status: statusCode }
-    );
-  } finally {
-    await prisma.$disconnect();
-  }
-}
-
-// Add GET method for order retrieval
-export async function GET(request: NextRequest) {
-  try {
-    const user = await getAuthenticatedUser();
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const { searchParams } = new URL(request.url);
-    const transactionId = searchParams.get('transactionId');
-
-    if (transactionId) {
-      // Get specific order
-      const orders = await prisma.transaction.findMany({
-        where: {
-          transactionID: transactionId,
-          clientID: user.clientID
-        },
-        include: {
-          cart: {
-            include: {
-              product: true
-            }
-          },
-          billing: true,
-          tracking: true,
-          voucher: true
-        },
-        orderBy: {
-          dateOrdered: 'desc'
-        }
-      });
-
-      return NextResponse.json({ orders });
-    } else {
-      // Get all orders for user
-      const orders = await prisma.transaction.findMany({
-        where: {
-          clientID: user.clientID
-        },
-        include: {
-          cart: {
-            include: {
-              product: true
-            }
-          },
-          billing: true,
-          tracking: true,
-          voucher: true
-        },
-        orderBy: {
-          dateOrdered: 'desc'
-        },
-        take: 50 // Limit to recent orders
-      });
-
-      return NextResponse.json({ orders });
-    }
-  } catch (error) {
-    console.error('Error fetching orders:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch orders' },
       { status: 500 }
     );
   } finally {
