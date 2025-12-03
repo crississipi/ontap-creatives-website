@@ -62,15 +62,6 @@
 /* Optional: Add hover effect on thumb */
 .admin::-webkit-scrollbar-thumb:hover {
   background: #2C4594 !important;
-<<<<<<< HEAD
-}
-
-.funnel::-webkit-scrollbar { 
-  width: 0px !important; 
-  height: 0px !important; 
-  transition: width 0.3s ease, height 0.3s ease !important;
-=======
->>>>>>> ebf4a206820da091b50990d7f9eb3550ad0230a6
 }
 
 /* Hide number input spinners cross-browser */
@@ -373,24 +364,4 @@ body {
 
 .disabled-button {
   cursor: not-allowed;
-<<<<<<< HEAD
-}
-
-.noise {
-  background-image: url("data:image/png;base64,iVBOR..."); /* tiny noise */
-  mix-blend-mode: overlay;
-  opacity: 1;
-}
-
-.gradient {
-  background-color: transparent;
-  background-image: linear-gradient(to right, 
-    transparent 40%,
-    #2C4594 45%,
-    #C5D9E7 50%,
-    #2C4594 55%,
-    transparent 60%
-  );
-=======
->>>>>>> ebf4a206820da091b50990d7f9eb3550ad0230a6
 }
