@@ -16,59 +16,46 @@ export async function GET(request: NextRequest) {
     
     if (error) {
       console.error('Google OAuth error:', error);
-      return NextResponse.redirect('https://ontap.ph?auth_error=google_' + error);
+      return NextResponse.redirect('https://darkslategray-horse-918539.hostingersite.com?auth_error=google');
     }
     
     if (!code) {
       console.error('No authorization code received');
-      return NextResponse.redirect('https://ontap.ph?auth_error=no_code');
+      return NextResponse.redirect('https://darkslategray-horse-918539.hostingersite.com?auth_error=no_code');
     }
     
-    // Get frontend domain from state or cookie
-    let frontendDomain = 'ontap.ph'; // Default
+    // Get frontend URL from state or cookie
+    let frontendUrl = 'https://darkslategray-horse-918539.hostingersite.com'; // Default
     
     if (state) {
       try {
         const stateData = JSON.parse(Buffer.from(state, 'base64').toString());
-        frontendDomain = stateData.frontend || 'ontap.ph';
-        console.log('Got frontend from state:', frontendDomain);
+        frontendUrl = stateData.frontendUrl || 'https://darkslategray-horse-918539.hostingersite.com';
+        console.log('Got frontend URL from state:', frontendUrl);
       } catch (err) {
-        console.log('Could not parse state, trying cookie');
+        console.log('Could not parse state');
       }
     }
     
     // Fallback to cookie
     const frontendCookie = request.cookies.get('oauth-frontend')?.value;
     if (frontendCookie) {
-      frontendDomain = frontendCookie;
-      console.log('Got frontend from cookie:', frontendDomain);
+      frontendUrl = frontendCookie;
+      console.log('Got frontend URL from cookie:', frontendUrl);
     }
     
-    // Determine frontend URL based on domain
-    let frontendUrl;
-    if (frontendDomain.includes('localhost') || frontendDomain.includes('127.0.0.1')) {
-      frontendUrl = 'http://localhost:3000';
-    } else if (frontendDomain.includes('ontap.ph')) {
-      frontendUrl = 'https://ontap.ph';
-    } else if (frontendDomain.includes('hostinger')) {
-      frontendUrl = 'https://darkslategray-horse-918539.hostingersite.com';
-    } else {
-      frontendUrl = 'https://ontap.ph'; // Default
-    }
+    console.log('Will redirect back to:', frontendUrl);
     
-    console.log('Frontend URL:', frontendUrl);
-    
-    // Exchange code for access token
-    const clientId = process.env.GOOGLE_CLIENT_ID_PROD || process.env.GOOGLE_CLIENT_ID;
-    const clientSecret = process.env.GOOGLE_CLIENT_SECRET_PROD || process.env.GOOGLE_CLIENT_SECRET;
+    // Exchange code for tokens
+    const clientId = process.env.GOOGLE_CLIENT_ID;
+    const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
     const redirectUri = 'https://ontap-creatives-website.vercel.app/api/auth/google/callback';
     
     if (!clientId || !clientSecret) {
       console.error('Missing Google OAuth credentials');
-      return NextResponse.redirect(`${frontendUrl}?auth_error=config_missing`);
+      return NextResponse.redirect(`${frontendUrl}?auth_error=config`);
     }
     
-    // Exchange code for tokens
     const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
       method: 'POST',
       headers: {
@@ -87,7 +74,7 @@ export async function GET(request: NextRequest) {
     
     if (!tokenResponse.ok) {
       console.error('Token exchange failed:', tokenData);
-      return NextResponse.redirect(`${frontendUrl}?auth_error=token_exchange`);
+      return NextResponse.redirect(`${frontendUrl}?auth_error=token`);
     }
     
     const { access_token } = tokenData;
@@ -103,26 +90,26 @@ export async function GET(request: NextRequest) {
     
     if (!userInfoResponse.ok) {
       console.error('Failed to get user info:', userInfo);
-      return NextResponse.redirect(`${frontendUrl}?auth_error=user_info`);
+      return NextResponse.redirect(`${frontendUrl}?auth_error=userinfo`);
     }
     
-    const { email, name, picture } = userInfo;
+    const { email, name } = userInfo;
     
     if (!email) {
       console.error('No email from Google');
       return NextResponse.redirect(`${frontendUrl}?auth_error=no_email`);
     }
     
-    console.log('Google user authenticated:', email, name);
+    console.log('Google user:', email);
     
-    // Check if user exists in database
+    // Check if user exists
     let user = await prisma.client.findUnique({
       where: { email: email.toLowerCase() },
     });
     
     if (!user) {
       // Create new user
-      const randomPassword = Math.random().toString(36).slice(-12) + Math.random().toString(36).slice(-12);
+      const randomPassword = Math.random().toString(36).slice(-12);
       const hashedPassword = await bcrypt.hash(randomPassword, 12);
       
       user = await prisma.client.create({
@@ -131,10 +118,10 @@ export async function GET(request: NextRequest) {
           email: email.toLowerCase(),
           password: hashedPassword,
           adsAgree: false,
-          emailVerified: true, // Google emails are verified
+          emailVerified: true,
         },
       });
-      console.log('New user created via Google:', email);
+      console.log('New user created:', email);
     }
     
     // Create JWT token
@@ -143,63 +130,38 @@ export async function GET(request: NextRequest) {
         userId: user.clientID,
         email: user.email,
         name: user.clientName,
-        provider: 'google'
       },
-      process.env.JWT_SECRET || 'your-secret-key-change-in-production',
+      process.env.JWT_SECRET || 'your-secret',
       { expiresIn: '30d' }
     );
     
     // Remove password from response
     const { password: _, ...userWithoutPassword } = user;
     
-    // Determine domain for cookie
-    const isProduction = process.env.NODE_ENV === 'production';
-    let cookieDomain: string | undefined;
+    // Create redirect URL with token as URL parameter
+    const redirectUrl = new URL(frontendUrl);
     
-    if (isProduction) {
-      if (frontendDomain.includes('ontap.ph')) {
-        cookieDomain = '.ontap.ph';
-      } else if (frontendDomain.includes('hostingersite.com')) {
-        cookieDomain = '.hostingersite.com';
-      }
+    // If the frontend has a callback handler, use it
+    if (frontendUrl.includes('hostinger') || frontendUrl.includes('https://darkslategray-horse-918539.hostingersite.com')) {
+      // For your Hostinger/ontap.ph frontend, redirect to a callback page
+      const callbackUrl = new URL(frontendUrl);
+      callbackUrl.pathname = '/auth/callback';
+      callbackUrl.searchParams.set('token', token);
+      callbackUrl.searchParams.set('user', JSON.stringify(userWithoutPassword));
+      callbackUrl.searchParams.set('provider', 'google');
+      
+      return NextResponse.redirect(callbackUrl.toString());
+    } else {
+      // For other cases, add token to URL
+      redirectUrl.searchParams.set('auth_token', token);
+      redirectUrl.searchParams.set('auth_user', JSON.stringify(userWithoutPassword));
+      redirectUrl.searchParams.set('auth_provider', 'google');
+      
+      return NextResponse.redirect(redirectUrl.toString());
     }
-    
-    console.log('Setting cookie for domain:', cookieDomain);
-    
-    // Create redirect URL with token as URL parameter (since cross-domain cookies are tricky)
-    const redirectUrl = new URL(`${frontendUrl}/auth/google-callback`);
-    redirectUrl.searchParams.set('token', token);
-    redirectUrl.searchParams.set('user', JSON.stringify(userWithoutPassword));
-    redirectUrl.searchParams.set('provider', 'google');
-    
-    const response = NextResponse.redirect(redirectUrl.toString());
-    
-    // Try to set cookie anyway (might work for same-domain cases)
-    if (cookieDomain) {
-      response.cookies.set({
-        name: 'auth-token',
-        value: token,
-        httpOnly: true,
-        secure: isProduction,
-        sameSite: 'none', // Use 'none' for cross-domain
-        maxAge: 30 * 24 * 60 * 60,
-        path: '/',
-        domain: cookieDomain,
-      });
-    }
-    
-    // Clear the oauth cookie
-    response.cookies.set({
-      name: 'oauth-frontend',
-      value: '',
-      maxAge: -1,
-      path: '/',
-    });
-    
-    return response;
     
   } catch (err: any) {
     console.error('Google callback error:', err);
-    return NextResponse.redirect('https://ontap.ph?auth_error=server_error');
+    return NextResponse.redirect('https://darkslategray-horse-918539.hostingersite.com?auth_error=server');
   }
 }

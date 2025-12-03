@@ -2,30 +2,37 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(request: NextRequest) {
   try {
-    // Get the origin (where the request came from)
-    const origin = request.headers.get('origin') || request.headers.get('referer') || 'https://ontap.ph';
-    console.log('Google OAuth request from origin:', origin);
+    // Get the redirect parameter to know where to send the user back to
+    const { searchParams } = new URL(request.url);
+    const redirectParam = searchParams.get('redirect');
     
-    // Parse the origin to get the hostname
+    let frontendUrl;
+    
+    if (redirectParam) {
+      // Use the provided redirect URL
+      frontendUrl = decodeURIComponent(redirectParam);
+    } else {
+      // Fallback: get from referer or origin headers
+      const referer = request.headers.get('referer');
+      const origin = request.headers.get('origin');
+      frontendUrl = referer || origin || 'https://darkslategray-horse-918539.hostingersite.com' || 'https://ontap.ph';
+    }
+    
+    console.log('Google OAuth - Frontend URL:', frontendUrl);
+    
+    // Extract domain from frontend URL
     let frontendDomain;
     try {
-      const originUrl = new URL(origin);
-      frontendDomain = originUrl.hostname;
+      const url = new URL(frontendUrl);
+      frontendDomain = url.hostname;
     } catch {
-      frontendDomain = 'ontap.ph'; // Default fallback
+      frontendDomain = 'https://darkslategray-horse-918539.hostingersite.com';
     }
     
-    // Determine which Google Client ID to use based on environment
-    let clientId;
-    const isProduction = process.env.NODE_ENV === 'production';
+    console.log('Google OAuth - Frontend domain:', frontendDomain);
     
-    if (isProduction) {
-      // Production client ID
-      clientId = process.env.GOOGLE_CLIENT_ID_PROD || process.env.GOOGLE_CLIENT_ID;
-    } else {
-      // Development client ID
-      clientId = process.env.GOOGLE_CLIENT_ID_DEV || process.env.GOOGLE_CLIENT_ID;
-    }
+    // Use production Google Client ID
+    const clientId = process.env.GOOGLE_CLIENT_ID;
     
     if (!clientId) {
       console.error('Google Client ID not configured');
@@ -35,18 +42,14 @@ export async function GET(request: NextRequest) {
       );
     }
     
-    // Determine redirect URI - ALWAYS use the Vercel backend URL for callback
+    // Always use Vercel backend for callback
     const redirectUri = 'https://ontap-creatives-website.vercel.app/api/auth/google/callback';
     
-    console.log('Using Client ID:', clientId.substring(0, 10) + '...');
-    console.log('Redirect URI:', redirectUri);
-    console.log('Frontend domain:', frontendDomain);
-    
-    // Create state parameter to pass frontend info
+    // Create state parameter with frontend info
     const state = Buffer.from(JSON.stringify({
       frontend: frontendDomain,
-      timestamp: Date.now(),
-      origin: origin
+      frontendUrl: frontendUrl,
+      timestamp: Date.now()
     })).toString('base64');
     
     // Build Google OAuth URL
@@ -58,17 +61,17 @@ export async function GET(request: NextRequest) {
       access_type: 'offline',
       prompt: 'consent',
       state: state,
-      hd: '*', // Optional: restrict to specific domain
+      hd: '*',
     });
     
     const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
     
     const response = NextResponse.redirect(authUrl);
     
-    // Store the frontend domain in a cookie for the callback
+    // Store frontend info in cookie for callback
     response.cookies.set({
       name: 'oauth-frontend',
-      value: frontendDomain,
+      value: frontendUrl,
       httpOnly: true,
       secure: true,
       sameSite: 'lax',
@@ -81,7 +84,7 @@ export async function GET(request: NextRequest) {
   } catch (err: any) {
     console.error('Google OAuth init error:', err);
     return NextResponse.json(
-      { error: 'Failed to initialize Google authentication: ' + err.message },
+      { error: 'Failed to initialize Google authentication' },
       { status: 500 }
     );
   }
