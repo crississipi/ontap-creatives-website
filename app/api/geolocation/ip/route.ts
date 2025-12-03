@@ -7,51 +7,6 @@ import { NextRequest, NextResponse } from 'next/server';
  */
 export async function GET(request: NextRequest) {
   try {
-<<<<<<< HEAD
-    // Get client IP
-    const clientIP = getClientIP(request);
-
-    if (!clientIP || clientIP === 'unknown') {
-      return NextResponse.json({ 
-        error: 'Could not determine IP address' 
-      }, { status: 400 });
-    }
-
-    // Skip geolocation for local IPs
-    if (isLocalIP(clientIP)) {
-      return NextResponse.json({
-        error: 'Local IP address detected',
-        latitude: null,
-        longitude: null
-      });
-    }
-
-    // Try IP geolocation services in order
-    const services = [
-      tryIPAPI,
-      tryIPWhois,
-      tryFreeIPAPI
-    ];
-
-    for (const service of services) {
-      try {
-        const location = await service(clientIP);
-        if (location) {
-          return NextResponse.json(location);
-        }
-      } catch (error) {
-        // Continue to next service
-        continue;
-      }
-    }
-
-    // All services failed
-    return NextResponse.json({ 
-      error: 'Failed to get location from IP',
-      latitude: null,
-      longitude: null
-    }, { status: 500 });
-=======
     // Get client IP from various headers
     const forwarded = request.headers.get('x-forwarded-for');
     const realIP = request.headers.get('x-real-ip');
@@ -146,7 +101,6 @@ export async function GET(request: NextRequest) {
       timezone: autoData.timezone,
       source: 'ipapi.co-fallback'
     });
->>>>>>> ebf4a206820da091b50990d7f9eb3550ad0230a6
 
   } catch (error) {
     return NextResponse.json({ 
