@@ -1,139 +1,205 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
-import bcrypt from 'bcryptjs'
-import jwt from 'jsonwebtoken'
-import fs from 'fs'
-import path from 'path'
+import { NextRequest, NextResponse } from 'next/server';
+import { PrismaClient } from '@prisma/client';
+import jwt from 'jsonwebtoken';
+import bcrypt from 'bcryptjs';
 
-const prisma = new PrismaClient()
-
-async function readClientSecrets() {
-  // Prefer environment variables, fallback to local JSON file included in repo
-  const clientId = process.env.GOOGLE_CLIENT_ID
-  const clientSecret = process.env.GOOGLE_CLIENT_SECRET
-  if (clientId && clientSecret) return { clientId, clientSecret }
-
-  try {
-    const secretsPath = path.join(process.cwd(), 'client_secret_82522263410-1r4543pkh309ubperae8nt1vto3h9v5n.apps.googleusercontent.com.json')
-    const raw = fs.readFileSync(secretsPath, 'utf8')
-    const parsed = JSON.parse(raw)
-    return {
-      clientId: parsed?.web?.client_id,
-      clientSecret: parsed?.web?.client_secret
-    }
-  } catch (e) {
-    return { clientId: undefined, clientSecret: undefined }
-  }
-}
+const prisma = new PrismaClient();
 
 export async function GET(request: NextRequest) {
   try {
-    const url = new URL(request.url)
-    const code = url.searchParams.get('code')
-    if (!code) return NextResponse.json({ error: 'Missing code' }, { status: 400 })
-
-    const { clientId, clientSecret } = await readClientSecrets()
-    if (!clientId || !clientSecret) {
-      return NextResponse.json({ error: 'Google client credentials not configured' }, { status: 500 })
+    const { searchParams } = new URL(request.url);
+    const code = searchParams.get('code');
+    const error = searchParams.get('error');
+    const state = searchParams.get('state');
+    
+    console.log('Google callback received');
+    
+    if (error) {
+      console.error('Google OAuth error:', error);
+      return NextResponse.redirect('https://ontap.ph?auth_error=google_' + error);
     }
-
-    const base = process.env.NEXT_PUBLIC_BASE_URL || process.env.BASE_URL || 'http://localhost:3000'
-    const redirectUri = `${base}/api/auth/google/callback`
-
+    
+    if (!code) {
+      console.error('No authorization code received');
+      return NextResponse.redirect('https://ontap.ph?auth_error=no_code');
+    }
+    
+    // Get frontend domain from state or cookie
+    let frontendDomain = 'ontap.ph'; // Default
+    
+    if (state) {
+      try {
+        const stateData = JSON.parse(Buffer.from(state, 'base64').toString());
+        frontendDomain = stateData.frontend || 'ontap.ph';
+        console.log('Got frontend from state:', frontendDomain);
+      } catch (err) {
+        console.log('Could not parse state, trying cookie');
+      }
+    }
+    
+    // Fallback to cookie
+    const frontendCookie = request.cookies.get('oauth-frontend')?.value;
+    if (frontendCookie) {
+      frontendDomain = frontendCookie;
+      console.log('Got frontend from cookie:', frontendDomain);
+    }
+    
+    // Determine frontend URL based on domain
+    let frontendUrl;
+    if (frontendDomain.includes('localhost') || frontendDomain.includes('127.0.0.1')) {
+      frontendUrl = 'http://localhost:3000';
+    } else if (frontendDomain.includes('ontap.ph')) {
+      frontendUrl = 'https://ontap.ph';
+    } else if (frontendDomain.includes('hostinger')) {
+      frontendUrl = 'https://darkslategray-horse-918539.hostingersite.com';
+    } else {
+      frontendUrl = 'https://ontap.ph'; // Default
+    }
+    
+    console.log('Frontend URL:', frontendUrl);
+    
+    // Exchange code for access token
+    const clientId = process.env.GOOGLE_CLIENT_ID_PROD || process.env.GOOGLE_CLIENT_ID;
+    const clientSecret = process.env.GOOGLE_CLIENT_SECRET_PROD || process.env.GOOGLE_CLIENT_SECRET;
+    const redirectUri = 'https://ontap-creatives-website.vercel.app/api/auth/google/callback';
+    
+    if (!clientId || !clientSecret) {
+      console.error('Missing Google OAuth credentials');
+      return NextResponse.redirect(`${frontendUrl}?auth_error=config_missing`);
+    }
+    
     // Exchange code for tokens
-    const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
+    const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
       body: new URLSearchParams({
         code,
         client_id: clientId,
         client_secret: clientSecret,
         redirect_uri: redirectUri,
-        grant_type: 'authorization_code'
-      })
-    })
-
-    if (!tokenRes.ok) {
-      const text = await tokenRes.text()
-      return NextResponse.json({ error: 'Failed to exchange code', details: text }, { status: 500 })
+        grant_type: 'authorization_code',
+      }),
+    });
+    
+    const tokenData = await tokenResponse.json();
+    
+    if (!tokenResponse.ok) {
+      console.error('Token exchange failed:', tokenData);
+      return NextResponse.redirect(`${frontendUrl}?auth_error=token_exchange`);
     }
-
-    const tokenData = await tokenRes.json()
-    const { access_token, id_token } = tokenData
-    if (!id_token && !access_token) {
-      return NextResponse.json({ error: 'No tokens returned from Google' }, { status: 500 })
+    
+    const { access_token } = tokenData;
+    
+    // Get user info from Google
+    const userInfoResponse = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
+      headers: {
+        Authorization: `Bearer ${access_token}`,
+      },
+    });
+    
+    const userInfo = await userInfoResponse.json();
+    
+    if (!userInfoResponse.ok) {
+      console.error('Failed to get user info:', userInfo);
+      return NextResponse.redirect(`${frontendUrl}?auth_error=user_info`);
     }
-
-    // Get user info from id_token (JWT) or userinfo endpoint
-    let profile: any = null
-    try {
-      // Try userinfo endpoint
-      if (access_token) {
-        const userRes = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
-          headers: { Authorization: `Bearer ${access_token}` }
-        })
-        if (userRes.ok) profile = await userRes.json()
-      }
-    } catch (e) {
-      // ignore
+    
+    const { email, name, picture } = userInfo;
+    
+    if (!email) {
+      console.error('No email from Google');
+      return NextResponse.redirect(`${frontendUrl}?auth_error=no_email`);
     }
-
-    // Fallback: decode id_token
-    if (!profile && id_token) {
-      try {
-        const decoded: any = jwt.decode(id_token)
-        profile = {
-          email: decoded?.email,
-          name: decoded?.name,
-          picture: decoded?.picture
-        }
-      } catch (e) {
-        // ignore
-      }
-    }
-
-    if (!profile || !profile.email) {
-      return NextResponse.json({ error: 'Failed to obtain Google profile' }, { status: 500 })
-    }
-
-    // Upsert user in DB
-    let user = await prisma.client.findUnique({ where: { email: profile.email } })
+    
+    console.log('Google user authenticated:', email, name);
+    
+    // Check if user exists in database
+    let user = await prisma.client.findUnique({
+      where: { email: email.toLowerCase() },
+    });
+    
     if (!user) {
-      // create a random password for the account (hashed)
-      const randomPwd = Math.random().toString(36).slice(2)
-      const hashed = await bcrypt.hash(randomPwd, 10)
-      
-      // Determine client name: prefer Google profile name, fall back to email prefix
-      let clientName = profile.name
-      if (!clientName || clientName.trim() === '') {
-        clientName = profile.email.split('@')[0]
-      }
+      // Create new user
+      const randomPassword = Math.random().toString(36).slice(-12) + Math.random().toString(36).slice(-12);
+      const hashedPassword = await bcrypt.hash(randomPassword, 12);
       
       user = await prisma.client.create({
         data: {
-          clientName,
-          email: profile.email,
-          password: hashed,
+          clientName: name || email.split('@')[0],
+          email: email.toLowerCase(),
+          password: hashedPassword,
           adsAgree: false,
-          emailVerified: true
-        }
-      })
+          emailVerified: true, // Google emails are verified
+        },
+      });
+      console.log('New user created via Google:', email);
     }
-
-    // Issue same JWT as login
-    const token = jwt.sign({ userId: user.clientID }, process.env.JWT_SECRET || 'dev-secret', { expiresIn: '7d' })
-
-    const response = NextResponse.redirect(new URL('/', request.url))
-    response.cookies.set('auth-token', token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 7 * 24 * 60 * 60,
-      path: '/'
-    })
-
-    return response
-  } catch (err) {
-    return NextResponse.json({ error: 'Google callback failed', details: String(err) }, { status: 500 })
+    
+    // Create JWT token
+    const token = jwt.sign(
+      { 
+        userId: user.clientID,
+        email: user.email,
+        name: user.clientName,
+        provider: 'google'
+      },
+      process.env.JWT_SECRET || 'your-secret-key-change-in-production',
+      { expiresIn: '30d' }
+    );
+    
+    // Remove password from response
+    const { password: _, ...userWithoutPassword } = user;
+    
+    // Determine domain for cookie
+    const isProduction = process.env.NODE_ENV === 'production';
+    let cookieDomain: string | undefined;
+    
+    if (isProduction) {
+      if (frontendDomain.includes('ontap.ph')) {
+        cookieDomain = '.ontap.ph';
+      } else if (frontendDomain.includes('hostingersite.com')) {
+        cookieDomain = '.hostingersite.com';
+      }
+    }
+    
+    console.log('Setting cookie for domain:', cookieDomain);
+    
+    // Create redirect URL with token as URL parameter (since cross-domain cookies are tricky)
+    const redirectUrl = new URL(`${frontendUrl}/auth/google-callback`);
+    redirectUrl.searchParams.set('token', token);
+    redirectUrl.searchParams.set('user', JSON.stringify(userWithoutPassword));
+    redirectUrl.searchParams.set('provider', 'google');
+    
+    const response = NextResponse.redirect(redirectUrl.toString());
+    
+    // Try to set cookie anyway (might work for same-domain cases)
+    if (cookieDomain) {
+      response.cookies.set({
+        name: 'auth-token',
+        value: token,
+        httpOnly: true,
+        secure: isProduction,
+        sameSite: 'none', // Use 'none' for cross-domain
+        maxAge: 30 * 24 * 60 * 60,
+        path: '/',
+        domain: cookieDomain,
+      });
+    }
+    
+    // Clear the oauth cookie
+    response.cookies.set({
+      name: 'oauth-frontend',
+      value: '',
+      maxAge: -1,
+      path: '/',
+    });
+    
+    return response;
+    
+  } catch (err: any) {
+    console.error('Google callback error:', err);
+    return NextResponse.redirect('https://ontap.ph?auth_error=server_error');
   }
 }
