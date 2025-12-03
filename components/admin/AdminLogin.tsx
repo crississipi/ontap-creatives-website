@@ -24,30 +24,55 @@ const AdminLogin = ({ showAdminLogin, setPage }: AdminProps) => {
 
     try {
       setLoading(true)
-      const res = await fetch('https://ontap-creatives-website.vercel.app/api/admin/login', {
+      console.log('Attempting admin login for:', email);
+      
+      // Use relative path for development, full URL for production
+      const apiUrl = process.env.NODE_ENV === 'development' 
+        ? '/api/admin/login' 
+        : 'https://ontap-creatives-website.vercel.app/api/admin/login';
+      
+      console.log('Using API URL:', apiUrl);
+      
+      const res = await fetch(apiUrl, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password })
+        headers: { 
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+        credentials: 'include', // IMPORTANT: This sends cookies
       })
 
-      const data = await res.json()
+      console.log('Response status:', res.status);
+      const data = await res.json();
+      console.log('Response data:', data);
+      
       if (!res.ok) {
-        throw new Error(data?.error || 'Unable to login. Please try again.')
+        throw new Error(data?.error || `Login failed with status ${res.status}`)
       }
 
       const role = data?.staff?.role as StaffRole | undefined
       if (role) {
         saveRoleSession(role)
+        console.log('Role saved:', role);
       }
 
       setSuccess('Access granted. Redirecting...')
-      setPage(1)
+      
+      // Wait a moment then reload to ensure cookies are set
+      setTimeout(() => {
+        console.log('Reloading page after successful login');
+        window.location.reload();
+      }, 1000)
+      
     } catch (err: any) {
+      console.error('Login error:', err);
       setError(err.message || 'Unable to login. Please try again.')
     } finally {
       setLoading(false);
-      setEmail('');
-      setPassword('');
+      // Don't clear email/password on error so user can see what they entered
+      // setEmail('');
+      // setPassword('');
     }
   }
   
@@ -88,10 +113,14 @@ const AdminLogin = ({ showAdminLogin, setPage }: AdminProps) => {
                   autoComplete='current-password'
                 />
                 {error && (
-                  <span className='text-sm text-rose-200 text-center'>{error}</span>
+                  <div className='text-sm text-rose-200 text-center p-2 bg-red-900/30 rounded'>
+                    <strong>Error:</strong> {error}
+                  </div>
                 )}
                 {success && (
-                  <span className='text-sm text-emerald-200 text-center'>{success}</span>
+                  <div className='text-sm text-emerald-200 text-center p-2 bg-green-900/30 rounded'>
+                    <strong>Success:</strong> {success}
+                  </div>
                 )}
                 <button type="button" className='ml-auto text-white hover:underline focus:text-blue ease-out duration-200'>forgot password?</button>
                 <button 
@@ -102,8 +131,19 @@ const AdminLogin = ({ showAdminLogin, setPage }: AdminProps) => {
                   {loading ? 'Verifying...' : 'LOGIN'}
                 </button>
             </form>
+            
+            {/* Debug info - remove in production */}
+            {process.env.NODE_ENV === 'development' && (
+              <div className='mt-4 p-2 bg-black/30 rounded text-xs text-white'>
+                <div>NODE_ENV: {process.env.NODE_ENV}</div>
+                <div>Email: {email}</div>
+                <div>Password length: {password.length}</div>
+              </div>
+            )}
         </div>
-        <button type="button" className='flex items-center gap-2 px-5 pl-3 py-3 rounded-md bg-white z-10 absolute bottom-10 left-10 hover:bg-light-blue focus:bg-violet focus:text-white ease-out duration-200' onClick={() => showAdminLogin(false)}><RiLogoutBoxLine className='text-xl'/> Exit</button>
+        <button type="button" className='flex items-center gap-2 px-5 pl-3 py-3 rounded-md bg-white z-10 absolute bottom-10 left-10 hover:bg-light-blue focus:bg-violet focus:text-white ease-out duration-200' onClick={() => showAdminLogin(false)}>
+          <RiLogoutBoxLine className='text-xl'/> Exit
+        </button>
     </div>
   )
 }

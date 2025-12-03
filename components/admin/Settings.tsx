@@ -103,7 +103,7 @@ const Settings = () => {
     const fetchProfile = async () => {
         setProfileLoading(true);
         try {
-            const res = await fetch('https://ontap-creatives-website.vercel.app/api/staff/me');
+            const res = await fetch('/api/staff/me');
             if (res.ok) {
                 const data = await res.json();
                 setProfileFirstName(data.firstName || '');
@@ -134,7 +134,7 @@ const Settings = () => {
     const fetchStaff = async () => {
       setLoadingStaff(true);
       try {
-        const res = await fetch('https://ontap-creatives-website.vercel.app/api/client/staff');
+        const res = await fetch('/api/client/staff');
         if (res.ok) {
           const data = await res.json();
           setStaffList(data.staff || []);

@@ -11,8 +11,6 @@ import { useLocationTracking } from '@/hooks/useLocationTracking'
 import { TbArrowUpDashed } from 'react-icons/tb'
 import { Area, AreaChart, Bar, BarChart, Cell, LabelList, ResponsiveContainer, Tooltip, XAxis } from 'recharts'
 
-const WorldMap = dynamic(() => import("./WorldMap"), { ssr: false });
-
 type MetricKey = 'visits' | 'earnings' | 'orders' | 'registered';
 
 interface MetricTrend {
@@ -87,150 +85,6 @@ const Cards: CardConfig[] = [
     },
 ];
 
-const defaultRegions = [
-  {
-    region: "National Capital Region",
-    abbr: "NCR",
-    latitude: 14.5736,
-    longitude: 121.03297,
-    count: 0
-  },
-  {
-    region: "Cordillera Administrative Region",
-    abbr: "CAR",
-    latitude: 17.35125,
-    longitude: 121.17189,
-    count: 0
-  },
-  {
-    region: "Ilocos Region",
-    abbr: "Region I",
-    latitude: 16.08321,
-    longitude: 120.61999,
-    count: 0
-  },
-  {
-    region: "Cagayan Valley",
-    abbr: "Region II",
-    latitude: 17.5751,
-    longitude: 121.7269,
-    count: 0
-  },
-  {
-    region: "Central Luzon",
-    abbr: "Region III",
-    latitude: 15.48277,
-    longitude: 120.71200,
-    count: 0
-  },
-  {
-    region: "CALABARZON",
-    abbr: "Region IV-A",
-    latitude: 14.10078,
-    longitude: 121.07937,
-    count: 0
-  },
-  {
-    region: "MIMAROPA",
-    abbr: "Region IV-B",
-    latitude: 9.84321,
-    longitude: 118.73648,
-    count: 0
-  },
-  {
-    region: "Bicol Region",
-    abbr: "Region V",
-    latitude: 13.42099,
-    longitude: 123.41370,
-    count: 0
-  },
-  {
-    region: "Western Visayas",
-    abbr: "Region VI",
-    latitude: 11.00498,
-    longitude: 122.53727,
-    count: 0
-  },
-  {
-    region: "Central Visayas",
-    abbr: "Region VII",
-    latitude: 9.81688,
-    longitude: 124.06414,
-    count: 0
-  },
-  {
-    region: "Eastern Visayas",
-    abbr: "Region VIII",
-    latitude: 12.24455,
-    longitude: 125.03882,
-    count: 0
-  },
-  {
-    region: "Zamboanga Peninsula",
-    abbr: "Region IX",
-    latitude: 8.15408,
-    longitude: 123.25879,
-    count: 0
-  },
-  {
-    region: "Northern Mindanao",
-    abbr: "Region X",
-    latitude: 8.02016,
-    longitude: 124.68565,
-    count: 0
-  },
-  {
-    region: "Davao Region",
-    abbr: "Region XI",
-    latitude: 7.30416,
-    longitude: 126.08934,
-    count: 0
-  },
-  {
-    region: "SOCCSKSARGEN",
-    abbr: "Region XII",
-    latitude: 6.27066,
-    longitude: 124.68565,
-    count: 0
-  },
-  {
-    region: "Caraga",
-    abbr: "Region XIII",
-    latitude: 8.80146,
-    longitude: 125.74069,
-    count: 0
-  },
-  {
-    region: "Bangsamoro Autonomous Region in Muslim Mindanao",
-    abbr: "BARMM",
-    latitude: 6.95700,
-    longitude: 124.24216,
-    count: 0
-  }
-]
-
-const regionColors = [
-  { bg: 'rgba(239, 68, 68, 0.3)', hover: 'rgba(239, 68, 68, 0.5)', text: 'text-red-800' }, // NCR
-  { bg: 'rgba(34, 197, 94, 0.3)', hover: 'rgba(34, 197, 94, 0.5)', text: 'text-green-800' }, // CAR
-  { bg: 'rgba(59, 130, 246, 0.3)', hover: 'rgba(59, 130, 246, 0.5)', text: 'text-blue-800' }, // Region I
-  { bg: 'rgba(168, 85, 247, 0.3)', hover: 'rgba(168, 85, 247, 0.5)', text: 'text-purple-800' }, // Region II
-  { bg: 'rgba(236, 72, 153, 0.3)', hover: 'rgba(236, 72, 153, 0.5)', text: 'text-pink-800' }, // Region III
-  { bg: 'rgba(249, 115, 22, 0.3)', hover: 'rgba(249, 115, 22, 0.5)', text: 'text-orange-800' }, // Region IV-A
-  { bg: 'rgba(132, 204, 22, 0.3)', hover: 'rgba(132, 204, 22, 0.5)', text: 'text-lime-800' }, // Region IV-B
-  { bg: 'rgba(20, 184, 166, 0.3)', hover: 'rgba(20, 184, 166, 0.5)', text: 'text-teal-800' }, // Region V
-  { bg: 'rgba(139, 69, 19, 0.3)', hover: 'rgba(139, 69, 19, 0.5)', text: 'text-amber-900' }, // Region VI
-  { bg: 'rgba(99, 102, 241, 0.3)', hover: 'rgba(99, 102, 241, 0.5)', text: 'text-indigo-800' }, // Region VII
-  { bg: 'rgba(14, 165, 233, 0.3)', hover: 'rgba(14, 165, 233, 0.5)', text: 'text-cyan-800' }, // Region VIII
-  { bg: 'rgba(232, 121, 249, 0.3)', hover: 'rgba(232, 121, 249, 0.5)', text: 'text-fuchsia-800' }, // Region IX
-  { bg: 'rgba(190, 18, 60, 0.3)', hover: 'rgba(190, 18, 60, 0.5)', text: 'text-rose-800' }, // Region X
-  { bg: 'rgba(6, 182, 212, 0.3)', hover: 'rgba(6, 182, 212, 0.5)', text: 'text-cyan-800' }, // Region XI
-  { bg: 'rgba(217, 119, 6, 0.3)', hover: 'rgba(217, 119, 6, 0.5)', text: 'text-amber-800' }, // Region XII
-  { bg: 'rgba(101, 163, 13, 0.3)', hover: 'rgba(101, 163, 13, 0.5)', text: 'text-lime-800' }, // Region XIII
-  { bg: 'rgba(180, 83, 9, 0.3)', hover: 'rgba(180, 83, 9, 0.5)', text: 'text-orange-900' }, // BARMM
-]
-
-type RegionDefinition = (typeof defaultRegions)[number];
-
 const Dashboard = () => {
   const [showMap, setShowMap] = useState(true);
   const [data, setData] = useState<BarChartItem[]>([])
@@ -238,7 +92,6 @@ const Dashboard = () => {
   const [dataType, setDataType] = useState<'duration' | 'visits'>('duration');
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
-  const [regions, setRegions] = useState(defaultRegions);
   const [selectedRegionName, setSelectedRegionName] = useState<string | null>(null);
 
   const [filter, setFilter] = useState(false);
@@ -401,58 +254,6 @@ const Dashboard = () => {
     setSidebarSize(6 - newSize);
   };
 
-  // Fetch region data with visitor counts
-  useEffect(() => {
-    const fetchRegionData = async () => {
-      try {
-        const days = getDaysFromFilter(currFilter);
-        const response = await fetch(`https://ontap-creatives-website.vercel.app/api/visitor/regions?days=${days}`)
-        const data = await response.json()
-        
-        if (data.regions) {
-          // Match regions with actual data, handling case-insensitive and partial matches
-          const updatedRegions = defaultRegions.map(defaultRegion => {
-            const matchedRegion = data.regions.find((r: any) => {
-              const defaultRegionName = defaultRegion.region.toLowerCase();
-              const apiRegionName = (r.region || '').toLowerCase();
-              return (
-                defaultRegionName === apiRegionName ||
-                defaultRegionName.includes(apiRegionName) ||
-                apiRegionName.includes(defaultRegionName) ||
-                defaultRegion.abbr.toLowerCase() === (r.abbr || '').toLowerCase()
-              );
-            });
-            return {
-              ...defaultRegion,
-              count: matchedRegion?.count || 0
-            };
-          });
-          setRegions(updatedRegions);
-        }
-      } catch (error) {
-        console.error('Error fetching region data:', error)
-      }
-    }
-
-    fetchRegionData()
-    // Refresh data every 30 seconds
-    const interval = setInterval(fetchRegionData, 30000)
-    return () => clearInterval(interval)
-  }, [currFilter])
-
-  const handleRegionClick = (region: RegionDefinition) => {
-    setSelectedRegionName(prev => {
-      // If clicking the same region, clear the selection
-      if (prev === region.region) {
-        return null;
-      }
-      // Otherwise select the new region
-      return region.region;
-    });
-  };
-
-  const clearRegionSelection = () => setSelectedRegionName(null);
-
   return (
     <div className='w-full h-full md:max-h-[100vh] bg-neutral-100 px-5 py-10 pb-5 gap-5 flex flex-col overflow-x-hidden md:pl-10 2xl:pl-5'>
         <div className='w-full flex items-center justify-between lg:pr-5'>
@@ -561,7 +362,7 @@ const Dashboard = () => {
                 <div className='min-h-2/5 w-full grid grid-cols-5 gap-3'>
                   {/* User Engagement - Resizable Height */}
                   <div
-                      className="flex flex-col h-68 lg:h-auto rounded-lg col-span-full lg:col-span-3"
+                      className="flex flex-col h-68 lg:h-auto col-span-full bg-white rounded-lg p-3 pb-0 shadow-md lg:col-span-3"
                   >
                       <div className='flex w-full items-center justify-between pr-3'>
                           <h3 className='font-bold text-base pb-3'>User Engagement</h3>
@@ -581,7 +382,7 @@ const Dashboard = () => {
                   </div>
 
                   <div
-                    className="flex flex-col rounded-lg col-span-full lg:col-span-2"
+                    className="flex flex-col col-span-full lg:col-span-2 bg-white rounded-lg p-3 pb-0 shadow-md"
                   >
                     <div className='flex w-full items-center justify-between pr-3'>
                       <h3 className='font-bold text-base pb-3'>Popular Items</h3>
@@ -626,7 +427,7 @@ const Dashboard = () => {
                 
                 {/* Activity Section - Resizable Height */}
                 <div
-                    className="flex flex-col rounded-lg overflow-hidden"
+                    className="flex flex-col overflow-hidden bg-white rounded-lg p-3 pb-0 shadow-md"
                 >
                     <div className='flex w-full items-center justify-between pr-3'>
                         <h3 className='font-bold text-base pb-3'><strong>Recent Activity <span className='text-sm font-black'>&gt;</span> {activityFilter === 'Orders' ? 'Orders' : 'Registered'}</strong></h3>
@@ -668,73 +469,10 @@ const Dashboard = () => {
                         </div>
                     </div>
                 </div>
-            </div>
-            </div>
-
-            {/* Sidebar Area - Resizable */}
-            <div
-              className="flex flex-col gap-3 overflow-hidden pb-10 md:pb-0 col-span-full lg:col-span-2"
-            >
-              {/* World Map Card */}
-              <div
-                className="rounded-lg lg:overflow-hidden max-h-100 lg:h-auto"
-              >
-                <div className="w-full h-full">
-                  {showMap && (
-                    <WorldMap 
-                      selectedRegion={selectedRegionName}
-                      viewMode="points"
-                      days={getDaysFromFilter(currFilter)}
-                      onClearRegion={clearRegionSelection}
-                    />
-                  )}
-                  {location.loading && (
-                      <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-80 z-10">
-                        <div className="text-lg">Loading visitor data...</div>
-                      </div>
-                    )}
-
-                    {!location.loading && regions.every(region => region.count === 0) && (
-                      <div className="col-span-full text-center py-8 text-gray-500">
-                        No visitor location data available for the selected period.
-                      </div>
-                    )}
-                </div>
               </div>
-
-              {/* Rest of your component remains the same */}
-              <div
-                className="rounded-lg lg:overflow-x-hidden"
-              >
-                <div className='flex w-full items-center justify-between p-0 pb-3 pr-3'>
-                  <h3 className='font-semibold text-sm'>Visitor's Area Locations</h3>
-                </div>
-                <div className='w-full h-auto grid grid-cols-3 overflow-x-hidden px-5 gap-3'>
-                  {regions.map((region, i) => {
-                    const color = regionColors[i % regionColors.length];
-                    const isSelected = selectedRegionName === region.region;
-                    return (
-                    <button 
-                      key={region.abbr}
-                      type='button' 
-                      className={`px-2 py-3 flex flex-col items-center justify-center gap-1 rounded-md transition-all duration-200 hover:scale-105 ${
-                        isSelected ? 'ring-2 ring-blue-500 ring-offset-2 shadow-lg shadow-blue-200' : ''
-                      }`}
-                      style={{
-                        backgroundColor: color.bg,
-                      }}
-                      onClick={() => handleRegionClick(region)}
-                    >
-                      <span className={`font-bold text-lg ${color.text}`}>
-                        {region.count.toLocaleString()}
-                      </span>
-                      <span className={`text-xs font-medium ${color.text}`}>
-                        {region.abbr}
-                      </span>
-                    </button>
-                  )})}
-                </div>
-              </div>
+            </div>
+            <div className='col-span-2 h-full border'>
+                
             </div>
         </div>
     </div>

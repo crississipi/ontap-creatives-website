@@ -1,15 +1,8 @@
-// app/api/auth/signup/route.ts
 import { NextRequest, NextResponse } from 'next/server'
 import bcrypt from 'bcryptjs'
 import { PrismaClient } from '@prisma/client'
 
-const globalForPrisma = globalThis as unknown as {
-  prisma: PrismaClient | undefined
-}
-
-const prisma = globalForPrisma.prisma ?? new PrismaClient()
-
-if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma
+const prisma = new PrismaClient()
 
 export async function POST(request: NextRequest) {
   try {
@@ -40,8 +33,8 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Validate password confirmation (if provided)
-    if (confirmPassword && password !== confirmPassword) {
+    // Validate password confirmation
+    if (password !== confirmPassword) {
       return NextResponse.json(
         { error: 'Passwords do not match' },
         { status: 400 }
@@ -63,7 +56,7 @@ export async function POST(request: NextRequest) {
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 12)
 
-    // Handle optional contact number - clean it up
+    // Handle optional contact number
     const cleanContactNumber = contactNumber ? contactNumber.replace(/\D/g, '').slice(0, 20) : null
 
     // Create user
@@ -75,24 +68,43 @@ export async function POST(request: NextRequest) {
         address: address?.trim() || '',
         password: hashedPassword,
         adsAgree: false,
-        emailVerified: false // Explicitly set to false for new users
+        emailVerified: false
       }
     })
 
     // Remove password from response
     const { password: _, ...userWithoutPassword } = user
 
+    // Send verification email request
+    try {
+      const verificationResponse = await fetch(`${request.nextUrl.origin}/api/email-verification`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: user.email,
+          name: user.clientName,
+        }),
+      });
+
+      if (!verificationResponse.ok) {
+        console.warn('Failed to send verification email, but user was created');
+      }
+    } catch (emailError) {
+      console.warn('Error sending verification email:', emailError);
+    }
+
     return NextResponse.json(
       { 
-        message: 'User created successfully', 
-        user: userWithoutPassword 
+        message: 'User created successfully. Please verify your email.', 
+        user: userWithoutPassword,
+        requiresVerification: true
       },
       { status: 201 }
     )
 
   } catch (error: any) {
+    console.error('Signup error:', error)
     
-    // Handle specific Prisma errors
     if (error.code === 'P2002') {
       return NextResponse.json(
         { error: 'User already exists with this email' },
@@ -108,7 +120,7 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json(
-      { error: 'Internal server error: ' + error.message },
+      { error: 'Internal server error' },
       { status: 500 }
     )
   }

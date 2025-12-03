@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { Mainpage } from "@/components";
 import { canUseSecretKeyAccess, refreshStoredRoleSession } from "@/utils/adminAccessSession";
-import { AdminLogin } from "@/components/admin";
+import { AdminLogin, AdminMainpage } from "@/components/admin";
 
 export default function Home() {
   const editable = false;
@@ -32,7 +32,11 @@ export default function Home() {
   return (
     <main className='min-h-[100vh] h-auto w-full flex flex-col items-center relative overflow-x-hidden p-0 m-0 select-none'>
       {adminLogin ? (
-        <AdminLogin showAdminLogin={showAdminLogin} setPage={setPage}/>
+        page === 0 ? (
+          <AdminLogin showAdminLogin={showAdminLogin} setPage={setPage} />
+        ) : (
+          <AdminMainpage editable={editable} setPage={setPage}/>
+        )
       ) : (
         <Mainpage editable={editable} />
       )}

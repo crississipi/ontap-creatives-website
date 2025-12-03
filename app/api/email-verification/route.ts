@@ -5,10 +5,6 @@ import nodemailer from 'nodemailer'
 
 const prisma = new PrismaClient()
 
-export async function OPTIONS() {
-  return new Response(null, { status: 200 })
-}
-
 export async function POST(request: NextRequest) {
   try {
     const { email, name } = await request.json()
@@ -26,7 +22,7 @@ export async function POST(request: NextRequest) {
     // Store OTP in database for email verification
     await storeOtp(email, otp, 30) // 30 minutes for email verification
 
-    // console.log('🔍 Verification OTP stored for email:', email, 'OTP:', otp)
+    console.log('Verification OTP stored for email:', email, 'OTP:', otp)
 
     // Send verification email
     const transporter = nodemailer.createTransport({
@@ -80,7 +76,7 @@ export async function POST(request: NextRequest) {
       { status: 200 }
     )
   } catch (error) {
-    // console.error('Send verification error:', error)
+    console.error('Send verification error:', error)
     return NextResponse.json(
       { error: 'Failed to send verification email' },
       { status: 500 }
@@ -88,4 +84,17 @@ export async function POST(request: NextRequest) {
   } finally {
     await prisma.$disconnect()
   }
+}
+
+export async function OPTIONS(request: NextRequest) {
+  const origin = request.headers.get('origin') || '';
+  return new Response(null, {
+    status: 200,
+    headers: {
+      'Access-Control-Allow-Origin': origin,
+      'Access-Control-Allow-Methods': 'POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type',
+      'Access-Control-Allow-Credentials': 'true',
+    },
+  });
 }

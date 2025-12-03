@@ -4,6 +4,7 @@ import "./globals.css";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { UserProvider } from "@/contexts/UserContext";
 import VisitorTracker from "@/components/VisitorTracker";
+import 'mapbox-gl/dist/mapbox-gl.css';
 
 export const metadata: Metadata = {
   title: "OnTap Creatives",

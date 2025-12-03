@@ -1,149 +1,104 @@
-"use client"
+"use client";
 
-import React, { createContext, useContext, useEffect, useState } from 'react'
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
 interface User {
-  clientID: number
-  clientName: string
-  email: string
-  contactNumber: number
-  address: string
+  clientID: number;
+  clientName: string | null;
+  email: string;
+  contactNumber: string | null;
+  address: string | null;
+  emailVerified: boolean;
 }
 
 interface UserContextType {
-  user: User | null
-  login: (userData: User) => void
-  logout: () => void
-  loading: boolean
-  updateVisitorClient: (clientID: number) => Promise<void>
+  user: User | null;
+  isAuthenticated: boolean;
+  loading: boolean;
+  login: (userData: User) => void;
+  logout: () => void;
 }
 
-const UserContext = createContext<UserContextType | undefined>(undefined)
+const UserContext = createContext<UserContextType | undefined>(undefined);
 
-export function UserProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null)
-  const [loading, setLoading] = useState(true)
+export const UserProvider = ({ children }: { children: ReactNode }) => {
+  const [user, setUser] = useState<User | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [loading, setLoading] = useState(true);
 
+  // Check for existing session on mount
   useEffect(() => {
-    checkUserSession()
-  }, [])
-
-  const checkUserSession = async () => {
-    try {
-      // First check localStorage for quick access
-      const storedUser = localStorage.getItem('user')
-      if (storedUser) {
-        const userData = JSON.parse(storedUser)
-        setUser(userData)
-        
-        // Update visitor record with clientID when session is restored
-        await updateVisitorClient(userData.clientID)
-        
-        setLoading(false)
-        return
-      }
-
-      // If no localStorage, check server session
-      const response = await fetch('https://ontap-creatives-website.vercel.app/api/auth/session', {
-        credentials: 'include',
-        headers: {
-          'Cache-Control': 'no-cache',
-        }
-      })
-      
-      if (response.ok) {
-        const data = await response.json()
-        if (data.user) {
-          setUser(data.user)
-          localStorage.setItem('user', JSON.stringify(data.user))
-          
-          // Update visitor record with clientID
-          await updateVisitorClient(data.user.clientID)
-        }
-      }
-    } catch (error) {
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const login = async (userData: User) => {
-    setUser(userData)
-    localStorage.setItem('user', JSON.stringify(userData))
-    
-    // Update visitor record with clientID when user logs in
-    await updateVisitorClient(userData.clientID)
-  }
-
-  const updateVisitorClient = async (clientID: number): Promise<void> => {
-    try {
-      const visitorUUID = getCookie('visitorUUID')
-      if (visitorUUID) {
-        const response = await fetch('https://ontap-creatives-website.vercel.app/api/visitor/update-client', {
-          method: 'POST',
+    const checkAuth = async () => {
+      try {
+        const response = await fetch('/api/auth/me', {
+          credentials: 'include',
           headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            visitorUUID,
-            clientID
-          })
-        })
+            'Cache-Control': 'no-cache'
+          }
+        });
+
+        if (response.ok) {
+          const userData = await response.json();
+          setUser(userData);
+          setIsAuthenticated(true);
+        } else {
+          setUser(null);
+          setIsAuthenticated(false);
+        }
+      } catch (error) {
+        console.error('Auth check failed:', error);
+        setUser(null);
+        setIsAuthenticated(false);
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
+    };
+
+    checkAuth();
+  }, []);
+
+  const login = (userData: User) => {
+    setUser(userData);
+    setIsAuthenticated(true);
+    
+    // Also store basic user info in localStorage for quick access (not sensitive data)
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('user', JSON.stringify({
+        id: userData.clientID,
+        name: userData.clientName,
+        email: userData.email
+      }));
     }
-  }
+  };
 
   const logout = async () => {
     try {
-      await fetch('https://ontap-creatives-website.vercel.app/api/auth/logout', {
+      await fetch('/api/auth/logout', {
         method: 'POST',
         credentials: 'include'
-      })
+      });
     } catch (error) {
+      console.error('Logout error:', error);
     } finally {
-      // Always clear client-side state
-      setUser(null)
-      localStorage.removeItem('user')
-      sessionStorage.clear()
-      
-      // Clear service worker caches if exists
-      if ('caches' in window) {
-        caches.keys().then(names => {
-          names.forEach(name => {
-            caches.delete(name)
-          })
-        })
+      setUser(null);
+      setIsAuthenticated(false);
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('user');
       }
-      
-      // Force reload to clear any React state
-      setTimeout(() => {
-        window.location.href = '/' // Redirect to home instead of reload
-      }, 100)
     }
-  }
+  };
 
   return (
-    <UserContext.Provider value={{ user, login, logout, loading, updateVisitorClient }}>
+    <UserContext.Provider value={{ user, isAuthenticated, loading, login, logout }}>
       {children}
     </UserContext.Provider>
-  )
-}
+  );
+};
 
-export function useUser() {
-  const context = useContext(UserContext)
+export const useUser = () => {
+  const context = useContext(UserContext);
   if (context === undefined) {
-    throw new Error('useUser must be used within a UserProvider')
+    throw new Error('useUser must be used within a UserProvider');
   }
-  return context
-}
-
-// Cookie utility function
-function getCookie(name: string): string | null {
-  if (typeof document === 'undefined') return null;
-  
-  const value = `; ${document.cookie}`;
-  const parts = value.split(`; ${name}=`);
-  if (parts.length === 2) return parts.pop()?.split(';').shift() || null;
-  return null;
-}
+  return context;
+};

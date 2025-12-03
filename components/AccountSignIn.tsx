@@ -112,28 +112,48 @@ const AccountSignIn = ({ setShowLogin, onSuccess }: AccountSignInProps) => {
   }
 
   const handleLogin = async () => {
-    const response = await fetch('https://ontap-creatives-website.vercel.app/api/auth/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        email: formData.email,
-        password: formData.password,
-      }),
-    })
+    setLoading(true);
+    
+    try {
+      const response = await fetch('https://ontap-creatives-website.vercel.app/api/auth/login', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password,
+        }),
+        credentials: 'include', // CRITICAL: This sends and receives cookies
+      });
 
-    if (response.ok) {
-      const data = await response.json()
-      if (data.user) {
-        login(data.user)
-      }
-      if (onSuccess) {
-        onSuccess()
+      const data = await response.json();
+
+      if (response.ok) {
+        if (data.user) {
+          login(data.user);
+        }
+        
+        showToast('success', 'Login successful!');
+        
+        // Close the login modal
+        setTimeout(() => {
+          setShowLogin(false);
+          if (onSuccess) {
+            onSuccess();
+          }
+          // Refresh the page to ensure all components get the new auth state
+          window.location.reload();
+        }, 1000);
+        
       } else {
-        setShowLogin(false)
+        showToast('error', data.error || 'Login failed. Please try again.');
       }
-    } else {
-      const errorData = await response.json()
-      showToast('error', 'Login failed. Please try again.');
+    } catch (error) {
+      console.error('Login error:', error);
+      showToast('error', 'Network error. Please check your connection.');
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -203,7 +223,6 @@ const AccountSignIn = ({ setShowLogin, onSuccess }: AccountSignInProps) => {
         }))
       }, 2000)
     } else {
-      const errorData = await response.json()
       showToast('error', 'Invalid OTP. Please try again.');
     }
   }
