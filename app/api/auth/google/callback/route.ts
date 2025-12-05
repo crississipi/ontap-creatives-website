@@ -1,3 +1,5 @@
+//app\api\auth\google\callback\route.ts
+
 import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 import jwt from 'jsonwebtoken';
@@ -33,7 +35,7 @@ export async function GET(request: NextRequest) {
     
     // Get frontend URL from state or cookie
     let frontendUrl = 'https://darkslategray-horse-918539.hostingersite.com';
-    let callbackPath = '/pages/auth/callback'; // Your exact callback path
+    let callbackPath = '/auth/callback'; // Your exact callback path
     
     if (state) {
       try {
