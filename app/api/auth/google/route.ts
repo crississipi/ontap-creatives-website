@@ -9,7 +9,7 @@ export async function GET(request: NextRequest) {
       hasJwtSecret: !!process.env.JWT_SECRET,
     });
     
-    if (!process.env.GOOGLE_CLIENT_ID) {
+    if (!process.env.GOOGLE_CLIENT_ID_PROD) {
       console.error('GOOGLE_CLIENT_ID is missing');
       return NextResponse.json(
         { 
@@ -41,7 +41,7 @@ export async function GET(request: NextRequest) {
     
     // Build Google OAuth URL
     const params = new URLSearchParams({
-      client_id: process.env.GOOGLE_CLIENT_ID,
+      client_id: process.env.GOOGLE_CLIENT_ID_PROD,
       redirect_uri: redirectUri,
       response_type: 'code',
       scope: 'openid email profile',
