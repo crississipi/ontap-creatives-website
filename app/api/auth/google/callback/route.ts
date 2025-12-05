@@ -174,17 +174,6 @@ export async function GET(request: NextRequest) {
     
     const response = NextResponse.redirect(callbackUrl.toString());
     
-    // Also set cookie
-    response.cookies.set({
-      name: 'auth_token',
-      value: token,
-      httpOnly: false,
-      secure: true,
-      sameSite: 'lax',
-      maxAge: 30 * 24 * 60 * 60,
-      path: '/',
-    });
-    
     return response;
     
   } catch (err: any) {
