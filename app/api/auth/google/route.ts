@@ -1,4 +1,3 @@
-// app/api/auth/google/route.ts - FINAL VERSION
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(request: NextRequest) {
@@ -23,10 +22,10 @@ export async function GET(request: NextRequest) {
       frontendUrl = decodeURIComponent(redirectParam);
     }
     
-    // State with callback path for static HTML file
+    // State with callback path
     const stateData = {
       frontendUrl: frontendUrl,
-      callbackPath: '/auth/callback', // Static HTML path
+      callbackPath: '/auth/callback', // Updated path for App Router
       timestamp: Date.now(),
     };
     

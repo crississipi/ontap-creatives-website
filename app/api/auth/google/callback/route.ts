@@ -1,4 +1,3 @@
-// app/api/auth/google/callback/route.ts - FINAL VERSION
 import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 import jwt from 'jsonwebtoken';
@@ -15,8 +14,6 @@ export async function GET(request: NextRequest) {
     const error = searchParams.get('error');
     const state = searchParams.get('state');
     
-    console.log('Callback params:', { hasCode: !!code, error, hasState: !!state });
-    
     if (error) {
       console.error('Google OAuth error:', error);
       const errorUrl = new URL('https://darkslategray-horse-918539.hostingersite.com');
@@ -31,23 +28,33 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect(errorUrl.toString());
     }
     
-    // Always use /auth/callback for static builds
-    const frontendBaseUrl = 'https://darkslategray-horse-918539.hostingersite.com';
-    const callbackPath = '/auth/callback'; // CHANGED: Static HTML file path
+    // Get frontend URL from state
+    let frontendUrl = 'https://darkslategray-horse-918539.hostingersite.com';
+    let callbackPath = '/auth/callback'; // Updated for App Router
+    
+    if (state) {
+      try {
+        const stateData = JSON.parse(Buffer.from(state, 'base64').toString());
+        frontendUrl = stateData.frontendUrl || frontendUrl;
+        callbackPath = stateData.callbackPath || callbackPath;
+        console.log('State data:', stateData);
+      } catch (err) {
+        console.log('Could not parse state');
+      }
+    }
     
     // Google OAuth callback URL
     const backendBaseUrl = 'https://ontap-creatives-website.vercel.app';
     const googleRedirectUri = `${backendBaseUrl}/api/auth/google/callback`;
     
-    console.log('Using Google redirect_uri:', googleRedirectUri);
-    console.log('Will redirect user back to:', `${frontendBaseUrl}${callbackPath}`);
+    console.log('Will redirect user back to:', `${frontendUrl}${callbackPath}`);
     
     const clientId = process.env.GOOGLE_CLIENT_ID_PROD;
     const clientSecret = process.env.GOOGLE_CLIENT_SECRET_PROD;
     
     if (!clientId || !clientSecret) {
       console.error('Missing Google OAuth credentials');
-      const errorUrl = new URL(frontendBaseUrl);
+      const errorUrl = new URL(frontendUrl);
       errorUrl.searchParams.set('auth_error', 'config_missing');
       return NextResponse.redirect(errorUrl.toString());
     }
@@ -69,7 +76,7 @@ export async function GET(request: NextRequest) {
     
     if (!tokenResponse.ok) {
       console.error('Token exchange failed:', tokenData);
-      const errorUrl = new URL(frontendBaseUrl);
+      const errorUrl = new URL(frontendUrl);
       errorUrl.searchParams.set('auth_error', 'token_exchange_failed');
       return NextResponse.redirect(errorUrl.toString());
     }
@@ -85,7 +92,7 @@ export async function GET(request: NextRequest) {
     
     if (!userInfoResponse.ok) {
       console.error('Failed to get user info:', userInfo);
-      const errorUrl = new URL(frontendBaseUrl);
+      const errorUrl = new URL(frontendUrl);
       errorUrl.searchParams.set('auth_error', 'user_info_failed');
       return NextResponse.redirect(errorUrl.toString());
     }
@@ -94,7 +101,7 @@ export async function GET(request: NextRequest) {
     
     if (!email) {
       console.error('No email from Google');
-      const errorUrl = new URL(frontendBaseUrl);
+      const errorUrl = new URL(frontendUrl);
       errorUrl.searchParams.set('auth_error', 'no_email');
       return NextResponse.redirect(errorUrl.toString());
     }
@@ -144,12 +151,12 @@ export async function GET(request: NextRequest) {
       profileImage: picture || null
     };
     
-    // Build callback URL with SINGLE encoding (not double)
-    const callbackUrl = new URL(`${frontendBaseUrl}${callbackPath}`);
+    // Build callback URL
+    const callbackUrl = new URL(`${frontendUrl}${callbackPath}`);
     
-    // IMPORTANT: Use single encoding for the user data
+    // IMPORTANT: Use encodeURIComponent for proper URL encoding
     callbackUrl.searchParams.set('token', token);
-    callbackUrl.searchParams.set('user', JSON.stringify(userWithProfileImage)); // Single encoding
+    callbackUrl.searchParams.set('user', encodeURIComponent(JSON.stringify(userWithProfileImage)));
     callbackUrl.searchParams.set('provider', 'google');
     callbackUrl.searchParams.set('success', 'true');
     
@@ -157,6 +164,7 @@ export async function GET(request: NextRequest) {
     
     const response = NextResponse.redirect(callbackUrl.toString());
     
+    // Also set cookie
     response.cookies.set({
       name: 'auth_token',
       value: token,
