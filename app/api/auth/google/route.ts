@@ -4,8 +4,8 @@ export async function GET(request: NextRequest) {
   try {
     console.log('Google OAuth route called');
     console.log('Available env vars:', {
-      hasClientId: !!process.env.GOOGLE_CLIENT_ID,
-      hasClientSecret: !!process.env.GOOGLE_CLIENT_SECRET,
+      hasClientId: !!process.env.GOOGLE_CLIENT_ID_PROD,
+      hasClientSecret: !!process.env.GOOGLE_CLIENT_SECRET_PROD,
       hasJwtSecret: !!process.env.JWT_SECRET,
     });
     
