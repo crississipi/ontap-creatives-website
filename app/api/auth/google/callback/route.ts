@@ -152,8 +152,18 @@ export async function GET(request: NextRequest) {
     };
     
     // Build callback URL
-    const callbackUrl = new URL(`${frontendUrl}${callbackPath}`);
-    
+    const callbackUrl = new URL(frontendUrl); // e.g. https://darkslategray-horse-918539.hostingersite.com
+
+    const hashParts = [
+      `token=${token}`,
+      `user=${encodeURIComponent(JSON.stringify(userWithProfileImage))}`,
+      `provider=google`,
+      `success=true`
+    ];
+
+    callbackUrl.hash = hashParts.join('&');
+    console.log('Final callback URL (hash):', callbackUrl.toString());
+
     // IMPORTANT: Use encodeURIComponent for proper URL encoding
     callbackUrl.searchParams.set('token', token);
     callbackUrl.searchParams.set('user', encodeURIComponent(JSON.stringify(userWithProfileImage)));
