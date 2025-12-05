@@ -2,66 +2,52 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(request: NextRequest) {
   try {
-    // Get the redirect parameter to know where to send the user back to
-    const { searchParams } = new URL(request.url);
-    const redirectParam = searchParams.get('redirect');
+    console.log('Google OAuth route called');
+    console.log('Available env vars:', {
+      hasClientId: !!process.env.GOOGLE_CLIENT_ID,
+      hasClientSecret: !!process.env.GOOGLE_CLIENT_SECRET,
+      hasJwtSecret: !!process.env.JWT_SECRET,
+    });
     
-    let frontendUrl;
-    
-    if (redirectParam) {
-      // Use the provided redirect URL
-      frontendUrl = decodeURIComponent(redirectParam);
-    } else {
-      // Fallback: get from referer or origin headers
-      const referer = request.headers.get('referer');
-      const origin = request.headers.get('origin');
-      frontendUrl = referer || origin || 'https://darkslategray-horse-918539.hostingersite.com' || 'https://ontap.ph';
-    }
-    
-    console.log('Google OAuth - Frontend URL:', frontendUrl);
-    
-    // Extract domain from frontend URL
-    let frontendDomain;
-    try {
-      const url = new URL(frontendUrl);
-      frontendDomain = url.hostname;
-    } catch {
-      frontendDomain = 'https://darkslategray-horse-918539.hostingersite.com';
-    }
-    
-    console.log('Google OAuth - Frontend domain:', frontendDomain);
-    
-    // Use production Google Client ID
-    const clientId = process.env.GOOGLE_CLIENT_ID;
-    
-    if (!clientId) {
-      console.error('Google Client ID not configured');
+    if (!process.env.GOOGLE_CLIENT_ID) {
+      console.error('GOOGLE_CLIENT_ID is missing');
       return NextResponse.json(
-        { error: 'Google authentication is not configured' },
+        { 
+          error: 'Google authentication is not configured',
+          details: 'GOOGLE_CLIENT_ID environment variable is missing'
+        },
         { status: 500 }
       );
     }
     
+    // Get the redirect parameter to know where to send the user back to
+    const { searchParams } = new URL(request.url);
+    const redirectParam = searchParams.get('redirect');
+    
+    let frontendUrl = redirectParam 
+      ? decodeURIComponent(redirectParam)
+      : 'https://darkslategray-horse-918539.hostingersite.com';
+    
+    console.log('Frontend URL for redirect:', frontendUrl);
+    
     // Always use Vercel backend for callback
     const redirectUri = 'https://ontap-creatives-website.vercel.app/api/auth/google/callback';
     
-    // Create state parameter with frontend info
+    // Create state parameter
     const state = Buffer.from(JSON.stringify({
-      frontend: frontendDomain,
       frontendUrl: frontendUrl,
       timestamp: Date.now()
     })).toString('base64');
     
     // Build Google OAuth URL
     const params = new URLSearchParams({
-      client_id: clientId,
+      client_id: process.env.GOOGLE_CLIENT_ID,
       redirect_uri: redirectUri,
       response_type: 'code',
       scope: 'openid email profile',
       access_type: 'offline',
       prompt: 'consent',
       state: state,
-      hd: '*',
     });
     
     const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
@@ -75,7 +61,7 @@ export async function GET(request: NextRequest) {
       httpOnly: true,
       secure: true,
       sameSite: 'lax',
-      maxAge: 10 * 60, // 10 minutes
+      maxAge: 10 * 60,
       path: '/',
     });
     
@@ -84,7 +70,10 @@ export async function GET(request: NextRequest) {
   } catch (err: any) {
     console.error('Google OAuth init error:', err);
     return NextResponse.json(
-      { error: 'Failed to initialize Google authentication' },
+      { 
+        error: 'Failed to initialize Google authentication',
+        details: err.message 
+      },
       { status: 500 }
     );
   }
