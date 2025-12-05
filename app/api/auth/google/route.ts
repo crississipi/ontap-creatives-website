@@ -2,66 +2,83 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(request: NextRequest) {
   try {
-    console.log('Google OAuth route called');
-    console.log('Available env vars:', {
+    console.log('Google OAuth init route called');
+    
+    // Debug environment
+    console.log('Environment check:', {
       hasClientId: !!process.env.GOOGLE_CLIENT_ID_PROD,
-      hasClientSecret: !!process.env.GOOGLE_CLIENT_SECRET_PROD,
-      hasJwtSecret: !!process.env.JWT_SECRET,
+      nodeEnv: process.env.NODE_ENV,
+      vercelUrl: process.env.VERCEL_URL
     });
     
     if (!process.env.GOOGLE_CLIENT_ID_PROD) {
-      console.error('GOOGLE_CLIENT_ID is missing');
+      console.error('GOOGLE_CLIENT_ID_PROD is missing');
       return NextResponse.json(
-        { 
-          error: 'Google authentication is not configured',
-          details: 'GOOGLE_CLIENT_ID environment variable is missing'
-        },
+        { error: 'Google authentication is not configured' },
         { status: 500 }
       );
     }
     
-    // Get the redirect parameter to know where to send the user back to
     const { searchParams } = new URL(request.url);
     const redirectParam = searchParams.get('redirect');
     
-    let frontendUrl = redirectParam 
-      ? decodeURIComponent(redirectParam)
-      : 'https://darkslategray-horse-918539.hostingersite.com';
+    // Get frontend URL for redirect back
+    let frontendUrl = 'https://darkslategray-horse-918539.hostingersite.com';
     
-    console.log('Frontend URL for redirect:', frontendUrl);
+    if (redirectParam) {
+      frontendUrl = decodeURIComponent(redirectParam);
+      console.log('Using provided frontend URL:', frontendUrl);
+    } else {
+      // Try referer header
+      const referer = request.headers.get('referer');
+      if (referer) {
+        try {
+          const refererUrl = new URL(referer);
+          frontendUrl = `${refererUrl.protocol}//${refererUrl.host}`;
+          console.log('Using referer as frontend URL:', frontendUrl);
+        } catch (e) {
+          console.log('Could not parse referer');
+        }
+      }
+    }
     
-    // Always use Vercel backend for callback
-    const redirectUri = 'https://ontap-creatives-website.vercel.app/api/auth/google/callback';
+    // Google OAuth callback URL (must match Google Cloud Console)
+    const backendBaseUrl = 'https://ontap-creatives-website.vercel.app';
+    const googleRedirectUri = `${backendBaseUrl}/api/auth/google/callback`;
     
-    // Create state parameter
-    const state = Buffer.from(JSON.stringify({
+    console.log('Google redirect_uri:', googleRedirectUri);
+    
+    // Create state with frontend info
+    const stateData = {
       frontendUrl: frontendUrl,
+      callbackPath: '/pages/auth/callback',
       timestamp: Date.now()
-    })).toString('base64');
+    };
+    
+    const state = Buffer.from(JSON.stringify(stateData)).toString('base64');
     
     // Build Google OAuth URL
-    const params = new URLSearchParams({
-      client_id: process.env.GOOGLE_CLIENT_ID_PROD,
-      redirect_uri: redirectUri,
-      response_type: 'code',
-      scope: 'openid email profile',
-      access_type: 'offline',
-      prompt: 'consent',
-      state: state,
-    });
+    const authUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth');
+    authUrl.searchParams.set('client_id', process.env.GOOGLE_CLIENT_ID_PROD);
+    authUrl.searchParams.set('redirect_uri', googleRedirectUri);
+    authUrl.searchParams.set('response_type', 'code');
+    authUrl.searchParams.set('scope', 'openid email profile');
+    authUrl.searchParams.set('access_type', 'offline');
+    authUrl.searchParams.set('prompt', 'consent');
+    authUrl.searchParams.set('state', state);
     
-    const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
+    console.log('Google OAuth URL:', authUrl.toString());
     
-    const response = NextResponse.redirect(authUrl);
+    const response = NextResponse.redirect(authUrl.toString());
     
-    // Store frontend info in cookie for callback
+    // Store frontend URL in cookie
     response.cookies.set({
-      name: 'oauth-frontend',
+      name: 'oauth_frontend',
       value: frontendUrl,
       httpOnly: true,
       secure: true,
       sameSite: 'lax',
-      maxAge: 10 * 60,
+      maxAge: 1800, // 30 minutes
       path: '/',
     });
     

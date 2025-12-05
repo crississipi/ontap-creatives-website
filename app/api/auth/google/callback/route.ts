@@ -7,25 +7,33 @@ const prisma = new PrismaClient();
 
 export async function GET(request: NextRequest) {
   try {
+    console.log('Google callback endpoint hit');
+    
     const { searchParams } = new URL(request.url);
     const code = searchParams.get('code');
     const error = searchParams.get('error');
     const state = searchParams.get('state');
     
-    console.log('Google callback received');
+    console.log('Callback params:', { hasCode: !!code, error, hasState: !!state });
     
     if (error) {
       console.error('Google OAuth error:', error);
-      return NextResponse.redirect('https://darkslategray-horse-918539.hostingersite.com?auth_error=google');
+      // Redirect to frontend with error
+      const errorUrl = new URL('https://darkslategray-horse-918539.hostingersite.com');
+      errorUrl.searchParams.set('auth_error', `google_${error}`);
+      return NextResponse.redirect(errorUrl.toString());
     }
     
     if (!code) {
       console.error('No authorization code received');
-      return NextResponse.redirect('https://darkslategray-horse-918539.hostingersite.com?auth_error=no_code');
+      const errorUrl = new URL('https://darkslategray-horse-918539.hostingersite.com');
+      errorUrl.searchParams.set('auth_error', 'no_code');
+      return NextResponse.redirect(errorUrl.toString());
     }
     
     // Get frontend URL from state or cookie
-    let frontendUrl = 'https://darkslategray-horse-918539.hostingersite.com'; // Default
+    let frontendUrl = 'https://darkslategray-horse-918539.hostingersite.com';
+    let callbackPath = '/pages/auth/callback'; // Your exact callback path
     
     if (state) {
       try {
@@ -33,29 +41,48 @@ export async function GET(request: NextRequest) {
         frontendUrl = stateData.frontendUrl || 'https://darkslategray-horse-918539.hostingersite.com';
         console.log('Got frontend URL from state:', frontendUrl);
       } catch (err) {
-        console.log('Could not parse state');
+        console.log('Could not parse state, using default');
       }
     }
     
     // Fallback to cookie
-    const frontendCookie = request.cookies.get('oauth-frontend')?.value;
-    if (frontendCookie) {
-      frontendUrl = frontendCookie;
-      console.log('Got frontend URL from cookie:', frontendUrl);
+    if (!frontendUrl) {
+      const frontendCookie = request.cookies.get('oauth_frontend')?.value;
+      if (frontendCookie) {
+        frontendUrl = frontendCookie;
+        console.log('Got frontend URL from cookie:', frontendUrl);
+      }
     }
     
-    console.log('Will redirect back to:', frontendUrl);
+    // Ensure frontend URL has the correct callback path
+    const frontendBaseUrl = frontendUrl.split('/pages')[0] || frontendUrl;
+    console.log('Frontend base URL:', frontendBaseUrl);
     
-    // Exchange code for tokens
-    const clientId = process.env.GOOGLE_CLIENT_ID;
-    const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
-    const redirectUri = 'https://ontap-creatives-website.vercel.app/api/auth/google/callback';
+    // Get environment-based redirect URI for Google
+    const isProduction = process.env.NODE_ENV === 'production';
+    const backendBaseUrl = isProduction 
+      ? 'https://ontap-creatives-website.vercel.app'
+      : process.env.VERCEL_URL 
+        ? `https://${process.env.VERCEL_URL}`
+        : 'http://localhost:3000';
+    
+    const googleRedirectUri = `${backendBaseUrl}/api/auth/google/callback`;
+    
+    console.log('Using Google redirect_uri:', googleRedirectUri);
+    console.log('Will redirect user back to:', `${frontendBaseUrl}${callbackPath}`);
+    
+    const clientId = process.env.GOOGLE_CLIENT_ID_PROD;
+    const clientSecret = process.env.GOOGLE_CLIENT_SECRET_PROD;
     
     if (!clientId || !clientSecret) {
       console.error('Missing Google OAuth credentials');
-      return NextResponse.redirect(`${frontendUrl}?auth_error=config`);
+      const errorUrl = new URL(frontendBaseUrl);
+      errorUrl.searchParams.set('auth_error', 'config_missing');
+      return NextResponse.redirect(errorUrl.toString());
     }
     
+    // Exchange code for tokens
+    console.log('Exchanging code for tokens...');
     const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
       method: 'POST',
       headers: {
@@ -65,7 +92,7 @@ export async function GET(request: NextRequest) {
         code,
         client_id: clientId,
         client_secret: clientSecret,
-        redirect_uri: redirectUri,
+        redirect_uri: googleRedirectUri,
         grant_type: 'authorization_code',
       }),
     });
@@ -74,12 +101,15 @@ export async function GET(request: NextRequest) {
     
     if (!tokenResponse.ok) {
       console.error('Token exchange failed:', tokenData);
-      return NextResponse.redirect(`${frontendUrl}?auth_error=token`);
+      const errorUrl = new URL(frontendBaseUrl);
+      errorUrl.searchParams.set('auth_error', 'token_exchange_failed');
+      return NextResponse.redirect(errorUrl.toString());
     }
     
     const { access_token } = tokenData;
     
     // Get user info from Google
+    console.log('Getting user info from Google...');
     const userInfoResponse = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
       headers: {
         Authorization: `Bearer ${access_token}`,
@@ -90,17 +120,21 @@ export async function GET(request: NextRequest) {
     
     if (!userInfoResponse.ok) {
       console.error('Failed to get user info:', userInfo);
-      return NextResponse.redirect(`${frontendUrl}?auth_error=userinfo`);
+      const errorUrl = new URL(frontendBaseUrl);
+      errorUrl.searchParams.set('auth_error', 'user_info_failed');
+      return NextResponse.redirect(errorUrl.toString());
     }
     
-    const { email, name } = userInfo;
+    const { email, name, picture } = userInfo;
     
     if (!email) {
       console.error('No email from Google');
-      return NextResponse.redirect(`${frontendUrl}?auth_error=no_email`);
+      const errorUrl = new URL(frontendBaseUrl);
+      errorUrl.searchParams.set('auth_error', 'no_email');
+      return NextResponse.redirect(errorUrl.toString());
     }
     
-    console.log('Google user:', email);
+    console.log('Google user authenticated:', email);
     
     // Check if user exists
     let user = await prisma.client.findUnique({
@@ -119,49 +153,56 @@ export async function GET(request: NextRequest) {
           password: hashedPassword,
           adsAgree: false,
           emailVerified: true,
+          profileImage: picture || null,
         },
       });
       console.log('New user created:', email);
     }
     
     // Create JWT token
+    const jwtSecret = process.env.JWT_SECRET || 'your-fallback-secret-key-change-this';
     const token = jwt.sign(
       { 
         userId: user.clientID,
         email: user.email,
         name: user.clientName,
       },
-      process.env.JWT_SECRET || 'your-secret',
+      jwtSecret,
       { expiresIn: '30d' }
     );
     
     // Remove password from response
     const { password: _, ...userWithoutPassword } = user;
     
-    // Create redirect URL with token as URL parameter
-    const redirectUrl = new URL(frontendUrl);
+    // Create the exact callback URL with token
+    const callbackUrl = new URL(`${frontendBaseUrl}${callbackPath}`);
+    callbackUrl.searchParams.set('token', token);
+    callbackUrl.searchParams.set('user', encodeURIComponent(JSON.stringify(userWithoutPassword)));
+    callbackUrl.searchParams.set('provider', 'google');
+    callbackUrl.searchParams.set('success', 'true');
     
-    // If the frontend has a callback handler, use it
-    if (frontendUrl.includes('hostinger') || frontendUrl.includes('https://darkslategray-horse-918539.hostingersite.com')) {
-      // For your Hostinger/ontap.ph frontend, redirect to a callback page
-      const callbackUrl = new URL(frontendUrl);
-      callbackUrl.pathname = '/auth/callback';
-      callbackUrl.searchParams.set('token', token);
-      callbackUrl.searchParams.set('user', JSON.stringify(userWithoutPassword));
-      callbackUrl.searchParams.set('provider', 'google');
-      
-      return NextResponse.redirect(callbackUrl.toString());
-    } else {
-      // For other cases, add token to URL
-      redirectUrl.searchParams.set('auth_token', token);
-      redirectUrl.searchParams.set('auth_user', JSON.stringify(userWithoutPassword));
-      redirectUrl.searchParams.set('auth_provider', 'google');
-      
-      return NextResponse.redirect(redirectUrl.toString());
-    }
+    console.log('Redirecting to callback URL:', callbackUrl.toString());
+    
+    // Create response with redirect
+    const response = NextResponse.redirect(callbackUrl.toString());
+    
+    // Also set cookie for JavaScript access
+    response.cookies.set({
+      name: 'auth_token',
+      value: token,
+      httpOnly: false, // Allow JavaScript access
+      secure: true,
+      sameSite: 'lax',
+      maxAge: 30 * 24 * 60 * 60, // 30 days
+      path: '/',
+    });
+    
+    return response;
     
   } catch (err: any) {
     console.error('Google callback error:', err);
-    return NextResponse.redirect('https://darkslategray-horse-918539.hostingersite.com?auth_error=server');
+    const errorUrl = new URL('https://darkslategray-horse-918539.hostingersite.com');
+    errorUrl.searchParams.set('auth_error', 'server_error');
+    return NextResponse.redirect(errorUrl.toString());
   }
 }
