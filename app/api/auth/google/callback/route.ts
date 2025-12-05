@@ -1,3 +1,4 @@
+// app/api/auth/google/callback/route.ts - FINAL VERSION
 import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 import jwt from 'jsonwebtoken';
@@ -18,7 +19,6 @@ export async function GET(request: NextRequest) {
     
     if (error) {
       console.error('Google OAuth error:', error);
-      // Redirect to frontend with error
       const errorUrl = new URL('https://darkslategray-horse-918539.hostingersite.com');
       errorUrl.searchParams.set('auth_error', `google_${error}`);
       return NextResponse.redirect(errorUrl.toString());
@@ -31,42 +31,17 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect(errorUrl.toString());
     }
     
-    // Get frontend URL from state or cookie
-    let frontendUrl = 'https://darkslategray-horse-918539.hostingersite.com';
-    let callbackPath = '/pages/auth/callback'; // CORRECT PATH
+    // Always use /auth/callback for static builds
+    const frontendBaseUrl = 'https://darkslategray-horse-918539.hostingersite.com';
+    const callbackPath = '/auth/callback'; // CHANGED: Static HTML file path
     
-    if (state) {
-      try {
-        const stateData = JSON.parse(Buffer.from(state, 'base64').toString());
-        frontendUrl = stateData.frontendUrl || 'https://darkslategray-horse-918539.hostingersite.com';
-        callbackPath = stateData.callbackPath || '/pages/auth/callback';
-        console.log('Got from state - frontendUrl:', frontendUrl, 'callbackPath:', callbackPath);
-      } catch (err) {
-        console.log('Could not parse state, using default');
-      }
-    }
-    
-    // Fallback to cookie
-    if (!frontendUrl) {
-      const frontendCookie = request.cookies.get('oauth_frontend')?.value;
-      if (frontendCookie) {
-        frontendUrl = frontendCookie;
-        console.log('Got frontend URL from cookie:', frontendUrl);
-      }
-    }
-    
-    // Clean up frontend URL to avoid double slashes
-    const frontendBaseUrl = frontendUrl.replace(/\/+$/, ''); // Remove trailing slashes
-    console.log('Cleaned frontend base URL:', frontendBaseUrl);
-    
-    // Google OAuth callback URL (must match Google Cloud Console)
+    // Google OAuth callback URL
     const backendBaseUrl = 'https://ontap-creatives-website.vercel.app';
     const googleRedirectUri = `${backendBaseUrl}/api/auth/google/callback`;
     
     console.log('Using Google redirect_uri:', googleRedirectUri);
     console.log('Will redirect user back to:', `${frontendBaseUrl}${callbackPath}`);
     
-    // Use environment variables
     const clientId = process.env.GOOGLE_CLIENT_ID_PROD;
     const clientSecret = process.env.GOOGLE_CLIENT_SECRET_PROD;
     
@@ -78,12 +53,9 @@ export async function GET(request: NextRequest) {
     }
     
     // Exchange code for tokens
-    console.log('Exchanging code for tokens...');
     const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: new URLSearchParams({
         code,
         client_id: clientId,
@@ -104,12 +76,9 @@ export async function GET(request: NextRequest) {
     
     const { access_token } = tokenData;
     
-    // Get user info from Google
-    console.log('Getting user info from Google...');
+    // Get user info
     const userInfoResponse = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
-      headers: {
-        Authorization: `Bearer ${access_token}`,
-      },
+      headers: { Authorization: `Bearer ${access_token}` },
     });
     
     const userInfo = await userInfoResponse.json();
@@ -138,7 +107,6 @@ export async function GET(request: NextRequest) {
     });
     
     if (!user) {
-      // Create new user
       const randomPassword = Math.random().toString(36).slice(-12);
       const hashedPassword = await bcrypt.hash(randomPassword, 12);
       
@@ -170,35 +138,25 @@ export async function GET(request: NextRequest) {
     // Remove password from response
     const { password: _, ...userWithoutPassword } = user;
     
-    // Add profile image to user object for frontend
+    // Add profile image to user object
     const userWithProfileImage = {
       ...userWithoutPassword,
       profileImage: picture || null
     };
     
-    // Build the CORRECT callback URL
-    // Remove any existing /pages from the URL to avoid duplication
-    let baseUrl = frontendBaseUrl;
-    if (baseUrl.includes('/pages')) {
-      baseUrl = baseUrl.split('/pages')[0];
-    }
+    // Build callback URL with SINGLE encoding (not double)
+    const callbackUrl = new URL(`${frontendBaseUrl}${callbackPath}`);
     
-    // Ensure we have the correct callback path
-    const correctCallbackPath = '/pages/auth/callback';
-    const callbackUrl = new URL(`${baseUrl}${correctCallbackPath}`);
-    
-    // Add query parameters
+    // IMPORTANT: Use single encoding for the user data
     callbackUrl.searchParams.set('token', token);
-    callbackUrl.searchParams.set('user', encodeURIComponent(JSON.stringify(userWithProfileImage)));
+    callbackUrl.searchParams.set('user', JSON.stringify(userWithProfileImage)); // Single encoding
     callbackUrl.searchParams.set('provider', 'google');
     callbackUrl.searchParams.set('success', 'true');
     
     console.log('Final callback URL:', callbackUrl.toString());
     
-    // Create response with redirect
     const response = NextResponse.redirect(callbackUrl.toString());
     
-    // Also set cookie for JavaScript access
     response.cookies.set({
       name: 'auth_token',
       value: token,
@@ -213,7 +171,6 @@ export async function GET(request: NextRequest) {
     
   } catch (err: any) {
     console.error('Google callback error:', err);
-    console.error('Error stack:', err.stack);
     const errorUrl = new URL('https://darkslategray-horse-918539.hostingersite.com');
     errorUrl.searchParams.set('auth_error', 'server_error');
     return NextResponse.redirect(errorUrl.toString());
