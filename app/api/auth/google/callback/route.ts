@@ -1,5 +1,3 @@
-//app\api\auth\google\callback\route.ts
-
 import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 import jwt from 'jsonwebtoken';
@@ -35,13 +33,14 @@ export async function GET(request: NextRequest) {
     
     // Get frontend URL from state or cookie
     let frontendUrl = 'https://darkslategray-horse-918539.hostingersite.com';
-    let callbackPath = '/auth/callback'; // Your exact callback path
+    let callbackPath = '/pages/auth/callback'; // CORRECT PATH
     
     if (state) {
       try {
         const stateData = JSON.parse(Buffer.from(state, 'base64').toString());
         frontendUrl = stateData.frontendUrl || 'https://darkslategray-horse-918539.hostingersite.com';
-        console.log('Got frontend URL from state:', frontendUrl);
+        callbackPath = stateData.callbackPath || '/pages/auth/callback';
+        console.log('Got from state - frontendUrl:', frontendUrl, 'callbackPath:', callbackPath);
       } catch (err) {
         console.log('Could not parse state, using default');
       }
@@ -56,23 +55,18 @@ export async function GET(request: NextRequest) {
       }
     }
     
-    // Ensure frontend URL has the correct callback path
-    const frontendBaseUrl = frontendUrl.split('/pages')[0] || frontendUrl;
-    console.log('Frontend base URL:', frontendBaseUrl);
+    // Clean up frontend URL to avoid double slashes
+    const frontendBaseUrl = frontendUrl.replace(/\/+$/, ''); // Remove trailing slashes
+    console.log('Cleaned frontend base URL:', frontendBaseUrl);
     
-    // Get environment-based redirect URI for Google
-    const isProduction = process.env.NODE_ENV === 'production';
-    const backendBaseUrl = isProduction 
-      ? 'https://ontap-creatives-website.vercel.app'
-      : process.env.VERCEL_URL 
-        ? `https://${process.env.VERCEL_URL}`
-        : 'http://localhost:3000';
-    
+    // Google OAuth callback URL (must match Google Cloud Console)
+    const backendBaseUrl = 'https://ontap-creatives-website.vercel.app';
     const googleRedirectUri = `${backendBaseUrl}/api/auth/google/callback`;
     
     console.log('Using Google redirect_uri:', googleRedirectUri);
     console.log('Will redirect user back to:', `${frontendBaseUrl}${callbackPath}`);
     
+    // Use environment variables
     const clientId = process.env.GOOGLE_CLIENT_ID_PROD;
     const clientSecret = process.env.GOOGLE_CLIENT_SECRET_PROD;
     
@@ -155,7 +149,6 @@ export async function GET(request: NextRequest) {
           password: hashedPassword,
           adsAgree: false,
           emailVerified: true,
-          profileImage: picture || null,
         },
       });
       console.log('New user created:', email);
@@ -168,6 +161,7 @@ export async function GET(request: NextRequest) {
         userId: user.clientID,
         email: user.email,
         name: user.clientName,
+        profileImage: picture || null,
       },
       jwtSecret,
       { expiresIn: '30d' }
@@ -176,14 +170,30 @@ export async function GET(request: NextRequest) {
     // Remove password from response
     const { password: _, ...userWithoutPassword } = user;
     
-    // Create the exact callback URL with token
-    const callbackUrl = new URL(`${frontendBaseUrl}${callbackPath}`);
+    // Add profile image to user object for frontend
+    const userWithProfileImage = {
+      ...userWithoutPassword,
+      profileImage: picture || null
+    };
+    
+    // Build the CORRECT callback URL
+    // Remove any existing /pages from the URL to avoid duplication
+    let baseUrl = frontendBaseUrl;
+    if (baseUrl.includes('/pages')) {
+      baseUrl = baseUrl.split('/pages')[0];
+    }
+    
+    // Ensure we have the correct callback path
+    const correctCallbackPath = '/pages/auth/callback';
+    const callbackUrl = new URL(`${baseUrl}${correctCallbackPath}`);
+    
+    // Add query parameters
     callbackUrl.searchParams.set('token', token);
-    callbackUrl.searchParams.set('user', encodeURIComponent(JSON.stringify(userWithoutPassword)));
+    callbackUrl.searchParams.set('user', encodeURIComponent(JSON.stringify(userWithProfileImage)));
     callbackUrl.searchParams.set('provider', 'google');
     callbackUrl.searchParams.set('success', 'true');
     
-    console.log('Redirecting to callback URL:', callbackUrl.toString());
+    console.log('Final callback URL:', callbackUrl.toString());
     
     // Create response with redirect
     const response = NextResponse.redirect(callbackUrl.toString());
@@ -192,10 +202,10 @@ export async function GET(request: NextRequest) {
     response.cookies.set({
       name: 'auth_token',
       value: token,
-      httpOnly: false, // Allow JavaScript access
+      httpOnly: false,
       secure: true,
       sameSite: 'lax',
-      maxAge: 30 * 24 * 60 * 60, // 30 days
+      maxAge: 30 * 24 * 60 * 60,
       path: '/',
     });
     
@@ -203,6 +213,7 @@ export async function GET(request: NextRequest) {
     
   } catch (err: any) {
     console.error('Google callback error:', err);
+    console.error('Error stack:', err.stack);
     const errorUrl = new URL('https://darkslategray-horse-918539.hostingersite.com');
     errorUrl.searchParams.set('auth_error', 'server_error');
     return NextResponse.redirect(errorUrl.toString());

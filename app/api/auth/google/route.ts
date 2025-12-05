@@ -42,12 +42,10 @@ export async function GET(request: NextRequest) {
     // Create state with frontend info
     const stateData = {
       frontendUrl: frontendUrl,
-      callbackPath: '/pages/auth/callback',
+      callbackPath: '/pages/auth/callback', // Make sure this is correct
       timestamp: Date.now(),
-      // Add the exact redirect URI to state for verification
-      expectedRedirectUri: redirectUri
     };
-    
+
     const state = Buffer.from(JSON.stringify(stateData)).toString('base64');
     
     // Build Google OAuth URL with EXACT parameters
