@@ -269,11 +269,16 @@ export async function POST(request: NextRequest) {
             }
           };
 
-          // Only connect cartID if this is a cart order
+          // Only connect cartID if this is a cart order AND the cart exists
           if (item.cartID && item.orderType === 'cart') {
-            transactionData.cart = {
-              connect: { cartID: item.cartID }
-            };
+            const cartRecord = await tx.cart.findUnique({
+              where: { cartID: item.cartID }
+            });
+            if (cartRecord) {
+              transactionData.cart = {
+                connect: { cartID: item.cartID }
+              };
+            }
           }
 
           // Only include voucher if it exists and is not null
@@ -302,7 +307,7 @@ export async function POST(request: NextRequest) {
               productID: {
                 in: cartProductIDs
               },
-              status: 'active'
+              status: 'onCart'
             },
             data: {
               status: 'ordered'
