@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { PrismaClient } from '@prisma/client'
+import { getCorsHeaders } from '@/lib/corsHeaders'
 
 const prisma = new PrismaClient()
 
@@ -8,6 +9,7 @@ export async function GET(
   { params }: { params: Promise<{ orderID: string }> }
 ) {
   try {
+    const origin = request.headers.get('origin') || null
     const {orderID} = await params
     let orderid = orderID;
 
@@ -38,7 +40,7 @@ export async function GET(
 
     if (!transactions || transactions.length === 0) {
       // console.log('❌ No transactions found for ID:', orderid);
-      return NextResponse.json({ error: 'Receipt not found' }, { status: 404 });
+      return NextResponse.json({ error: 'Receipt not found' }, { status: 404, headers: getCorsHeaders(origin) });
     }
 
     // Use the first transaction to get common data
@@ -98,12 +100,13 @@ export async function GET(
 
     // console.log('✅ Receipt data prepared for:', orderid);
 
-    return NextResponse.json(receiptData);
+    return NextResponse.json(receiptData, { headers: getCorsHeaders(origin) });
   } catch (error) {
     // console.error('❌ Failed to fetch receipt:', error);
+    const origin = request.headers.get('origin') || null
     return NextResponse.json(
       { error: 'Failed to fetch receipt' },
-      { status: 500 }
+      { status: 500, headers: getCorsHeaders(origin) }
     );
   } finally {
     await prisma.$disconnect();

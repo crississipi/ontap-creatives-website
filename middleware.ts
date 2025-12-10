@@ -35,6 +35,8 @@ const publicPaths = [
   '/api/voucher',
   // Cart add needs pre-auth CORS; route will enforce auth
   '/api/cart',
+  // Receipts need to be readable cross-site
+  '/api/receipts',
 ];
 
 export function middleware(request: NextRequest) {
