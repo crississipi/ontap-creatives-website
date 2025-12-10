@@ -173,7 +173,19 @@ export async function GET(request: NextRequest) {
     console.log('Final callback URL:', callbackUrl.toString());
     
     const response = NextResponse.redirect(callbackUrl.toString());
-    
+
+    // Set auth cookie on backend (Vercel) so browser will include it on subsequent requests
+    // Use SameSite='none' and Secure to allow cross-site cookies from Hostinger frontend
+    response.cookies.set({
+      name: 'auth_token',
+      value: token,
+      httpOnly: true,
+      secure: true,
+      sameSite: 'none',
+      maxAge: 60 * 60 * 24 * 30, // 30 days
+      path: '/',
+    });
+
     return response;
     
   } catch (err: any) {
