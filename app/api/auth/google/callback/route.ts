@@ -177,7 +177,7 @@ export async function GET(request: NextRequest) {
     // Set auth cookie on backend (Vercel) so browser will include it on subsequent requests
     // Use SameSite='none' and Secure to allow cross-site cookies from Hostinger frontend
     response.cookies.set({
-      name: 'auth_token',
+      name: 'auth-token',
       value: token,
       httpOnly: true,
       secure: true,

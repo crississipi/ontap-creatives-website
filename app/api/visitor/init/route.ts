@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { PrismaClient } from '@prisma/client'
 import { v4 as uuidv4 } from 'uuid'
+import { getCorsHeaders } from '@/lib/corsHeaders'
 
 const prisma = new PrismaClient()
 
@@ -26,6 +27,7 @@ interface RequestBody {
  */
 export async function POST(request: NextRequest) {
   try {
+    const origin = request.headers.get('origin') || null
     const body: RequestBody = await request.json();
     const { visitorUUID, geoData, userAgent, ipAddress } = body;
 
@@ -92,17 +94,18 @@ export async function POST(request: NextRequest) {
       visitorID: visitor.visitorID,
       locationSaved: !!(visitor.latitude && visitor.longitude),
       message: 'Visitor initialized successfully'
-    });
+    }, { headers: getCorsHeaders(origin) });
 
   } catch (error) {
     console.error('Error in visitor init API:', error);
+    const origin = request.headers.get('origin') || null
     return NextResponse.json(
       { 
         success: false,
         error: 'Internal server error',
         message: error instanceof Error ? error.message : 'Unknown error'
       },
-      { status: 500 }
+      { status: 500, headers: getCorsHeaders(origin) }
     );
   }
 }

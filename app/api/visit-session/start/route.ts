@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { PrismaClient } from '@prisma/client'
+import { getCorsHeaders } from '@/lib/corsHeaders'
 
 const prisma = new PrismaClient()
 
 export async function POST(request: NextRequest) {
   try {
+    const origin = request.headers.get('origin') || null
     const body = await request.json()
     const { visitorUUID, pageUrl, pageTitle, metadata } = body
 
@@ -65,11 +67,12 @@ export async function POST(request: NextRequest) {
       sessionID: session.sessionID,
       visitorID: visitor.visitorID,
       visitorCreated: !visitor // Indicate if visitor was newly created
-    })
+    }, { headers: getCorsHeaders(origin) })
   } catch (error) {
+    const origin = request.headers.get('origin') || null
     return NextResponse.json(
       { error: 'Internal server error' },
-      { status: 500 }
+      { status: 500, headers: getCorsHeaders(origin) }
     )
   }
 }

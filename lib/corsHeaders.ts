@@ -3,10 +3,12 @@
 // List of allowed origins
 const allowedOrigins = [
   "https://ontap.ph",
+  "https://darkslategray-horse-918539.hostingersite.com",
   "http://localhost:3000", 
   "http://localhost:3001",
   "http://127.0.0.1:3000",
-  "http://127.0.0.1:3001"
+  "http://127.0.0.1:3001",
+  "https://ontap-creatives-website.vercel.app",
 ];
 
 // Function to check if the origin is allowed
@@ -20,6 +22,7 @@ export const getCorsHeaders = (origin: string | null) => {
   const headers: Record<string, string> = {
     "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Requested-With",
+    "Access-Control-Allow-Credentials": "true",
   };
 
   // If the origin is allowed, set it in the headers
@@ -40,7 +43,8 @@ export const corsHeaders = (origin?: string) => {
 
 // Default CORS headers (you can use this if you don't have the origin)
 export const defaultCorsHeaders = {
-  "Access-Control-Allow-Origin": "https://ontap.ph",
+  "Access-Control-Allow-Origin": "https://darkslategray-horse-918539.hostingersite.com",
   "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
   "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Requested-With",
+  "Access-Control-Allow-Credentials": "true",
 };

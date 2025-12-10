@@ -3,11 +3,13 @@ import { NextRequest, NextResponse } from 'next/server'
 import { headers } from 'next/headers'
 import jwt from 'jsonwebtoken'
 import { PrismaClient } from '@prisma/client'
+import { getCorsHeaders } from '@/lib/corsHeaders'
 
 const prisma = new PrismaClient()
 
 export async function GET(request: NextRequest) {
   try {
+    const origin = request.headers.get('origin') || null
     const headersList = await headers()
     const authHeader = headersList.get('authorization')
     const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null
@@ -19,7 +21,7 @@ export async function GET(request: NextRequest) {
       const tokenFromCookie = authCookie?.split('=')[1]
       
       if (!tokenFromCookie) {
-        return NextResponse.json({ user: null }, { status: 200 })
+        return NextResponse.json({ user: null }, { status: 200, headers: getCorsHeaders(origin) })
       }
       
       // Use token from cookie
@@ -36,7 +38,7 @@ export async function GET(request: NextRequest) {
         }
       })
 
-      return NextResponse.json({ user: user || null }, { status: 200 })
+      return NextResponse.json({ user: user || null }, { status: 200, headers: getCorsHeaders(origin) })
     }
 
     // Verify JWT token from header
@@ -53,8 +55,9 @@ export async function GET(request: NextRequest) {
       }
     })
 
-    return NextResponse.json({ user: user || null }, { status: 200 })
+    return NextResponse.json({ user: user || null }, { status: 200, headers: getCorsHeaders(origin) })
   } catch (error) {
-    return NextResponse.json({ user: null }, { status: 200 })
+    const origin = request.headers.get('origin') || null
+    return NextResponse.json({ user: null }, { status: 200, headers: getCorsHeaders(origin) })
   }
 }

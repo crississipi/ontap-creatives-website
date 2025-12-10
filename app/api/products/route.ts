@@ -1,11 +1,13 @@
 // app/api/products/route.ts
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { PrismaClient } from '@prisma/client'
+import { getCorsHeaders } from '@/lib/corsHeaders'
 
 const prisma = new PrismaClient()
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    const origin = request.headers.get('origin') || null
     const products = await prisma.products.findMany({
       orderBy: {
         dateAdded: 'asc'
@@ -24,12 +26,13 @@ export async function GET() {
         // Include the category field
         category: product.category || 'Uncategorized' // Add fallback
       }))
-    })
+    }, { headers: getCorsHeaders(origin) })
   } catch (error) {
     // console.error('Failed to fetch products:', error)
+    const origin = request.headers.get('origin') || null
     return NextResponse.json(
       { success: false, error: 'Failed to fetch products' },
-      { status: 500 }
+      { status: 500, headers: getCorsHeaders(origin) }
     )
   }
 }
