@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Mainpage } from "@/components";
-import { canUseSecretKeyAccess, refreshStoredRoleSession } from "@/utils/adminAccessSession";
+import { refreshStoredRoleSession } from "@/utils/adminAccessSession";
 import { AdminLogin, AdminMainpage } from "@/components/admin";
 
 export default function Home() {

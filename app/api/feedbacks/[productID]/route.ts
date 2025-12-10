@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { PrismaClient } from '@prisma/client'
+import { getCorsHeaders } from '@/lib/corsHeaders'
 
 const prisma = new PrismaClient()
 
@@ -8,6 +9,7 @@ export async function GET(
   { params }: { params: Promise<{ productID: string }> }
 ) {
   try {
+    const origin = request.headers.get('origin') || null
     // Await the params Promise
     const { productID } = await params
     const productIdNumber = parseInt(productID)
@@ -16,7 +18,7 @@ export async function GET(
     if (isNaN(productIdNumber)) {
       return NextResponse.json(
         { error: 'Invalid product ID' },
-        { status: 400 }
+        { status: 400, headers: getCorsHeaders(origin) }
       )
     }
 
@@ -48,7 +50,7 @@ export async function GET(
     if (!productWithFeedbacks) {
       return NextResponse.json(
         { error: 'Product not found' },
-        { status: 404 }
+        { status: 404, headers: getCorsHeaders(origin) }
       )
     }
 
@@ -59,11 +61,12 @@ export async function GET(
       hasFeedbacks,
       feedbackCount,
       feedbacks: productWithFeedbacks.feedbacks
-    }, { status: 200 })
+    }, { status: 200, headers: getCorsHeaders(origin) })
   } catch (error) {
+    const origin = request.headers.get('origin') || null
     return NextResponse.json(
       { error: 'Internal server error' },
-      { status: 500 }
+      { status: 500, headers: getCorsHeaders(origin) }
     )
   }
 }
