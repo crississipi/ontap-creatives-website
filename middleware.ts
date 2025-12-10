@@ -24,6 +24,7 @@ const publicPaths = [
   '/api/auth/reset-password',
   '/api/auth/google',
   '/api/auth/google/callback',
+  '/api/auth/me',
   '/api/visitor',
   '/api/visit-session',
   '/api/products',

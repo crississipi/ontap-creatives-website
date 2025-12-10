@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import jwt from 'jsonwebtoken';
 import { PrismaClient } from '@prisma/client';
+import { getCorsHeaders } from '@/lib/corsHeaders';
 
 const prisma = new PrismaClient();
 
 export async function GET(request: NextRequest) {
   try {
+    const origin = request.headers.get('origin') || null;
     const token = request.cookies.get('auth-token')?.value;
     
     if (!token) {
@@ -30,15 +32,15 @@ export async function GET(request: NextRequest) {
           });
 
           if (!user) {
-            return NextResponse.json({ user: null }, { status: 200 });
+            return NextResponse.json({ user: null }, { status: 200, headers: getCorsHeaders(origin) });
           }
 
-          return NextResponse.json({ user }, { status: 200 });
+          return NextResponse.json({ user }, { status: 200, headers: getCorsHeaders(origin) });
         } catch (error) {
-          return NextResponse.json({ user: null }, { status: 200 });
+          return NextResponse.json({ user: null }, { status: 200, headers: getCorsHeaders(origin) });
         }
       }
-      return NextResponse.json({ user: null }, { status: 200 });
+      return NextResponse.json({ user: null }, { status: 200, headers: getCorsHeaders(origin) });
     }
 
     const secret = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
@@ -57,12 +59,13 @@ export async function GET(request: NextRequest) {
     });
 
     if (!user) {
-      return NextResponse.json({ user: null }, { status: 200 });
+      return NextResponse.json({ user: null }, { status: 200, headers: getCorsHeaders(origin) });
     }
 
-    return NextResponse.json({ user }, { status: 200 });
+    return NextResponse.json({ user }, { status: 200, headers: getCorsHeaders(origin) });
   } catch (error) {
     console.error('Error fetching user:', error);
-    return NextResponse.json({ user: null }, { status: 200 });
+    const origin = request.headers.get('origin') || null;
+    return NextResponse.json({ user: null }, { status: 200, headers: getCorsHeaders(origin) });
   }
 }
