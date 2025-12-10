@@ -24,6 +24,9 @@ const publicPaths = [
   '/api/auth/reset-password',
   '/api/auth/google',
   '/api/auth/google/callback',
+  '/api/visitor',
+  '/api/visit-session',
+  '/api/products',
 ];
 
 export function middleware(request: NextRequest) {
