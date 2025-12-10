@@ -1,16 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { PrismaClient } from '@prisma/client'
+import { getCorsHeaders } from '@/lib/corsHeaders'
 
 const prisma = new PrismaClient()
 
 // Add GET method to handle the clientID query
 export async function GET(request: NextRequest) {
   try {
+    const origin = request.headers.get('origin') || null
     const { searchParams } = new URL(request.url)
     const clientID = parseInt(searchParams.get('clientID') || '0')
 
     if (!clientID) {
-      return NextResponse.json({ error: 'clientID is required' }, { status: 400 })
+      return NextResponse.json({ error: 'clientID is required' }, { status: 400, headers: getCorsHeaders(origin) })
     }
 
     const client = await prisma.client.findUnique({
@@ -28,7 +30,7 @@ export async function GET(request: NextRequest) {
     })
 
     if (!client) {
-      return NextResponse.json({ error: 'Client not found' }, { status: 404 })
+      return NextResponse.json({ error: 'Client not found' }, { status: 404, headers: getCorsHeaders(origin) })
     }
 
     const spinsUsed = client.vouchers.length
@@ -39,21 +41,23 @@ export async function GET(request: NextRequest) {
       vouchers: client.vouchers,
       spinsUsed,
       spinsRemaining
-    })
+    }, { headers: getCorsHeaders(origin) })
 
   } catch (error) {
     // console.error('Get vouchers error:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    const origin = request.headers.get('origin') || null
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500, headers: getCorsHeaders(origin) })
   }
 }
 
 // Keep your existing POST method
 export async function POST(request: NextRequest) {
   try {
+    const origin = request.headers.get('origin') || null
     const { clientID, voucherLabel, discount } = await request.json()
 
     if (!clientID || !voucherLabel) {
-      return NextResponse.json({ error: 'clientID and voucherLabel are required' }, { status: 400 })
+      return NextResponse.json({ error: 'clientID and voucherLabel are required' }, { status: 400, headers: getCorsHeaders(origin) })
     }
 
     const client = await prisma.client.findUnique({
@@ -70,11 +74,11 @@ export async function POST(request: NextRequest) {
     })
 
     if (!client) {
-      return NextResponse.json({ error: 'Client not found' }, { status: 404 })
+      return NextResponse.json({ error: 'Client not found' }, { status: 404, headers: getCorsHeaders(origin) })
     }
 
     if (client.vouchers.length >= 2) {
-      return NextResponse.json({ error: 'Maximum spins reached' }, { status: 400 })
+      return NextResponse.json({ error: 'Maximum spins reached' }, { status: 400, headers: getCorsHeaders(origin) })
     }
 
     // Calculate discount percentage based on voucher label
@@ -115,10 +119,11 @@ export async function POST(request: NextRequest) {
       spinsUsed: updatedVouchers.length,
       spinsRemaining: Math.max(0, 2 - updatedVouchers.length),
       canSpin: updatedVouchers.length < 2
-    })
+    }, { headers: getCorsHeaders(origin) })
 
   } catch (error) {
     // console.error('Save voucher error:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    const origin = request.headers.get('origin') || null
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500, headers: getCorsHeaders(origin) })
   }
 }

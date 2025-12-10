@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { headers } from 'next/headers'
 import jwt from 'jsonwebtoken'
 import { PrismaClient } from '@prisma/client'
+import { getCorsHeaders } from '@/lib/corsHeaders'
 
 import { sendAdminOrderNotification, sendOrderConfirmationEmail } from '@/lib/emailService';
 
@@ -138,9 +139,10 @@ export async function POST(request: NextRequest) {
   let orderData: any = null;
   
   try {
+    const origin = request.headers.get('origin') || null
     const user = await getAuthenticatedUser();
     if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401, headers: getCorsHeaders(origin) });
     }
 
     const body: OrderRequest = await request.json();
@@ -151,7 +153,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ 
         error: 'Validation failed', 
         details: validation.errors 
-      }, { status: 400 });
+      }, { status: 400, headers: getCorsHeaders(origin) });
     }
 
     // Generate a single transaction ID for all items
@@ -427,7 +429,7 @@ export async function POST(request: NextRequest) {
       message: 'Order placed successfully',
       transactionId: result.transactionId,
       receiptUrl: `${process.env.NEXTAUTH_URL || 'https://ontap.ph/'}/receipts/${result.transactionId}`
-    });
+    }, { headers: getCorsHeaders(origin) });
 
   } catch (error) {
     // console.error('Order creation error:', error);
@@ -448,9 +450,10 @@ export async function POST(request: NextRequest) {
       }
     }
     
+    const origin = request.headers.get('origin') || null
     return NextResponse.json(
       { error: errorMessage },
-      { status: 500 }
+      { status: 500, headers: getCorsHeaders(origin) }
     );
   } finally {
     await prisma.$disconnect();

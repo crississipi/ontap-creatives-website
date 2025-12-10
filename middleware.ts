@@ -29,6 +29,12 @@ const publicPaths = [
   '/api/visitor',
   '/api/visit-session',
   '/api/products',
+  // Read-only or cross-site accessed endpoints
+  '/api/feedbacks',
+  '/api/orders',
+  '/api/voucher',
+  // Cart add needs pre-auth CORS; route will enforce auth
+  '/api/cart',
 ];
 
 export function middleware(request: NextRequest) {
@@ -55,7 +61,7 @@ export function middleware(request: NextRequest) {
   }
   
   response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+  response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Cache-Control');
   response.headers.set('Access-Control-Allow-Credentials', 'true'); // IMPORTANT
 
   // Check if authentication is required
@@ -76,9 +82,15 @@ export function middleware(request: NextRequest) {
         } catch (error) {
           // Invalid token
           if (path.startsWith('/api/')) {
+            const headers: Record<string, string> = {
+              'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+              'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Requested-With, Cache-Control',
+              'Access-Control-Allow-Credentials': 'true',
+            };
+            if (isAllowedOrigin) headers['Access-Control-Allow-Origin'] = origin;
             return NextResponse.json(
               { error: 'Unauthorized' },
-              { status: 401 }
+              { status: 401, headers }
             );
           }
           return NextResponse.redirect(new URL('/', request.url));
@@ -86,9 +98,15 @@ export function middleware(request: NextRequest) {
       } else {
         // No token at all
         if (path.startsWith('/api/')) {
+          const headers: Record<string, string> = {
+            'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+            'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Requested-With, Cache-Control',
+            'Access-Control-Allow-Credentials': 'true',
+          };
+          if (isAllowedOrigin) headers['Access-Control-Allow-Origin'] = origin;
           return NextResponse.json(
             { error: 'Unauthorized' },
-            { status: 401 }
+            { status: 401, headers }
           );
         }
         return NextResponse.redirect(new URL('/', request.url));
@@ -100,9 +118,15 @@ export function middleware(request: NextRequest) {
       } catch (error) {
         // Token is invalid or expired
         if (path.startsWith('/api/')) {
+          const headers: Record<string, string> = {
+            'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+            'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Requested-With, Cache-Control',
+            'Access-Control-Allow-Credentials': 'true',
+          };
+          if (isAllowedOrigin) headers['Access-Control-Allow-Origin'] = origin;
           return NextResponse.json(
             { error: 'Invalid or expired session' },
-            { status: 401 }
+            { status: 401, headers }
           );
         }
         return NextResponse.redirect(new URL('/', request.url));

@@ -1,17 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { PrismaClient } from '@prisma/client'
+import { getCorsHeaders } from '@/lib/corsHeaders'
 
 const prisma = new PrismaClient()
 
 export async function POST(request: NextRequest) {
   try {
+    const origin = request.headers.get('origin') || null
     const { productID, clientID, quantity, subtotal, logo } = await request.json()
 
     // Validate required fields
     if (!productID || !clientID || !quantity || subtotal === undefined) {
       return NextResponse.json(
         { error: 'Missing required fields: productID, clientID, quantity, and subtotal are required' },
-        { status: 400 }
+        { status: 400, headers: getCorsHeaders(origin) }
       )
     }
 
@@ -23,7 +25,7 @@ export async function POST(request: NextRequest) {
     if (!product) {
       return NextResponse.json(
         { error: 'Product not found' },
-        { status: 404 }
+        { status: 404, headers: getCorsHeaders(origin) }
       )
     }
 
@@ -35,7 +37,7 @@ export async function POST(request: NextRequest) {
     if (!client) {
       return NextResponse.json(
         { error: 'Client not found' },
-        { status: 404 }
+        { status: 404, headers: getCorsHeaders(origin) }
       )
     }
 
@@ -98,13 +100,14 @@ export async function POST(request: NextRequest) {
         message: existingCartItem ? 'Cart item updated successfully' : 'Item added to cart successfully',
         cartItem 
       },
-      { status: 200 }
+      { status: 200, headers: getCorsHeaders(origin) }
     )
 
   } catch (error) {
+    const origin = request.headers.get('origin') || null
     return NextResponse.json(
       { error: 'Internal server error' },
-      { status: 500 }
+      { status: 500, headers: getCorsHeaders(origin) }
     )
   }
 }
