@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 import { headers } from 'next/headers'
 import jwt from 'jsonwebtoken'
-import { corsHeaders } from '@/lib/corsHeaders';
+import { getCorsHeaders } from '@/lib/corsHeaders';
 
 const prisma = new PrismaClient();
 
@@ -82,9 +82,10 @@ export async function OPTIONS() {
 
 export async function GET(request: NextRequest) {
   try {
+    const origin = request.headers.get('origin') || null
     const user = await getAuthenticatedUser();
     if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401, headers: getCorsHeaders(origin) });
     }
 
     // Fetch transactions with tracking data
@@ -179,15 +180,16 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ 
       success: true,
       orders 
-    });
+    }, { headers: getCorsHeaders(origin) });
 
   } catch (error) {
+    const origin = request.headers.get('origin') || null
     return NextResponse.json(
       { 
         error: 'Failed to fetch orders',
         details: error instanceof Error ? error.message : 'Unknown error'
       },
-      {status: 500,}
+      {status: 500, headers: getCorsHeaders(origin)}
     );
   } finally {
     await prisma.$disconnect();

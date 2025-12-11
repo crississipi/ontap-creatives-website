@@ -315,7 +315,7 @@
                 >
                     <HiOutlineX />
                 </button>
-                <div className='col-span-1 md:col-span-3 h-full w-full flex lg:flex-col gap-2 [perspective:1000px] lg:overflow-hidden'>
+                <div className='col-span-1 md:col-span-3 h-full w-full flex lg:flex-col gap-2 perspective-[1000px] lg:overflow-hidden'>
                     <div className="w-full h-[40vh] lg:h-2/3 flex lg:flex-col gap-3 px-3 flex-row items-center rounded-lg justify-center relative perspective-[1000px]">
                         {finalImgUrl !== '' ? 
                             <Image
@@ -341,7 +341,7 @@
                                             repeat: Infinity,
                                             repeatType: 'loop',
                                         }}
-                                        className="w-1/2 md:w-1/3 card-size lg:w-5/6 xl:w-4/5 2xl:w-3/5 aspect-[3/2] rounded-xl z-30 relative mt-10"
+                                        className="w-1/2 md:w-1/3 card-size lg:w-5/6 xl:w-4/5 2xl:w-3/5 aspect-3/2 rounded-xl z-30 relative mt-10"
                                         style={{
                                             transformStyle: 'preserve-3d',
                                             perspective: '1000px',
@@ -439,7 +439,7 @@
                                         </div>
                                     </motion.div> : 
                                     <>
-                                        <div className="w-3/5 aspect-[3/2] md:w-1/3 lg:w-4/5 xl:w-3/4 2xl:w-3/5 rounded-xl z-30 relative">
+                                        <div className="w-3/5 aspect-3/2 md:w-1/3 lg:w-4/5 xl:w-3/4 2xl:w-3/5 rounded-xl z-30 relative">
                                             <div
                                                 className="absolute inset-0"
                                                 style={{
@@ -490,7 +490,7 @@
                                                 )}
                                             </div>
                                         </div>
-                                        <div className="w-3/5 aspect-[3/2] md:w-1/3 lg:w-4/5 xl:w-3/4 2xl:w-3/5 rounded-xl z-30 relative mt-3">
+                                        <div className="w-3/5 aspect-3/2 md:w-1/3 lg:w-4/5 xl:w-3/4 2xl:w-3/5 rounded-xl z-30 relative mt-3">
                                             <div
                                                 className="absolute inset-0"
                                                 style={{
@@ -543,7 +543,7 @@
                                 }
 
                                 <div className="absolute inset-0 pointer-events-none z-0 flex items-center justify-center">
-                                    <div className="absolute top-0 w-full h-full bg-gradient-to-t from-neutral-300 via-white to-white z-0" />
+                                    <div className="absolute top-0 w-full h-full bg-linear-to-t from-neutral-300 via-white to-white z-0" />
 
                                     <motion.div
                                     animate={{
