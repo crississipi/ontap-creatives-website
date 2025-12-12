@@ -1,7 +1,5 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import jwt from 'jsonwebtoken';
-import { JWT_SECRET } from '@/lib/auth';
 
 const allowedOrigins = [
   "https://ontap.ph",
@@ -79,25 +77,8 @@ export function middleware(request: NextRequest) {
     if (!authToken) {
       const authHeader = request.headers.get('authorization');
       if (authHeader?.startsWith('Bearer ')) {
-        const token = authHeader.substring(7);
-        try {
-          jwt.verify(token, JWT_SECRET);
-        } catch (error) {
-          // Invalid token
-          if (path.startsWith('/api/')) {
-            const headers: Record<string, string> = {
-              'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-              'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Requested-With, Cache-Control',
-              'Access-Control-Allow-Credentials': 'true',
-            };
-            if (isAllowedOrigin) headers['Access-Control-Allow-Origin'] = origin;
-            return NextResponse.json(
-              { error: 'Unauthorized' },
-              { status: 401, headers }
-            );
-          }
-          return NextResponse.redirect(new URL('/', request.url));
-        }
+        // Token is present in header, allow request to proceed to API route for verification
+        return response;
       } else {
         // No token at all
         if (path.startsWith('/api/')) {
@@ -115,25 +96,8 @@ export function middleware(request: NextRequest) {
         return NextResponse.redirect(new URL('/', request.url));
       }
     } else {
-      // Verify cookie token
-      try {
-        jwt.verify(authToken, JWT_SECRET);
-      } catch (error) {
-        // Token is invalid or expired
-        if (path.startsWith('/api/')) {
-          const headers: Record<string, string> = {
-            'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-            'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Requested-With, Cache-Control',
-            'Access-Control-Allow-Credentials': 'true',
-          };
-          if (isAllowedOrigin) headers['Access-Control-Allow-Origin'] = origin;
-          return NextResponse.json(
-            { error: 'Invalid or expired session' },
-            { status: 401, headers }
-          );
-        }
-        return NextResponse.redirect(new URL('/', request.url));
-      }
+      // Token is present in cookie, allow request to proceed to API route for verification
+      return response;
     }
   }
 
