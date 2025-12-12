@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import jwt from 'jsonwebtoken';
 import { PrismaClient } from '@prisma/client';
 import { getCorsHeaders } from '@/lib/corsHeaders';
+import { JWT_SECRET } from '@/lib/auth';
 
 const prisma = new PrismaClient();
 
@@ -16,8 +17,7 @@ export async function GET(request: NextRequest) {
       if (authHeader?.startsWith('Bearer ')) {
         const bearerToken = authHeader.substring(7);
         try {
-          const secret = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
-          const decoded = jwt.verify(bearerToken, secret) as { userId: number };
+          const decoded = jwt.verify(bearerToken, JWT_SECRET) as { userId: number };
           
           const user = await prisma.client.findUnique({
             where: { clientID: decoded.userId },
@@ -43,8 +43,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ user: null }, { status: 200, headers: getCorsHeaders(origin) });
     }
 
-    const secret = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
-    const decoded = jwt.verify(token, secret) as { userId: number };
+    const decoded = jwt.verify(token, JWT_SECRET) as { userId: number };
     
     const user = await prisma.client.findUnique({
       where: { clientID: decoded.userId },

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
+import { JWT_SECRET } from '@/lib/auth';
 
 const prisma = new PrismaClient();
 
@@ -130,7 +131,6 @@ export async function GET(request: NextRequest) {
     }
     
     // Create JWT token
-    const jwtSecret = process.env.JWT_SECRET || 'your-fallback-secret-key-change-this';
     const token = jwt.sign(
       { 
         userId: user.clientID,
@@ -138,7 +138,7 @@ export async function GET(request: NextRequest) {
         name: user.clientName,
         profileImage: picture || null,
       },
-      jwtSecret,
+      JWT_SECRET,
       { expiresIn: '30d' }
     );
     

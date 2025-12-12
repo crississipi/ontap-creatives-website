@@ -4,6 +4,7 @@ import { headers } from 'next/headers'
 import jwt from 'jsonwebtoken'
 import { PrismaClient } from '@prisma/client'
 import { getCorsHeaders } from '@/lib/corsHeaders'
+import { JWT_SECRET } from '@/lib/auth';
 
 import { sendAdminOrderNotification, sendOrderConfirmationEmail } from '@/lib/emailService';
 
@@ -25,14 +26,14 @@ async function getAuthenticatedUser() {
         return null
       }
       
-      const decoded = jwt.verify(tokenFromCookie, process.env.JWT_SECRET!) as { userId: number }
+      const decoded = jwt.verify(tokenFromCookie, JWT_SECRET) as { userId: number }
       const user = await prisma.client.findUnique({
         where: { clientID: decoded.userId }
       })
       return user
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { userId: number }
+    const decoded = jwt.verify(token, JWT_SECRET) as { userId: number }
     const user = await prisma.client.findUnique({
       where: { clientID: decoded.userId }
     })

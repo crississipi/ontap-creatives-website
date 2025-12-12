@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 import { PrismaClient } from '@prisma/client'
+import { JWT_SECRET } from '@/lib/auth';
 
 const prisma = new PrismaClient()
 
@@ -55,7 +56,7 @@ export async function POST(request: NextRequest) {
         email: user.email,
         name: user.clientName 
       },
-      process.env.JWT_SECRET || 'your-secret-key-change-in-production',
+      JWT_SECRET,
       { expiresIn: '30d' }
     )
 

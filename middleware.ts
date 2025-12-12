@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import jwt from 'jsonwebtoken';
+import { JWT_SECRET } from '@/lib/auth';
 
 const allowedOrigins = [
   "https://ontap.ph",
@@ -80,7 +81,7 @@ export function middleware(request: NextRequest) {
       if (authHeader?.startsWith('Bearer ')) {
         const token = authHeader.substring(7);
         try {
-          jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
+          jwt.verify(token, JWT_SECRET);
         } catch (error) {
           // Invalid token
           if (path.startsWith('/api/')) {
@@ -116,7 +117,7 @@ export function middleware(request: NextRequest) {
     } else {
       // Verify cookie token
       try {
-        jwt.verify(authToken, process.env.JWT_SECRET || 'your-secret-key');
+        jwt.verify(authToken, JWT_SECRET);
       } catch (error) {
         // Token is invalid or expired
         if (path.startsWith('/api/')) {
