@@ -14,7 +14,7 @@ interface PrismaError extends Error {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { sessionID, pageUrl, pageTitle, metadata } = body
+    const { sessionID, duration } = body
 
     if (!sessionID) {
       return NextResponse.json(
@@ -23,14 +23,15 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Update session with new page information
+    // Update session duration if provided
+    const updateData: any = {}
+    if (duration !== undefined) {
+      updateData.duration = duration
+    }
+
     const session = await prisma.session.update({
       where: { sessionID: sessionID },
-      data: {
-        pageUrl: pageUrl || null,
-        pageTitle: pageTitle || null,
-        metadata: metadata ? JSON.stringify(metadata) : null
-      }
+      data: updateData
     })
 
     return NextResponse.json({ 
@@ -47,6 +48,7 @@ export async function POST(request: NextRequest) {
         error: 'Session not found' 
       })
     }
+    console.error('Session update error:', error)
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

@@ -9,6 +9,7 @@ import Image from 'next/image';
 import Toast from './Toast';
 import { useToast } from '@/hooks/useToast';
 import { inPeso } from '@/lib/utils';
+import { useUser } from '@/contexts/UserContext';
 
 interface CartItem {
   cartID: number;
@@ -52,7 +53,13 @@ const CartPage = () => {
   useEffect(() => {
     const fetchUserSession = async () => {
       try {
-        const response = await fetch('https://ontap-creatives-website.vercel.app/api/auth/session');
+        const response = await fetch('https://ontap-creatives-website.vercel.app/api/auth/session', {
+            method: 'GET',
+            headers: {
+            'Content-Type': 'application/json',
+            },
+            credentials: 'include',
+        });
         const data = await response.json();
         
         if (data.user) {
@@ -161,6 +168,7 @@ const CartPage = () => {
           quantity: newQuantity,
           subtotal: newSubtotal
         }),
+        credentials: 'include',
       });
 
       const data = await response.json();
@@ -192,6 +200,7 @@ const CartPage = () => {
 
       const response = await fetch(`https://ontap-creatives-website.vercel.app/api/cart/item/${cartID}`, {
         method: 'DELETE',
+        credentials: 'include',
       });
 
       if (!response.ok) {
@@ -235,7 +244,10 @@ const CartPage = () => {
 
       // Remove items one by one from the backend
       const removePromises = itemsToRemove.map(cartID =>
-        fetch(`https://ontap-creatives-website.vercel.app/api/cart/item/${cartID}`, { method: 'DELETE' })
+        fetch(`https://ontap-creatives-website.vercel.app/api/cart/item/${cartID}`, { 
+          method: 'DELETE',
+          credentials: 'include',
+         })
       );
 
       const results = await Promise.allSettled(removePromises);
@@ -293,7 +305,7 @@ const CartPage = () => {
 
   if (authLoading || loading) {
     return (
-      <div className='h-[100vh] w-[100vw] flex items-center justify-center bg-gradient-to-t from-violet via-light-blue to-white'>
+      <div className='h-screen w-screen flex items-center justify-center bg-linear-to-t from-violet via-light-blue to-white'>
         <Image
           height={2048}
           width={2048}
@@ -307,7 +319,7 @@ const CartPage = () => {
 
   if (!user) {
     return (
-      <div className='h-[100vh] w-[100vw] flex items-center justify-center bg-gradient-to-t from-violet via-light-blue to-white'>
+      <div className='h-screen w-screen flex items-center justify-center bg-linear-to-t from-violet via-light-blue to-white'>
         <div className="text-center">
           <h2 className="text-2xl font-bold text-gray-800 mb-2">Authentication Required</h2>
           <p className="text-gray-600 mb-6">Please log in to view your cart</p>
@@ -323,7 +335,7 @@ const CartPage = () => {
   }
 
   return (
-    <div className='h-[100vh] w-[100vw] flex items-center relative overflow-x-hidden p-3 lg:p-5 xl:p-10 gap-5 select-none overflow-hidden bg-gradient-to-t from-violet via-light-blue to-white before:absolute before:top-0 before:left-0 before:h-full before:w-full before:z-30 before:bg-white/70 before:backdrop-blur-lg'>
+    <div className='h-screen w-screen flex items-center relative overflow-x-hidden p-3 lg:p-5 xl:p-10 gap-5 select-none overflow-hidden bg-linear-to-t from-violet via-light-blue to-white before:absolute before:top-0 before:left-0 before:h-full before:w-full before:z-30 before:bg-white/70 before:backdrop-blur-lg z-999'>
         {roulette && (<VoucherRoulette setRoulette={setRoulette} />)}
         
         {/* Remove Confirmation Modal */}
@@ -529,9 +541,6 @@ const CartPage = () => {
                         </div>
                     </motion.div>
                 </div>
-                </div>
-                <div className='hidden h-[95%] mt-16 w-1/7 xl:flex flex-col items-center border border-black/20'>
-                {/* Ads Here */}
                 </div>
             </motion.div>
         )}

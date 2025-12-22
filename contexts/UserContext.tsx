@@ -3,6 +3,9 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
 interface User {
+  profileImage: string;
+  coverImage: string;
+  isAffiliate: any;
   clientID: number;
   clientName: string | null;
   email: string;
@@ -30,7 +33,8 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const response = await fetch('/api/auth/me', {
+        const url = `https://ontap-creatives-website.vercel.app/api/auth/me`;
+        const response = await fetch(url, {
           credentials: 'include',
           headers: {
             'Cache-Control': 'no-cache'
@@ -73,7 +77,8 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
 
   const logout = async () => {
     try {
-      await fetch('/api/auth/logout', {
+      const url = `https://ontap-creatives-website.vercel.app/api/auth/logout`;
+      await fetch(url, {
         method: 'POST',
         credentials: 'include'
       });

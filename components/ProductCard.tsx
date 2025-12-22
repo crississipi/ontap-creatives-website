@@ -50,13 +50,13 @@ const ProductCard = ({
 
   return (
     <button 
-      className={`relative flex flex-col items-center ${hoverable ? `${size} border border-neutral-200 group hover:shadow-lg hover:scale-101 hover:border-transparent ease-out duration-500` : 'w-full h-1/2 md:h-full md:w-2/5 md:bg-light-blue'}`}
+      className={`relative flex flex-col items-center ${hoverable ? `${size} bg-white border border-gray-100 group hover:shadow-xl hover:shadow-blue/10 hover:scale-[1.02] hover:border-blue/20 transition-all duration-500 rounded-2xl` : 'w-full h-1/2 md:h-full md:w-2/5 md:bg-light-blue'}`}
       onClick={handleClick}
     >
         <div className='h-1/2 w-full mt-10 flex items-center justify-center relative'>
           {size === 'w-full aspect-[9/10] aspect-[3/4]' && (
             <div
-              className='md:hidden absolute w-5/6 aspect-[3/2] top-2/5 -translate-1/2 left-1/2 z-50 rounded-md [perspective:1000px]'
+              className='md:hidden absolute w-5/6 aspect-3/2 top-2/5 -translate-1/2 left-1/2 z-50 rounded-md perspective-[1000px]'
             >
               <div 
                 className='h-full w-full rounded-lg absolute group-hover:-rotate-x-10 group-hover:rotate-z-25 group-hover:-top-2 top-0 duration-500 
@@ -89,7 +89,7 @@ const ProductCard = ({
               <div 
                 className='h-full w-full rounded-xl xl:rounded-lg absolute  group-hover:rotate-x-30 group-hover:-rotate-y-5 group-hover:-rotate-z-15 group-hover:-top-20 group-hover:left-5 top-0 left-0 duration-500
 
-                before:h-2/3 before:w-full before:absolute before:-z-20 before:top-0 before:-left-0 before:bg-black/20 before:rounded-xl group-hover:before:top-15 group-hover:before:-left-5 group-hover:before:rotate-x-5 group-hover:before:-rotate-y-50 group-hover:before:-rotate-z-15 before:duration-500'
+                before:h-2/3 before:w-full before:absolute before:-z-20 before:top-0 before:left-0 before:bg-black/20 before:rounded-xl group-hover:before:top-15 group-hover:before:-left-5 group-hover:before:rotate-x-5 group-hover:before:-rotate-y-50 group-hover:before:-rotate-z-15 before:duration-500'
               >
                 <div className="relative w-full h-full transition-transform duration-700 transform-3d shadow-md rounded-2xl xl:rounded-lg">
                   {finalFrontImg !== '/images/card-4/front-card.png' && (
@@ -118,7 +118,7 @@ const ProductCard = ({
           )}
           { size !== 'h-full w-full' && size !== 'min-h-3/7 w-full md:aspect-[3/5]' ? (
             <div
-              className='hidden md:block absolute w-3/4 aspect-[3/2] top-2/5 -translate-1/2 left-1/2 z-50 rounded-xl [perspective:1000px]  xl:rounded-lg'
+              className='hidden md:block absolute w-3/4 aspect-3/2 top-2/5 -translate-1/2 left-1/2 z-50 rounded-xl perspective-[1000px]  xl:rounded-lg'
             >
               <div 
                 className='h-full w-full rounded-xl xl:rounded-lg absolute group-hover:-rotate-x-10 group-hover:rotate-z-35 group-hover:top-10 top-0 duration-500 
@@ -151,7 +151,7 @@ const ProductCard = ({
               <div 
                 className='h-full w-full rounded-xl xl:rounded-lg absolute  group-hover:rotate-x-40 group-hover:-rotate-y-5 group-hover:-rotate-z-20 group-hover:-top-25 group-hover:left-5 top-0 left-0 duration-500
 
-                before:h-2/3 before:w-66/100 before:absolute before:-z-20 before:top-0 before:-left-0 before:bg-black/20 before:rounded-xl group-hover:before:top-17 group-hover:before:-left-5 group-hover:before:rotate-x-5 group-hover:before:-rotate-y-50 group-hover:before:-rotate-z-15 before:duration-500'
+                before:h-2/3 before:w-66/100 before:absolute before:-z-20 before:top-0 before:left-0 before:bg-black/20 before:rounded-xl group-hover:before:top-17 group-hover:before:-left-5 group-hover:before:rotate-x-5 group-hover:before:-rotate-y-50 group-hover:before:-rotate-z-15 before:duration-500'
               >
                 <div className="relative w-full h-full transition-transform duration-700 transform-3d shadow-md rounded-2xl xl:rounded-lg">
                   {finalFrontImg !== '/images/card-4/front-card.png' && (

@@ -1,10 +1,8 @@
 "use client";
 
-import React, { useEffect, useState } from 'react';
-import FAQsCategory from './FAQsCategory';
-import { HiMiniArrowLeftStartOnRectangle, HiMiniArrowRightStartOnRectangle } from 'react-icons/hi2';
-import { EditProps } from '@/types';
-import { EditableText } from '.';
+import React, { useEffect, useState, useMemo } from 'react';
+import { HiChevronRight } from 'react-icons/hi2';
+import { FiSearch } from 'react-icons/fi';
 
 const QA = [
     {
@@ -61,10 +59,13 @@ const QA = [
 
 
 
-const FAQs = ({editable}: EditProps) => {
+const FAQs = () => {
   const [showFAQs, setShowFAQs] = useState(true);
   const [selectedQuestion, setSelectedQuestion] = useState<[number, number]>([0,0]);
   const [valueChanged, hasValueChanged] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showAnswer, setShowAnswer] = useState(false);
+  
   const Answers = [
     [
       [
@@ -263,65 +264,147 @@ const FAQs = ({editable}: EditProps) => {
     },10);
   }, [selectedQuestion[0], selectedQuestion[1]])
 
+  // Filter questions based on search query
+  const filteredQuestions = useMemo(() => {
+    if (!searchQuery.trim()) return null;
+    
+    const results: { topicIndex: number; questionIndex: number; topic: string; question: string }[] = [];
+    QA.forEach((category, topicIndex) => {
+      category.question.forEach((question, questionIndex) => {
+        if (question.toLowerCase().includes(searchQuery.toLowerCase()) || 
+            category.topic.toLowerCase().includes(searchQuery.toLowerCase())) {
+          results.push({ topicIndex, questionIndex, topic: category.topic, question });
+        }
+      });
+    });
+    return results;
+  }, [searchQuery]);
+
+  const handleQuestionClick = (topicIndex: number, questionIndex: number) => {
+    setSelectedQuestion([topicIndex, questionIndex]);
+    setShowAnswer(true);
+    setSearchQuery('');
+  };
+
   return (
-    <div className='h-[100vh] w-full bg-neutral-100 mt-16 flex flex-col gap-3 overflow-hidden md:py-3'>
-        <div className='h-full w-full flex gap-3 relative px-3'>
-            <div 
-                className={`bg-white ${showFAQs ? 'w-3/4 h-full md:min-w-1/4 md:max-w-1/4 py-1 md:py-5 md:h-min' : 'w-min h-min md:min-w-1/4 md:max-w-1/4 md:h-min py-0 md:py-3'} absolute left-0 top-2 md:top-0 md:relative rounded-r-xl md:rounded-none gap-5 shadow-md overflow-x-hidden transition-all ease-out duration-200`}>
-                <button 
-                    type='button'
-                    className='md:hidden w-full px-3 py-2 flex items-center justify-between gap-3 '
-                    onClick={() => setShowFAQs(!showFAQs)}
-                >
-                    <h2 className='text-lg font-medium'>Topics</h2>
-                    <span
-                        className='text-2xl px-2 py-2 rounded-md hover:bg-light-blue focus:bg-blueease-out duration-200'
-                    >
-                        {showFAQs ? (
-                            <HiMiniArrowLeftStartOnRectangle />
-                        ) : (
-                            <HiMiniArrowRightStartOnRectangle />
-                        )}
-                    </span>
-                </button>
-                <h2 className='hidden md:block text-lg font-medium w-full text-center mb-5'>Topics</h2>
-                {showFAQs && (
-                    QA.map((val, i) => (
-                        <FAQsCategory 
-                          key={`FAQsCategory${i}`}
-                          topic={val.topic}
-                          questions={val.question}
-                          qNum={i}
-                          setSelectedQuestion={setSelectedQuestion}
-                          editable={true}
-                        />
-                    ))
-                )}
+    <div className='min-h-screen lg:h-dvh w-full bg-neutral-50 flex flex-col z-99 lg:overflow-hidden'>
+      {/* Hero Section with Gradient */}
+      <div className='relative w-full bg-linear-to-br from-blue via-violet to-dark-blue py-20 px-6'>
+        <div className='max-w-4xl mx-auto text-center'>
+          <h1 className='text-4xl md:text-5xl font-bold text-gray-100 mb-4'>
+            How can we help you?
+          </h1>
+          <p className='text-gray-300 mb-8 max-w-2xl mx-auto'>
+            Welcome to our Help Center! Here, you'll find answers to frequently asked questions, helpful guides, and useful tips to assist you in getting the most out of our platform.
+          </p>
+          
+          {/* Search Bar */}
+          <div className='relative max-w-xl mx-auto'>
+            <div className='relative'>
+              <FiSearch className='absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 text-xl' />
+              <input
+                type='text'
+                placeholder='Search'
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className='w-full pl-12 pr-4 py-3 text-white rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue focus:border-transparent shadow-sm'
+              />
             </div>
-            {valueChanged && 
-              <div className='w-full px-3 py-3'>
-                {editable ? (
-                  <EditableText tag="p" className='mt-16 text-2xl md:text-3xl font-semibold w-full md:w-3/4 text-center' type='textarea'>
-                    {QA[selectedQuestion[0]].topic}
-                  </EditableText>
-                ) : (
-                  <h4 className='mt-16 text-2xl md:text-3xl font-semibold w-full md:w-3/4 text-center'>{QA[selectedQuestion[0]].topic}</h4>
-                )}
-                <span className='h-full w-full md:w-9/10 text-lg flex flex-col gap-5 text-justify mt-10 md:text-xl'>
-                  <p className='indent-5'>
-                    {Answers[selectedQuestion[0]][selectedQuestion[1]][0]}
-                  </p>
-                  <p className='indent-5'>
-                    {Answers[selectedQuestion[0]][selectedQuestion[1]][1]}
-                  </p>
-                  <p className='indent-5'>
-                    {Answers[selectedQuestion[0]][selectedQuestion[1]][2]}
-                  </p>
-                </span>
-              </div>
-            }
             
+            {/* Search Results Dropdown */}
+            {searchQuery && filteredQuestions && filteredQuestions.length > 0 && (
+              <div className='absolute w-full mt-2 bg-white rounded-lg shadow-lg border border-gray-200 max-h-96 overflow-y-auto z-50'>
+                {filteredQuestions.map((result, index) => (
+                  <button
+                    key={index}
+                    onClick={() => handleQuestionClick(result.topicIndex, result.questionIndex)}
+                    className='w-full text-left px-4 py-3 hover:bg-gray-50 border-b border-gray-100 last:border-b-0 transition-colors'
+                  >
+                    <div className='text-xs text-blue font-medium mb-1'>{result.topic}</div>
+                    <div className='text-sm text-gray-700'>{result.question}</div>
+                  </button>
+                ))}
+              </div>
+            )}
+            
+            {searchQuery && filteredQuestions && filteredQuestions.length === 0 && (
+              <div className='absolute w-full mt-2 bg-white rounded-lg shadow-lg border border-gray-200 p-4 text-center text-gray-500'>
+                No results found for "{searchQuery}"
+              </div>
+            )}
+          </div>
         </div>
+      </div>
+
+      {/* Main Content Section */}
+      <div className='max-w-7xl h-full mx-auto w-full px-6 py-12 lg:overflow-hidden'>
+        <div className='h-full w-full flex flex-col md:flex-row gap-8'>
+          {/* Left Side - FAQ Info */}
+          <div className='md:w-1/3'>
+            <div className='mb-2 text-sm font-semibold text-gray-500 uppercase tracking-wide'>
+              Support
+            </div>
+            <h2 className='text-4xl font-bold text-gray-900 mb-4'>FAQS</h2>
+            <p className='text-gray-600 leading-relaxed'>
+              Have questions? We've got answers! Check out our Frequently Asked Questions (FAQs) to find quick solutions to common queries. Save time and get the information you need right here.
+            </p>
+          </div>
+
+          {/* Right Side - Questions List */}
+          <div className='md:w-2/3 h-full overflow-x-hidden overflow-y-auto'>
+            {showAnswer ? (
+              <div className='bg-white rounded-lg p-6 shadow-sm'>
+                <button
+                  onClick={() => setShowAnswer(false)}
+                  className='text-blue hover:text-dark-blue mb-4 flex items-center gap-2 font-medium'
+                >
+                  ← Back to questions
+                </button>
+                {valueChanged && (
+                  <>
+                    <h3 className='text-2xl font-semibold text-gray-900 mb-2'>
+                      {QA[selectedQuestion[0]].question[selectedQuestion[1]]}
+                    </h3>
+                    <div className='text-sm text-gray-500 mb-6'>
+                      {QA[selectedQuestion[0]].topic}
+                    </div>
+                    <div className='text-gray-700 leading-relaxed space-y-4'>
+                      <p className='indent-5'>
+                        {Answers[selectedQuestion[0]][selectedQuestion[1]][0]}
+                      </p>
+                      <p className='indent-5'>
+                        {Answers[selectedQuestion[0]][selectedQuestion[1]][1]}
+                      </p>
+                      <p className='indent-5'>
+                        {Answers[selectedQuestion[0]][selectedQuestion[1]][2]}
+                      </p>
+                    </div>
+                  </>
+                )}
+              </div>
+            ) : (
+              <div className='space-y-2'>
+                {QA.map((category, topicIndex) => (
+                  <React.Fragment key={topicIndex}>
+                    {category.question.map((question, questionIndex) => (
+                      <button
+                        key={`${topicIndex}-${questionIndex}`}
+                        onClick={() => handleQuestionClick(topicIndex, questionIndex)}
+                        className='w-full bg-white rounded-lg px-6 py-4 flex items-center justify-between hover:shadow-md transition-shadow border border-gray-100 group'
+                      >
+                        <span className='text-left text-gray-800 font-medium'>
+                          {question}
+                        </span>
+                        <HiChevronRight className='text-gray-400 text-xl group-hover:text-blue transition-colors shrink-0 ml-4' />
+                      </button>
+                    ))}
+                  </React.Fragment>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
     </div>
   )
 }

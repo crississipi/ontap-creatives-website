@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react'
 import ProductCard from './ProductCard'
 import { AnimatePresence, motion } from 'framer-motion';
 import { CheckOut, PopUp, ShowMoreInfo } from '.';
-import { EditProps, ProductProps } from '@/types';
+import { ProductProps } from '@/types';
 import Image from 'next/image';
 import { useToast } from '@/hooks/useToast';
 import Toast from './Toast';
@@ -38,7 +38,7 @@ interface User {
     address: string;
 }
 
-const ProductList = ({editable}: EditProps) => {
+const ProductList = () => {
   const [inquire, setInquireItem] = useState(false);
   const [clickedProductId, setClickedProductId] = useState<number | null>(null); 
   const [clickedProductData, setClickedProductData] = useState<ProductProps | null>(null);
@@ -60,7 +60,13 @@ const ProductList = ({editable}: EditProps) => {
     const fetchUserSession = async () => {
       try {
         setCheckingAuth(true);
-        const response = await fetch('https://ontap-creatives-website.vercel.app/api/auth/session');
+        const response = await fetch('https://ontap-creatives-website.vercel.app/api/auth/session', {
+            method: 'GET',
+            headers: {
+            'Content-Type': 'application/json',
+            },
+            credentials: 'include',
+        });
         
         if (response.ok) {
           const data = await response.json();
@@ -176,7 +182,7 @@ const ProductList = ({editable}: EditProps) => {
 
   if (loading) { 
     return (
-      <section className='min-h-[100vh] w-full flex items-center justify-center py-16 bg-neutral-50'>
+      <section className='min-h-screen w-full flex items-center justify-center py-16 bg-neutral-50'>
         <Image
           height={2048}
           width={2048}
@@ -189,7 +195,7 @@ const ProductList = ({editable}: EditProps) => {
   }
   
   return (
-    <section className='min-h-[100vh] w-full flex flex-col items-center justify-center py-16 bg-neutral-50 relative'>
+    <section className='min-h-screen w-full flex flex-col items-center justify-center py-16 bg-neutral-50 relative'>
       {toast.show && (
         <Toast 
           icon={toast.icon}
@@ -227,7 +233,6 @@ const ProductList = ({editable}: EditProps) => {
       {isShowMoreInfoReady && (
         <ShowMoreInfo 
           product={clickedProductData}
-          editable={editable}
           setInquireItem={handleCloseShowMoreInfo}
           inquire={inquire}
           setGotoCheckout={setGotoCheckout}
@@ -245,7 +250,7 @@ const ProductList = ({editable}: EditProps) => {
         />
       ) : (
         <>
-        <div className='w-full 2xl:w-3/4 h-auto grid grid-cols-2 gap-3 px-3 py-8 md:grid-rows-2 md:px-10 lg:grid-rows-1 lg:grid-cols-3 lg:h-full xl:grid-cols-4'>
+        <div className='w-full 2xl:w-3/4 h-auto grid grid-cols-1 sm:grid-cols-2 gap-4 px-4 py-8 md:grid-rows-2 md:px-10 lg:grid-rows-1 lg:grid-cols-3 lg:h-full xl:grid-cols-4'>
           {products.businessCards.map((val, i) => (
             <motion.div
               key={`prodcard-${i}`}
@@ -271,7 +276,7 @@ const ProductList = ({editable}: EditProps) => {
         </div>
         
         <h2 className='z-10 w-full text-center text-2xl mt-10 text-black font-semibold md:text-5xl'>Other Products</h2>
-        <div className='w-full h-full grid grid-cols-2 gap-3 px-3 md:px-10 py-8 lg:grid-cols-3 xl:grid-cols-4 2xl:w-3/4'>
+        <div className='w-full h-full grid grid-cols-1 sm:grid-cols-2 gap-4 px-4 md:px-10 py-8 lg:grid-cols-3 xl:grid-cols-4 2xl:w-3/4'>
           {products.otherProducts.map((val, i) => (
             <motion.div
               key={`otherprodcard-${i}`}
@@ -282,7 +287,7 @@ const ProductList = ({editable}: EditProps) => {
                 ease: 'easeOut',
                 delay: (i + 1) / 10
               }}
-              className='h-auto w-auto aspect-[2/3]'
+              className='h-auto w-auto aspect-2/3'
             >
               <ProductCard 
                 product={val}

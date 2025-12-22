@@ -104,7 +104,7 @@ const CartSlip = ({ item, selected, onSelect, onQuantityUpdate, onRemove }: Cart
                 />
               ) : 
               item.product.frontUrl ? (
-                <span className='w-full aspect-[3/2] rounded-md overflow-hidden flex items-center justify-center my-auto'>
+                <span className='w-full aspect-3/2 rounded-md overflow-hidden flex items-center justify-center my-auto'>
                     <Image
                     src={item.product.frontUrl}
                     alt={item.product.name}

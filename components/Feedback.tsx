@@ -57,7 +57,7 @@ const Feedback = () => {
   } = useStarRating(5);
 
   return (
-    <div className='h-[100vh] w-full flex flex-col bg-white p-5'>
+    <div className='h-screen w-full flex flex-col bg-white p-5'>
       <h1 className='text-3xl font-bold text-dark-blue'>Product Feedback</h1>
       <div className='h-full w-full flex'>
         <div className='h-full w-2/5 flex items-center justify-center'>

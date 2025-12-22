@@ -12,7 +12,6 @@ import FAQs from "./FAQs";
 import Starting from "./Starting";
 import PopUp from "./PopUp";
 import Mainpage from "./Mainpage";
-import EditableText from "./Editable";
 import ShowMoreInfo from "./ShowMoreInfo";
 import VoucherRoullete from "./VoucherRoullete";
 import CartPage from "./CartPage";
@@ -20,7 +19,9 @@ import CheckOut from "./CheckOut";
 import ContactNum from "./ContactNum";
 import OrderPage from "./OrderPage";
 import PrivacyPolicy from "./PrivacyPolicy";
-import TermsConditions from "./TermsConditions"
+import TermsConditions from "./TermsConditions";
+import UserProfile from "./UserProfile";
+import MobileSidebar from "./MobileSidebar";
 
 export {
     Header, 
@@ -37,7 +38,6 @@ export {
     Starting,
     PopUp,
     Mainpage,
-    EditableText,
     ShowMoreInfo,
     VoucherRoullete,
     CartPage,
@@ -45,5 +45,7 @@ export {
     ContactNum,
     OrderPage,
     PrivacyPolicy,
-    TermsConditions
+    TermsConditions,
+    UserProfile,
+    MobileSidebar
 }

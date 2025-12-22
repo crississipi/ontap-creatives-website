@@ -4,8 +4,6 @@ import React, { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
 import OnTapAnimation from './OnTapAnimation';
-import { EditProps } from '@/types';
-import { EditableText } from '.';
 
 function useInView(threshold = 0.1) {
   const ref = useRef<HTMLDivElement | null>(null);
@@ -29,145 +27,76 @@ function useInView(threshold = 0.1) {
   return { ref, isInView };
 }
 
-const About = ({editable}: EditProps) => {
+const About = () => {
   const { ref: section1Ref, isInView: section1Visible } = useInView();
   const { ref: section2Ref, isInView: section2Visible } = useInView();
-  const { ref: section3Ref, isInView: section3Visible } = useInView();
 
   return (
-    <div ref={section1Ref} className='h-auto w-full xl:w-[90%] bg-white px-5 md:px-10 flex flex-col py-16 font-bold gap-10 md:gap-20 items-center'>
-        <div className='w-full flex flex-col gap-3 mr-auto'>
-            {editable ? (
-                <>
-                    <EditableText tag="h2" className="text-2xl md:text-3xl" type='input'>
-                        Elevate your networking game with our cutting-edge Smart Business Card
-                    </EditableText>
-                </>
-            ) : (
-                <motion.h2 
-                    initial={{ x: "150%" }}
-                    animate={{ x: section1Visible ? "0%" : "150%" }}
-                    transition={{ duration: 1.5, ease: "easeOut" }}
-                    className='text-2xl md:text-3xl xl:text-4xl'
-                >
-                    <span className='text-dark-blue'>Elevate </span> 
-                    your networking game with our cutting-edge 
-                    <span className='text-dark-blue'> Smart Business Card</span>
-                </motion.h2>
-            )}
-            {editable ? (
-                <>
-                    <EditableText tag="p" className="text-md text-justify md:text-lg resize-none h-48" type='textarea'>
-                        A smart business card is a game-changer in the digital era, revolutionizing the way we network and connect. This cutting-edge innovation seamlessly combines technology and connectivity to make you stand out from the crowd, It allows you to showcase your creativity and uniqueness, setting you apart from the competition. By effortlessly sharing your contact information, social media profiles, and portfolio with a simple tap or scan, you can effortlessly expand your network and foster meaningful relationships. These connections can open doors to new opportunities and collaborations, bringing success to your professional endeavors. In this rapidly evolving world, a smart business card is an essential tool for any ambitious individual looking to thrive in the digital landscape.
-                    </EditableText>
-                </>
-            ) : (
-                <motion.p
-                    initial={{ x: "-150%" }}
-                    animate={{ x: section1Visible ? "0%" : "-150%" }}
-                    transition={{ duration: 1.5, ease: "easeOut" }}
-                    className='text-md text-justify lg:text-lg xl:text-2xl xl:font-light'
-                >
-                    A smart business card is a game-changer in the digital era, revolutionizing the way we network and connect. This cutting-edge innovation seamlessly combines technology and connectivity to make you stand out from the crowd, It allows you to showcase your creativity and uniqueness, setting you apart from the competition. By effortlessly sharing your contact information, social media profiles, and portfolio with a simple tap or scan, you can effortlessly expand your network and foster meaningful relationships. These connections can open doors to new opportunities and collaborations, bringing success to your professional endeavors. In this rapidly evolving world, a smart business card is an essential tool for any ambitious individual looking to thrive in the digital landscape.
-                </motion.p>
-            )}
-            
-        </div>
-        <div ref={section2Ref} className='h-auto w-4/5 md:w-full flex flex-col md:flex-row md:gap-5 xl:gap-20 items-center'>
-            <OnTapAnimation />
-            <motion.div 
-                className='w-auto md:w-full flex flex-col gap-3 lg:ml-32'
-                initial={{ x: "250%" }}
-                animate={{ x: section2Visible ? "0%" : "250%" }}
-                transition={{ duration: 0.7, ease: "easeOut" }}
+    <div ref={section1Ref} className='my-20 min-h-[85vh] h-max lg:h-[85vh] w-full xl:w-full z-99 shadow-2xl bg-white flex flex-col lg:flex-row px-5 md:px-12 py-10 md:py-12 gap-8 lg:gap-12 overflow-hidden relative'>
+                    <Image
+                height={4096}
+                width={4096}
+                alt="ontap creatives logo"
+                src='/images/waves.png'
+                className='absolute w-full md:w-3/5 2xl:w-1/2 h-max z-1 left-0 bottom-0 -mb-48 2xl:top-1/2 object-contain'
+            />
+        <div className='h-full w-full lg:w-1/2 flex flex-col gap-6 relative'>
+            <motion.h2 
+                initial={{ opacity: 0, x: -50 }}
+                animate={{ opacity: section1Visible ? 1 : 0, x: section1Visible ? 0 : -50 }}
+                transition={{ duration: 0.8, ease: "easeOut" }}
+                className='text-2xl md:text-4xl xl:text-5xl font-bold leading-tight z-10 text-dark-blue'
             >
-                {editable ? (
-                    <>
-                        <EditableText tag="h3" className="text-3xl md:text-5xl" type='input'>
-                            Why Choose OnTap Business card?
-                        </EditableText>
-                        <EditableText tag="p" className="text-base text-justify md:text-lg h-40 w-full" type='textarea'>
-                            Smart business cards are a valuable tool for professionals looking to make a lasting impression. With their sleek design and innovative features, you are embracing technology, efficiency, and sustainability, all while making a memorable impact in the business world.
-                        </EditableText>
-                    </>
-                ) : (
-                    <>
-                        <h3 className='text-3xl md:text-5xl'>Why Choose <span className='text-dark-blue'>OnTap Business card?</span></h3>
-                        <p className='text-base text-justify md:text-lg xl:text-2xl xl:font-light'>Smart business cards are a valuable tool for professionals looking to make a lasting impression. With their sleek design and innovative features, you are embracing technology, efficiency, and sustainability, all while making a memorable impact in the business world.</p>
-                    </>
-                )}
-                
+                <span className='text-transparent bg-clip-text bg-linear-to-r from-blue to-violet'>Elevate</span> Your Networking with{' '}
+                <span className='text-transparent bg-clip-text bg-linear-to-r from-blue to-violet'>Smart Business Cards</span>
+            </motion.h2>
+            <motion.p
+                initial={{ opacity: 0, x: -50 }}
+                animate={{ opacity: section1Visible ? 1 : 0, x: section1Visible ? 0 : -50 }}
+                transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
+                className='text-base md:text-lg xl:text-xl font-normal text-gray-700 leading-relaxed z-10'
+            >
+                Transform how you connect in the digital era. Share your contact info, social profiles, and portfolio instantly with a simple tap. Stand out, build meaningful relationships, and unlock new opportunities effortlessly.
+            </motion.p>
+            <motion.div 
+                className='flex flex-col gap-4 mt-4 z-10'
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: section1Visible ? 1 : 0, y: section1Visible ? 0 : 30 }}
+                transition={{ duration: 0.8, ease: "easeOut", delay: 0.4 }}
+            >
+                <h3 className='text-2xl md:text-3xl xl:text-4xl font-bold text-dark-blue'>
+                    Why Choose <span className='text-transparent bg-clip-text bg-linear-to-r from-blue to-violet'>OnTap?</span>
+                </h3>
+                <p className='text-base md:text-lg xl:text-xl font-normal text-gray-700 leading-relaxed'>
+                    Sleek design meets innovative technology. Embrace efficiency, sustainability, and make a lasting impression that sets you apart.
+                </p>
             </motion.div> 
         </div>
-        <div ref={section3Ref} className='w-full flex flex-col md:flex-row gap-10 md:gap-20 xl:gap-10 2xl:gap-20'>
+        <div ref={section2Ref} className='w-full lg:w-1/2 h-full relative flex items-center justify-end'>
+            <OnTapAnimation />
             <motion.div 
-                initial={{ x: "-150%" }}
-                animate={{ x: section3Visible ? "0%" : "-150%" }}
-                transition={{ duration: 0.7, ease: "easeOut" }}
-                className='flex flex-col gap-3 md:gap-5 xl:flex-row h-full w-4/5 md:w-full xl:w-full items-center mx-auto'
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: section2Visible ? 1 : 0, y: section2Visible ? 0 : 30 }}
+                transition={{ duration: 0.6, ease: "easeOut", delay: 0.3 }}
+                className='absolute left-0 bottom-0 -mb-5 w-max md:w-[75%] lg:w-[70%] z-50 bg-light-blue/10 backdrop-blur-xs rounded-2xl border border-blue/50 p-3 lg:p-4 shadow-md'
             >
-                <Image
-                    height={500}
-                    width={500}
-                    alt='ontap creatives cards'
-                    src='/images/about-img-1.png'
-                    className='lg:min-h-64 md:h-auto w-3/4 lg:w-4/5 lg:h-full xl:w-1/2 2xl:w-1/3 object-cover pt-5 object-center -mt-3'
-                    draggable={false}
-                />
-                <span className='h-full md:py-5'>
-                    {editable ? (
-                    <>
-                        <EditableText tag="h4" className="text-dark-blue text-xl" type='input'>
-                            Grow your Sphere of Influence
-                        </EditableText>
-                        <EditableText tag="p" className="text-base text-justify md:text-lg h-40 w-full" type='textarea'>
-                            Your network is your net worth. Utilize our digital business card to connect with like-minded individuals, industry leaders, and potential collaborators. Cultivate relationships that drive success and propel your career forward.
-                        </EditableText>
-                    </>
-                    ) : (
-                    <>
-                        <h4 className='text-dark-blue text-xl md:text-2xl xl:text-4xl'>Grow your Sphere of Influence</h4>
-                        <p className='text-base text-justify md:text-lg xl:text-2xl xl:font-light'>Your network is your net worth. Utilize our digital business card to connect with like-minded individuals, industry leaders, and potential collaborators. Cultivate relationships that drive success and propel your career forward.</p>
-                    </>
-                    )}
-                    
-                </span>
+                <h4 className='text-base md:text-xl font-bold text-transparent bg-clip-text bg-linear-to-r from-blue to-violet'>Expand Your Network</h4>
+                <p className='text-sm md:text-base font-normal text-gray-700 leading-snug'>
+                    Connect with industry leaders and collaborators. <span className='hidden lg:block'> Your network is your net worth, grow it strategically.</span>
+                </p>
             </motion.div>
             <motion.div 
-                initial={{ x: "150%" }}
-                animate={{ x: section3Visible ? "0%" : "150%" }}
-                transition={{ duration: 0.7, ease: "easeOut" }}
-                className='flex flex-col gap-3 md:gap-5 xl:flex-row h-full w-4/5 md:w-full xl:w-full items-center mx-auto'
+                initial={{ opacity: 0, y: -30 }}
+                animate={{ opacity: section2Visible ? 1 : 0, y: section2Visible ? 0 : -30 }}
+                transition={{ duration: 0.6, ease: "easeOut", delay: 0.5 }}
+                className='absolute right-0 top-0 -mt-5 w-max md:w-[75%] lg:w-[70%] bg-violet/10 backdrop-blur-xs rounded-2xl border border-violet/50 p-3 lg:p-4 shadow-md'
             >
-                <Image
-                    height={500}
-                    width={500}
-                    alt='ontap creatives cards'
-                    src='/images/about-img-2.png'
-                    className='lg:min-h-64 md:h-auto w-3/4 lg:w-4/5 lg:h-full xl:w-1/2 2xl:w-1/3 object-cover pt-5 object-center -mt-3'
-                    draggable={false}
-                />
-                <span className='h-full md:py-5'>
-                    {editable ? (
-                    <>
-                        <EditableText tag="h4" className="text-dark-blue text-xl md:text-2xl" type='input'>
-                            Seamless Connectivity
-                        </EditableText>
-                        <EditableText tag="p" className="text-base text-justify md:text-lg h-40 w-full" type='textarea'>
-                            Stay linked effortlessly! Share your digital business card instantly, allowing contacts to access your professional profile, social media, and contact details with a simple click. The power of connection is just a tap away.
-                        </EditableText>
-                    </>
-                    ) : (
-                    <>
-                        <h4 className='text-dark-blue text-xl md:text-2xl xl:text-4xl'>Seamless Connectivity</h4>
-                        <p className='text-base text-justify md:text-lg xl:text-2xl xl:font-light'>Stay linked effortlessly! Share your digital business card instantly, allowing contacts to access your professional profile, social media, and contact details with a simple click. The power of connection is just a tap away.</p>
-                    </>
-                    )}
-                    
-                </span>
+                <h4 className='text-base md:text-xl font-bold text-transparent bg-clip-text bg-linear-to-r from-blue to-violet'>Instant Connectivity</h4>
+                <p className='text-sm md:text-base font-normal text-gray-700 leading-snug'>
+                    Share your digital card instantly. <span className='hidden lg:block'>One tap gives contacts access to your profile, socials, and details.</span>
+                </p>
             </motion.div>
         </div>
-        
     </div>
   );
 };

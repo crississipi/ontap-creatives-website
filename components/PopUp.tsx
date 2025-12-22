@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useEffect, useState } from 'react'
-import { HiArrowRight, HiLocationMarker, HiOutlineX, HiPhone } from 'react-icons/hi'
+import { HiArrowRight, HiOutlineX } from 'react-icons/hi'
 import Toast from './Toast';
 import { Country } from '@/types';
 import { countries } from '@/data/countries';
@@ -103,6 +103,7 @@ const PopUp = ({ setShowPopup }: PopupProps) => {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload),
+                credentials: 'include'
             });
 
             const data = await res.json();

@@ -170,7 +170,25 @@ const OrderPage: React.FC = () => {
     try {
         setLoading(true);
         
-        const response = await fetch('https://ontap-creatives-website.vercel.app/api/transaction');
+        const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://ontap-creatives-website.vercel.app';
+        
+        const getCookie = (name: string) => {
+          if (typeof document === 'undefined') return '';
+          const value = `; ${document.cookie}`;
+          const parts = value.split(`; ${name}=`);
+          if (parts.length === 2) return parts.pop()?.split(';').shift() || '';
+          return '';
+        };
+
+        const token = getCookie('auth-token') || getCookie('auth_token');
+        
+        const response = await fetch(`${baseUrl}/api/transaction`, {
+          method: 'GET',
+          credentials: 'include',
+          headers: {
+            ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+          }
+        });
         
         if (!response.ok) {
           showToast('error', 'Failed to fetch orders.')
@@ -298,7 +316,7 @@ const OrderPage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className='h-[100vh] w-full flex items-center justify-center bg-gradient-to-t from-violet via-light-blue to-white'>
+      <div className='h-screen w-full flex items-center justify-center bg-linear-to-t from-violet via-light-blue to-white'>
         <Image
           height={2048}
           width={2048}
@@ -311,7 +329,7 @@ const OrderPage: React.FC = () => {
   }
 
   return (
-    <div className='h-[100vh] w-full flex flex-col items-center relative overflow-x-hidden p-0 lg:p-10 pt-20 lg:pr-5 gap-2 lg:gap-5 select-none lg:overflow-hidden bg-gradient-to-t from-violet via-light-blue to-white before:absolute before:top-0 before:left-0 before:h-full before:w-full before:z-30 before:bg-white/70 before:backdrop-blur-xl'>
+    <div className='h-screen w-full flex flex-col items-center relative overflow-x-hidden p-0 lg:p-10 pt-20 lg:pr-5 gap-2 lg:gap-5 select-none lg:overflow-hidden bg-linear-to-t from-violet via-light-blue to-white before:absolute before:top-0 before:left-0 before:h-full before:w-full before:z-30 before:bg-white/70 before:backdrop-blur-xl'>
       {toast.show && (
         <Toast 
           icon={toast.icon}

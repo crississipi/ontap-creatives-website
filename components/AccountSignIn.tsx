@@ -173,6 +173,7 @@ const AccountSignIn = ({ setShowLogin, onSuccess }: AccountSignInProps) => {
         contactNumber: formData.contactNumber,
         address: formData.address,
       }),
+      credentials: 'include',
     })
 
     if (response.ok) {
@@ -184,6 +185,7 @@ const AccountSignIn = ({ setShowLogin, onSuccess }: AccountSignInProps) => {
           email: formData.email,
           name: formData.name,
         }),
+        credentials: 'include',
       })
 
       if (verificationResponse.ok) {
@@ -206,6 +208,7 @@ const AccountSignIn = ({ setShowLogin, onSuccess }: AccountSignInProps) => {
         email: formData.email,
         otp: formData.otp,
       }),
+      credentials: 'include',
     })
 
     if (response.ok) {
@@ -232,7 +235,9 @@ const AccountSignIn = ({ setShowLogin, onSuccess }: AccountSignInProps) => {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email: formData.email }),
+      credentials: 'include',
     })
+    
 
     if (response.ok) {
       setCurrentView('verify-otp')
@@ -251,6 +256,7 @@ const AccountSignIn = ({ setShowLogin, onSuccess }: AccountSignInProps) => {
         email: formData.email,
         otp: formData.otp,
       }),
+      credentials: 'include',
     })
 
     if (response.ok) {
@@ -276,6 +282,7 @@ const AccountSignIn = ({ setShowLogin, onSuccess }: AccountSignInProps) => {
         otp: formData.otp,
         newPassword: formData.newPassword,
       }),
+      credentials: 'include',
     })
 
     if (response.ok) {
@@ -344,6 +351,7 @@ const AccountSignIn = ({ setShowLogin, onSuccess }: AccountSignInProps) => {
           email: formData.email,
           name: formData.name,
         }),
+        credentials: 'include',
       })
 
       if (response.ok) {

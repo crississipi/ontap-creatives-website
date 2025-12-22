@@ -383,7 +383,8 @@ function isValidPhilippineNumber(phoneNumber: string): boolean {
         headers: {
             'Content-Type': 'application/json',
         },
-        body: JSON.stringify(orderData)
+        body: JSON.stringify(orderData),
+        credentials: 'include',
         });
 
         const result = await response.json();
@@ -606,7 +607,7 @@ function isValidPhilippineNumber(phoneNumber: string): boolean {
                             animate={{ x: -180 }}
                             exit={{ x: 200 }}
                             transition={{ duration: 0.5 }}
-                            className="flex items-center gap-3 bg-gradient-to-l from-white via-white to-transparent min-w-[200%] h-full justify-center"
+                            className="flex items-center gap-3 bg-linear-to-l from-white via-white to-transparent min-w-[200%] h-full justify-center"
                             >
                             <Image
                                 height={2048}
@@ -856,7 +857,7 @@ function isValidPhilippineNumber(phoneNumber: string): boolean {
                                         width={2048}
                                         alt='Item Image'
                                         src={item.product.imgUrl || item.product.frontUrl!}
-                                        className='h-4/5 w-auto aspect-[3/2] rounded-md object-cover object-center'
+                                        className='h-4/5 w-auto aspect-3/2 rounded-md object-cover object-center'
                                     />
                                     <span className='flex flex-col w-auto'>
                                         <p className='font-extrabold text-sm'>{item.product.name}</p>

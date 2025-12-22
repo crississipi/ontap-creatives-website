@@ -62,18 +62,21 @@ model client {
   email         String        @unique(map: "email") @db.VarChar(50)
   contactNumber String?       @db.VarChar(20)
   address       String?       @db.VarChar(255)
-  profileImage  String?       @db.VarChar(255)
   timeAvailFrom DateTime?     @db.Time(0)
   timeAvailTo   DateTime?     @db.Time(0)
   password      String        @db.VarChar(255)
   adsAgree      Boolean
   emailVerified Boolean       @default(false)
   dateCreated   DateTime      @default(now()) @map("dateCreated")
+  profileImage  String?       @db.VarChar(255)
+  coverImage    String?       @db.VarChar(255)
+  referredBy    String?       @db.VarChar(100)
   carts         cart[]
   feedbacks     feedback[]
   transactions  transaction[]
   visitors      visitor[]
   vouchers      voucher[]
+  affiliate     affiliate?
 
   @@map("client")
 }
@@ -227,6 +230,114 @@ model staff {
   password       String?   @db.VarChar(255)
   age            Int?
   birthday       DateTime?
+  profileImage   String?   @db.VarChar(255)
 
   @@map("staff")
+}
+
+model affiliate {
+  affiliateID    Int      @id @default(autoincrement())
+  clientID       Int      @unique
+  affiliateCode  String   @unique @db.VarChar(100)
+  totalEarnings  Float    @default(0) @db.Float
+  status         String   @default("Active") @db.VarChar(50)
+  createdAt      DateTime @default(now())
+  client         client   @relation(fields: [clientID], references: [clientID], onDelete: Cascade)
+
+  @@index([clientID])
+  @@index([affiliateCode])
+  @@map("affiliate")
+}
+
+model newsletter{
+  id                String   @id @default(cuid())
+  email             String   @unique
+  subscribedAt      DateTime @default(now())
+  isActive          Boolean  @default(true)
+  unsubscribeToken  String   @unique @default(cuid())
+}
+
+model affiliate {
+  affiliateID    Int      @id @default(autoincrement())
+  clientID       Int      @unique
+  affiliateCode  String   @unique @db.VarChar(100)
+  totalEarnings  Float    @default(0) @db.Float
+  status         String   @default("Active") @db.VarChar(50)
+  createdAt      DateTime @default(now())
+  client         client   @relation(fields: [clientID], references: [clientID], onDelete: Cascade)
+
+  @@index([clientID])
+  @@index([affiliateCode])
+  @@map("affiliate")
+}
+
+model affiliateApplication {
+  applicationID                Int       @id @default(autoincrement())
+  
+  // Part 1: General Information
+  fullLegalName                String    @db.VarChar(200)
+  preferredDisplayName         String?   @db.VarChar(200)
+  dateOfBirth                  DateTime
+  nationality                  String    @db.VarChar(100)
+  govIdType                    String?   @db.VarChar(100)
+  govIdNumber                  String?   @db.VarChar(100)
+  primaryEmail                 String    @db.VarChar(255)
+  secondaryEmail               String?   @db.VarChar(255)
+  mobileNumber                 String    @db.VarChar(50)
+  alternativeContactNumber     String?   @db.VarChar(50)
+  completeResidentialAddress   String    @db.Text
+  city                         String    @db.VarChar(100)
+  province                     String    @db.VarChar(100)
+  country                      String    @db.VarChar(100)
+  timeZone                     String    @db.VarChar(100)
+  desiredAffiliateUsername     String    @unique @db.VarChar(100)
+  howDidYouHear                String    @db.VarChar(255)
+  
+  // Part 2: Occupation History / Relevant Experience
+  currentOccupation            String    @db.VarChar(200)
+  employmentType               String    @db.VarChar(100)
+  companyBusinessName          String?   @db.VarChar(200)
+  industryField                String    @db.VarChar(200)
+  yearsOfExperience            String    @db.VarChar(50)
+  previousAffiliateExperience  Boolean
+  platformsWorkedWith          String?   @db.Text
+  durationOfAffiliateExp       String?   @db.VarChar(100)
+  averageMonthlyPerformance    String?   @db.VarChar(255)
+  primarySkills                String    @db.Text
+  toolsPlatformsUsed           String    @db.Text
+  registeredBusinessName       String?   @db.VarChar(200)
+  businessType                 String?   @db.VarChar(100)
+  businessWebsiteUrl           String?   @db.Text
+  
+  // Part 3: Marketing Strategy & Audience Reach
+  audienceDescription          String    @db.Text
+  geographicReach              String    @db.VarChar(255)
+  estimatedAudienceSize        String    @db.VarChar(100)
+  marketingChannels            String    @db.Text
+  socialMediaLinks             String?   @db.Text
+  websiteBlogUrl               String?   @db.Text
+  emailListSize                String?   @db.VarChar(100)
+  promotionPlan                String    @db.Text
+  primaryContentFormat         String    @db.VarChar(255)
+  estimatedMonthlySales        String?   @db.VarChar(100)
+  
+  // Part 4: Agreements and Compliance
+  accurateInformationConfirmed Boolean
+  termsConditionsAgreed        Boolean
+  privacyPolicyAgreed          Boolean
+  brandingGuidelinesConfirmed  Boolean
+  ethicalMarketingConfirmed    Boolean
+  competingAffiliations        String?   @db.Text
+  
+  // Application metadata
+  applicationStatus            String    @default("pending") @db.VarChar(50)
+  submittedAt                  DateTime  @default(now())
+  reviewedAt                   DateTime?
+  reviewedBy                   Int?
+  reviewNotes                  String?   @db.Text
+  
+  @@index([primaryEmail])
+  @@index([desiredAffiliateUsername])
+  @@index([applicationStatus])
+  @@map("affiliate_application")
 }

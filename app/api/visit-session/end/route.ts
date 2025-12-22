@@ -22,19 +22,38 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Update session with end time and duration
+    // Get current session to calculate average duration
+    const currentSession = await prisma.session.findUnique({
+      where: { sessionID: sessionID }
+    })
+
+    if (!currentSession) {
+      return NextResponse.json({ 
+        success: true,
+        error: 'Session not found' 
+      })
+    }
+
+    // Calculate average duration if there were multiple visits
+    const currentDuration = currentSession.duration || 0
+    
+    // If multiple visits, calculate weighted average
+    // (previous_avg * (count-1) + new_duration) / count
+    const newAverageDuration = (currentDuration + duration) / 2;
+
+    // Update session with end time and average duration
     const session = await prisma.session.update({
       where: { sessionID: sessionID },
       data: {
         dateLeft: new Date(dateLeft),
-        duration: duration
+        duration: newAverageDuration
       }
     })
 
     return NextResponse.json({ 
       success: true, 
       sessionID: session.sessionID,
-      duration: session.duration
+      duration: session.duration,
     })
   } catch (error) {
     
@@ -49,6 +68,7 @@ export async function POST(request: NextRequest) {
       })
     }
     
+    console.error('Session end error:', error)
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

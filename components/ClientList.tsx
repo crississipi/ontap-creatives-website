@@ -1,99 +1,115 @@
 "use client";
 
-import React, { useState, useRef, useEffect} from "react";
+import React, { useState, useEffect} from "react";
 import Image from "next/image";
-import { EditProps } from "@/types";
+import { motion, AnimatePresence, easeInOut } from "framer-motion";
 
 const logos = Array.from(
   { length: 15 },
   (_, i) => `/images/client-logos/sponsor-${i + 1}.png`
 );
 
-type MarqueeRowProps = {
-  images: string[];
-  direction?: "left" | "right";
-};
+const BATCH_SIZE = 5;
+const DISPLAY_DURATION = 3000; // 3 seconds visible
+const TRANSITION_DURATION = 1000; // Time for entrance/exit sequences roughly
 
-const MarqueeRow: React.FC<MarqueeRowProps> = ({ images, direction = "left" }) => {
-  const trackRef = useRef<HTMLDivElement | null>(null);
-  const [startIndex, setStartIndex] = useState(0);
-
-  const itemWidth = 120; // px
-  const gap = 40; // px
-  const step = itemWidth + gap;
-
-  const visibleItems = Array.from({ length: images.length }, (_, i) => {
-    const index = (startIndex + i) % images.length;
-    return images[index];
-  });
+const ClientList = () => {
+  const [batchIndex, setBatchIndex] = useState(0);
 
   useEffect(() => {
-    let offset = 0;
-    let frame: number;
+    const interval = setInterval(() => {
+      setBatchIndex((prev) => (prev + 1) % Math.ceil(logos.length / BATCH_SIZE));
+    }, DISPLAY_DURATION + TRANSITION_DURATION * 2); // Adjust timing as needed
 
-    const tick = () => {
-      if (trackRef.current) {
-        offset += direction === "left" ? -1 : 1;
-        trackRef.current.style.transform = `translateX(${offset}px)`;
+    return () => clearInterval(interval);
+  }, []);
 
-        if (direction === "left" && Math.abs(offset) > step) {
-          offset += step;
-          setStartIndex((prev) => (prev + 1) % images.length);
-        } else if (direction === "right" && offset > step) {
-          offset -= step;
-          setStartIndex((prev) => (prev - 1 + images.length) % images.length);
-        }
-      }
-      frame = requestAnimationFrame(tick);
-    };
-
-    frame = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(frame);
-  }, [direction, images.length, step]);
-
-  return (
-    <div className="relative h-28 w-full overflow-hidden mx-auto">
-      <div
-        ref={trackRef}
-        className="absolute top-0 left-1/2 -translate-x-1/2 flex h-full items-center"
-        style={{ gap }}
-      >
-        {visibleItems.map((src, i) => (
-          <div
-            key={i}
-            className="h-20 flex items-center justify-center"
-            style={{ width: itemWidth }}
-          >
-            <Image
-              height={itemWidth}
-              width={itemWidth}
-              alt={`Client Logo ${i}`}
-              src={src}
-              className="h-full object-contain object-center"
-              draggable={false}
-            />
-          </div>
-        ))}
-      </div>
-    </div>
+  const currentLogos = logos.slice(
+    batchIndex * BATCH_SIZE,
+    (batchIndex + 1) * BATCH_SIZE
   );
-};
 
-// helper to slice ranges with wrap-around
-const sliceRange = (arr: string[], start: number, end: number) => {
-  if (end >= start) {
-    return arr.slice(start, end);
-  }
-  return [...arr.slice(start), ...arr.slice(0, end)];
-};
+  // If last batch is smaller, we might want to pad it or just show fewer. 
+  // Since 15 / 5 = 3, it's exact.
 
-const ClientList = ({editable}: EditProps) => {
+  const containerVariants = {
+    hidden: { opacity: 1 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.2,
+        delayChildren: 0.3,
+      }
+    },
+    exit: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1,
+        staggerDirection: 1,
+        when: "afterChildren" 
+      }
+    }
+  };
+
+  const itemVariants = {
+    hidden: { 
+      opacity: 0, 
+      filter: "blur(10px)", 
+      scale: 0.8,
+      y: 20
+    },
+    visible: { 
+      opacity: 1, 
+      filter: "blur(0px)", 
+      scale: 1,
+      y: 0,
+      transition: {
+        duration: 0.5,
+        ease: easeInOut
+      }
+    },
+    exit: { 
+      opacity: 0, 
+      filter: "blur(10px)", 
+      scale: 0.8,
+      y: -20,
+      transition: {
+        duration: 0.4,
+        ease: easeInOut
+      }
+    }
+  };
+
   return (
-    <>
-        <div className="relative h-auto w-full overflow-hidden bg-light-blue flex flex-col">
-            <MarqueeRow images={logos.slice(0, 15)} direction="left" />
-        </div>
-    </>
+    <div className="relative h-max w-full overflow-hidden flex flex-col items-center justify-center">
+        <AnimatePresence mode="wait">
+            <motion.div
+                key={batchIndex}
+                className="flex flex-wrap justify-center items-center gap-8 md:gap-16 px-4"
+                variants={containerVariants}
+                initial="hidden"
+                animate="visible"
+                exit="exit"
+            >
+                {currentLogos.map((src, i) => (
+                    <motion.div
+                        key={`${batchIndex}-${i}`} // Unique key for each item instance
+                        variants={itemVariants}
+                        className="h-20 w-32 flex items-center justify-center"
+                    >
+                        <Image
+                            height={100}
+                            width={120}
+                            alt={`Client Logo`}
+                            src={src}
+                            className="h-full w-full object-contain object-center"
+                            draggable={false}
+                        />
+                    </motion.div>
+                ))}
+            </motion.div>
+        </AnimatePresence>
+    </div>
   );
 };
 

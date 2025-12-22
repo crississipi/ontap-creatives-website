@@ -8,7 +8,7 @@ export async function POST(request: NextRequest) {
   try {
     const origin = request.headers.get('origin') || null
     const body = await request.json()
-    const { visitorUUID, pageUrl, pageTitle, metadata } = body
+    const { visitorUUID } = body
 
     if (!visitorUUID) {
       return NextResponse.json(
@@ -40,7 +40,6 @@ export async function POST(request: NextRequest) {
         }
       })
     } else {
-
       // Update last visit for existing visitor
       await prisma.visitor.update({
         where: { visitorUUID },
@@ -51,25 +50,46 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    // Create new session
-    const session = await prisma.session.create({
-      data: {
+    // Get today's date at midnight (for consistent date comparison)
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+
+    // Check if session exists for today
+    let session = await prisma.session.findFirst({
+      where: {
         visitorID: visitor.visitorID,
-        pageUrl: pageUrl || null,
-        pageTitle: pageTitle || null,
-        metadata: metadata ? JSON.stringify(metadata) : null,
-        dateVisited: new Date()
+        dateLeft: today
       }
     })
+
+    if (session) {
+      // Update existing session - increment visit count and reset timing
+      session = await prisma.session.update({
+        where: { sessionID: session.sessionID },
+        data: {
+          dateVisited: new Date(),
+          dateLeft: null,
+          duration: null
+        }
+      })
+    } else {
+      // Create new session for today
+      session = await prisma.session.create({
+        data: {
+          visitorID: visitor.visitorID,
+          dateVisited: new Date(),
+        }
+      })
+    }
 
     return NextResponse.json({ 
       success: true, 
       sessionID: session.sessionID,
       visitorID: visitor.visitorID,
-      visitorCreated: !visitor // Indicate if visitor was newly created
     }, { headers: getCorsHeaders(origin) })
   } catch (error) {
     const origin = request.headers.get('origin') || null
+    console.error('Session start error:', error)
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500, headers: getCorsHeaders(origin) }

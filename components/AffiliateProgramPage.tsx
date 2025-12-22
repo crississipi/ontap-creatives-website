@@ -1,11 +1,9 @@
-"use client"
+"use client";
 
-import React, { useEffect, useRef, useState } from 'react'
-import Image from 'next/image'
-import { motion } from 'framer-motion';
-import { EditProps } from '@/types';
-import { EditableText } from '.';
-
+import React, { useEffect, useRef, useState } from "react";
+import Image from "next/image";
+import { motion } from "framer-motion";
+import AffiliateApplicationForm from "./AffiliateApplicationForm";
 
 function useInView(threshold = 0.1) {
   const ref = useRef<HTMLDivElement | null>(null);
@@ -30,178 +28,113 @@ function useInView(threshold = 0.1) {
   return { ref, isInView };
 }
 
-const AffiliateProgramPage = ({editable}: EditProps) => {
-  
+const AffiliateProgramPage = () => {
   const { ref: section1Ref, isInView: section1Visible } = useInView();
   const { ref: section2Ref, isInView: section2Visible } = useInView();
   const { ref: section3Ref, isInView: section3Visible } = useInView();
 
   return (
-    <div className='h-auto w-full flex flex-col'>
-        <div ref={section1Ref} className='h-full md:h-[100vh] w-full relative flex items-center pl-5 py-10 md:py-0 overflow-hidden'>
-            <Image
-                height={4096}
-                width={4096}
-                alt='affiliate page background'
-                src='/images/affiliate-bg.png'
-                className='h-full w-full object-cover object-center absolute top-1/2 left-1/2 -translate-1/2'
-                draggable={false}
-            />
-            <motion.span 
-                className='z-20 text-white flex flex-col w-2/3 md:w-1/2 gap-5 mt-16'
-                initial={{ x: '-150%' }}
-                animate={section1Visible ? { x: '0%' } : {}}
-                transition={{
-                    duration: 0.8,
-                    ease: 'easeOut',
-                    delay: 0.3
-                }}
-            >
-                {editable ? (
-                    <>
-                        <EditableText tag="h1" className='text-4xl md:text-7xl md:pl-20 font-bold uppercase' type='input'>
-                            Affiliate Program
-                        </EditableText>
-                        <EditableText tag="p" className='h-40 text-lg leading-6 md:pl-20 md:text-2xl md:leading-normal' type='textarea'>
-                            We are excited to present our Affiliate Program for cutting-edge Smart Business Card. This program is designed to create a mutually beneficial partnership, allowing reseller to Tap into a growing market and offer innovative smart business card service to their clients.
-                        </EditableText>
-                    </>
-                ) : (
-                    <>
-                        <h1 className='text-4xl font-bold uppercase 
+    <div className="h-auto w-full flex flex-col">
+      <div
+        ref={section1Ref}
+        className="h-full md:h-screen w-full relative flex items-center pl-5 py-10 md:py-0 overflow-hidden bg-linear-to-tr from-violet via-dark-blue to-blue"
+      >
+        <Image
+          height={4096}
+          width={4096}
+          alt="affiliate page background"
+          src="/images/affiliate-bg.png"
+          className="h-full w-full object-cover object-center absolute top-1/2 left-1/2 -translate-1/2"
+          draggable={false}
+        />
+        <motion.span
+          className="z-20 text-white flex flex-col w-2/3 md:w-1/2 gap-5 mt-16"
+          initial={{ x: "-150%" }}
+          animate={section1Visible ? { x: "0%" } : {}}
+          transition={{
+            duration: 0.8,
+            ease: "easeOut",
+            delay: 0.3,
+          }}
+        >
+          <h1
+            className="text-4xl font-bold uppercase 
                         md:text-7xl 
-                        lg:pl-20'>Affiliate Program</h1>
-                        <p className='text-lg leading-6 lg:pl-20 
-                        md:text-2xl md:leading-normal'>We are excited to present our Affiliate Program for cutting-edge Smart Business Card. This program is designed to create a mutually beneficial partnership, allowing reseller to Tap into a growing market and offer innovative smart business card service to their clients.</p>
-                    </>
-                )}
-                
-            </motion.span>
-            <div className='h-2/3 aspect-square top-1/2 mt-4 -ml-7 md:mt-6 md:-ml-3 left-4/7 lg:left-1/2 lg:ml-0 2xl:ml-32 absolute -translate-y-1/2 flex items-center justify-center perspective-distant'>
-                <span className='h-16 w-16 rounded-full absolute top-1/2 left-1/2 -translate-1/2 waterEffect' style={{ animationDelay: "0.5s" }}></span>
-                <span className='h-24 w-24 rounded-full absolute top-1/2 left-1/2 -translate-1/2 waterEffect' style={{ animationDelay: "0.55s" }}></span>
-                <span className='h-32 w-32 rounded-full absolute top-1/2 left-1/2 -translate-1/2 waterEffect' style={{ animationDelay: "0.6s" }}></span>
-                <span className='h-40 w-40 rounded-full absolute top-1/2 left-1/2 -translate-1/2 waterEffect' style={{ animationDelay: "0.65s" }}></span>
-                <span className='h-48 w-48 rounded-full absolute top-1/2 left-1/2 -translate-1/2 waterEffect' style={{ animationDelay: "0.7s" }}></span>
-                <span className='h-56 w-56 rounded-full absolute top-1/2 left-1/2 -translate-1/2 waterEffect' style={{ animationDelay: "0.75s" }}></span>
-                <span className='h-64 w-64 rounded-full absolute top-1/2 left-1/2 -translate-1/2 waterEffect' style={{ animationDelay: "0.8s" }}></span>
-            </div>
-            <motion.span 
-                ref={section3Ref}
-                initial={{marginTop: '100px', scale: 1.1}}
-                animate={{marginTop: section3Visible ? '50px' : '100px', scale: section3Visible ?  1 : 1.5}}
-                transition={{
-                    duration: 0.5,
-                    ease: 'easeOut',
-                    delay: 0.3
-                }}
-                className='w-60 lg:w-80 aspect-square scale-275 md:scale-350 -ml-10 absolute left-3/4 top-5/6 md:left-5/6 md:ml-0 md:top-3/4 lg:left-7/10 lg:top-[93%] lg:-translate-y-1/3'
-            >
-                <Image
-                    height={4096}
-                    width={4096}
-                    alt='affiliate page background'
-                    src='/images/hand.png'
-                    className='h-full w-full z-40 object-contain object-center'
-                    draggable={false}
-                />
-            </motion.span>
+                        lg:pl-20"
+          >
+            Affiliate Program
+          </h1>
+          <p
+            className="text-lg leading-6 lg:pl-20 
+                        md:text-2xl md:leading-normal"
+          >
+            We are excited to present our Affiliate Program for cutting-edge
+            Smart Business Card. This program is designed to create a mutually
+            beneficial partnership, allowing reseller to Tap into a growing
+            market and offer innovative smart business card service to their
+            clients.
+          </p>
+        </motion.span>
+        <div className="h-2/3 aspect-square top-1/2 mt-4 -ml-7 md:mt-6 md:-ml-3 left-4/7 lg:left-1/2 lg:ml-0 2xl:ml-32 absolute -translate-y-1/2 flex items-center justify-center perspective-distant">
+          <span
+            className="h-16 w-16 rounded-full absolute top-1/2 left-1/2 -translate-1/2 waterEffect"
+            style={{ animationDelay: "0.5s" }}
+          ></span>
+          <span
+            className="h-24 w-24 rounded-full absolute top-1/2 left-1/2 -translate-1/2 waterEffect"
+            style={{ animationDelay: "0.55s" }}
+          ></span>
+          <span
+            className="h-32 w-32 rounded-full absolute top-1/2 left-1/2 -translate-1/2 waterEffect"
+            style={{ animationDelay: "0.6s" }}
+          ></span>
+          <span
+            className="h-40 w-40 rounded-full absolute top-1/2 left-1/2 -translate-1/2 waterEffect"
+            style={{ animationDelay: "0.65s" }}
+          ></span>
+          <span
+            className="h-48 w-48 rounded-full absolute top-1/2 left-1/2 -translate-1/2 waterEffect"
+            style={{ animationDelay: "0.7s" }}
+          ></span>
+          <span
+            className="h-56 w-56 rounded-full absolute top-1/2 left-1/2 -translate-1/2 waterEffect"
+            style={{ animationDelay: "0.75s" }}
+          ></span>
+          <span
+            className="h-64 w-64 rounded-full absolute top-1/2 left-1/2 -translate-1/2 waterEffect"
+            style={{ animationDelay: "0.8s" }}
+          ></span>
         </div>
-        <div ref={section2Ref} className='h-max w-full flex flex-col items-center py-10 z-10 md:py-20'>
-            {editable ? (
-                <>
-                    <EditableText tag="h2" className='text-3xl font-bold text-dark-blue pb-10 w-full text-center md:text-4xl' type='input'>
-                        How to Apply for OnTap's Affiliate Program?
-                    </EditableText>
-                </>
-            ) : (
-                <h2 className='text-3xl font-bold text-dark-blue pb-10 w-full text-center md:text-4xl'>
-                    How to Apply for OnTap's <span className='text-blue'>Affiliate Program?</span>
-                </h2>
-            )}
-            
-            <span className='-z-10 py-10 border-t-2 border-dark-blue w-9/10 text-center text-dark-blue flex flex-col'>
-                {editable ? (
-                    <>
-                        <EditableText tag="h3" className='text-center mb-10 font-bold md:text-xl'  type='input'>
-                            To know more of our Affiliate Program, please get in touch with us for further information.
-                        </EditableText>
-                        <EditableText tag="h4" className='text-black text-2xl font-bold mb-5 md:text-3xl text-center' type='input'>
-                            SALES TEAM
-                        </EditableText>
-                        <EditableText tag="p" className='font-bold text-xl md:text-2xl text-center' type='input'>
-                            +63 9177008364
-                        </EditableText>
-                        <EditableText tag="p" className='font-bold text-xl md:text-2xl text-center' type='input'>
-                            +63 9764183188
-                        </EditableText>
-                        <EditableText tag="p" className='font-bold text-xl mb-10 md:text-2xl text-center' type='input'>
-                            +63 9764183189
-                        </EditableText>
-                        <EditableText tag="p" className='text-blue mb-5 md:text-xl text-center'  type='input'>
-                            Click/Download the application form here.
-                        </EditableText>
-                        <EditableText tag="h5" className='mb-3 font-bold md:text-lg  text-center'  type='input'>
-                            Kindly send your application to our email
-                        </EditableText>
-                        <EditableText tag="a" className='font-bold md:text-lg text-center'  type='input' >
-                            ontapcreatives@gmail.com
-                        </EditableText>
-                    </>
-                ) : (
-                    <>
-                        <h3 className='mb-10 font-bold md:text-xl' >To know more of our Affiliate Program, please get in touch with us for further information.</h3>
-                        <h4 className='text-black text-2xl font-bold mb-5 md:text-3xl'>SALES TEAM</h4>
-                        <p className='font-bold text-xl md:text-2xl'>+63 9177008364</p>
-                        <p className='font-bold text-xl md:text-2xl'>+63 9764183188</p>
-                        <p className='font-bold text-xl mb-10 md:text-2xl'>+63 9764183189</p>
-                        <p className='text-blue mb-5 md:text-xl'>Click/Download the application form here.</p>
-                        <h5 className='mb-3 font-bold md:text-lg'>Kindly send your application to our email</h5>
-                        <a 
-                            href="#" 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className='font-bold md:text-lg'
-                        >ontapcreatives@gmail.com</a>
-                    </>
-                )}
-                
-            </span>
-        </div>
-        <div className='h-max md:h-[100vh] w-full flex flex-col relative px-10 md:pr-0 py-5 md:overflow-hidden'>
-            <Image
-                height={4096}
-                width={4096}
-                alt='affiliate page background'
-                src='/images/join-team-bg.png'
-                className='h-full md:h-auto w-full object-cover md:object-contain object-center absolute top-1/2 left-1/2 -translate-1/2'
-                draggable={false}
-            />
-            {editable ? (
-                <>
-                    <EditableText tag="h2" className='z-10 w-full text-3xl font-bold text-dark-blue text-center 
-                    md:text-7xl md:mt-10' type='input'>
-                        JOIN OUR TEAM
-                    </EditableText>
-                    <EditableText tag="h3" className='h-54 z-10 text-2xl ml-32 my-14 font-bold text-dark-blue 
-                    md:my-auto md:mx-auto md:leading-18 md:text-6xl md:w-1/3'  type='textarea'>
-                        BECOME AN AFFILIATE MEMBER TODAY
-                    </EditableText>
-                </>
-            ) : (
-                <>
-                    <h2 className='z-10 w-full text-3xl font-bold text-dark-blue text-center 
-                    md:text-7xl md:mt-10'>JOIN OUR TEAM</h2>
-                    <h3 className='
-                    z-10 text-2xl my-14 font-bold text-dark-blue ml-24 
-                    md:my-auto md:ml-auto md:mr-10 md:text-5xl md:w-2/3 
-                    lg:ml-auto lg:mr-30 lg:leading-18 lg:text-6xl lg:w-4/7 
-                    xl:w-1/3 xl:mx-auto'>BECOME AN AFFILIATE MEMBER TODAY</h3>
-                </>
-            )}
-        </div>
+        <motion.span
+          ref={section3Ref}
+          initial={{ marginTop: "100px", scale: 1.1 }}
+          animate={{
+            marginTop: section3Visible ? "50px" : "100px",
+            scale: section3Visible ? 1 : 1.5,
+          }}
+          transition={{
+            duration: 0.5,
+            ease: "easeOut",
+            delay: 0.3,
+          }}
+          className="w-60 lg:w-80 aspect-square scale-275 md:scale-350 -ml-10 absolute left-3/4 top-5/6 md:left-5/6 md:ml-0 md:top-3/4 lg:left-7/10 lg:top-[93%] lg:-translate-y-1/3"
+        >
+          <Image
+            height={4096}
+            width={4096}
+            alt="affiliate page background"
+            src="/images/hand.png"
+            className="h-full w-full z-40 object-contain object-center"
+            draggable={false}
+          />
+        </motion.span>
+      </div>
+
+      <div ref={section2Ref} className="min-h-screen lg:h-dvh w-full z-10">
+        <AffiliateApplicationForm />
+      </div>
     </div>
   );
 };
 
-export default AffiliateProgramPage
+export default AffiliateProgramPage;

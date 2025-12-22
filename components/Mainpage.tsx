@@ -1,25 +1,29 @@
 "use client"
 
 import React, { JSX, useEffect, useState } from 'react'
-import { About, AboutUs, AffiliateProgramPage, CartPage, ClientList, FAQs, FillUpForm, Footer, Header, Hero, OrderPage, PrivacyPolicy, ProductList, Starting, TermsConditions, VideoTutorial } from '.'
+import { About, AboutUs, AffiliateProgramPage, CartPage, ClientList, FAQs, FillUpForm, Footer, Header, Hero, OrderPage, PrivacyPolicy, ProductList, Starting, TermsConditions, UserProfile, VideoTutorial } from '.'
 import { AnimatePresence, motion } from 'framer-motion'
 import { BsQuestionLg } from 'react-icons/bs'
-import { EditProps } from '@/types'
 import Funnel from './Funnel'
+import MobileSidebar from './MobileSidebar'
+import AccountSignIn from './AccountSignIn'
 
-const Mainpage = ({ editable }: EditProps) => {
+const Mainpage = () => {
   const [page, setPage] = useState(0);
   const [endWarping, endWarpingNow] = useState(false);
+  const [showNav, isNavShown] = useState(false);
+  const [showLogin, setShowLogin] = useState(false);
 
   const SectionPage: Record<number, JSX.Element> = {
-    1: <AffiliateProgramPage editable={editable}/>,
-    2: <FAQs editable={editable}/>,
-    3: <ProductList editable={editable}/>,
+    1: <AffiliateProgramPage />,
+    2: <FAQs />,
+    3: <ProductList />,
     4: <CartPage />,
-    5: <AboutUs editable={editable}/>,
+    5: <AboutUs />,
     6: <OrderPage />,
     7: <PrivacyPolicy/>,
-    8: <TermsConditions />
+    8: <TermsConditions />,
+    9: <UserProfile />
   }
 
   useEffect(() => {
@@ -41,18 +45,32 @@ const Mainpage = ({ editable }: EditProps) => {
     return () => clearTimeout(timer);
   }, []);
 
+  const handleLoginSuccess = () => {
+    setShowLogin(false);
+  };
+
   return (
     <div className='h-auto w-full flex flex-col items-center relative overflow-x-hidden'>
-        <Header setPage={setPage}/>
-          {/* <Funnel /> */}
+        <Header 
+          setPage={setPage} 
+          showNav={showNav} 
+          isNavShown={isNavShown}
+          setShowLogin={setShowLogin}
+        />
+        <MobileSidebar 
+          showNav={showNav} 
+          isNavShown={isNavShown} 
+          setPage={setPage}
+          setShowLogin={setShowLogin}
+        />
+        <Funnel />
           {page === 0 ? (
             <>
               <AnimatePresence mode='wait'>{!endWarping && (<Starting />)}</AnimatePresence>
-              <Hero endWarping={endWarping} editable={editable}/>
-              <About editable={editable}/>
-              <VideoTutorial editable={editable}/>
+              <Hero endWarping={endWarping} />
+              <About />
+              <VideoTutorial />
               <FillUpForm />
-              <ClientList editable={editable}/>
               <Footer setPage={setPage}/>
             </>
             ) : SectionPage[page]}
@@ -75,6 +93,14 @@ const Mainpage = ({ editable }: EditProps) => {
               FAQs
             </motion.button>
           )}
+        
+        {/* Login Modal */}
+        {showLogin && (
+          <AccountSignIn 
+            setShowLogin={setShowLogin} 
+            onSuccess={handleLoginSuccess}
+          />
+        )}
     </div>
   )
 }

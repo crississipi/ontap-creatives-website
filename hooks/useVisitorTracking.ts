@@ -10,6 +10,15 @@ interface VisitorTrackingHook {
   trackPageView: (metadata?: SessionMetadata) => Promise<void>
 }
 
+// Cookie utility
+const getCookie = (name: string): string | null => {
+  if (typeof document === 'undefined') return null;
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) return parts.pop()?.split(';').shift() || null;
+  return null;
+}
+
 export const useVisitorTracking = (visitorUUID: string): VisitorTrackingHook => {
   const sessionStartTime = useRef<number | null>(null)
   const currentSessionId = useRef<number | null>(null)
@@ -58,10 +67,7 @@ export const useVisitorTracking = (visitorUUID: string): VisitorTrackingHook => 
     sessionStartTime.current = Date.now()
 
     const sessionData = {
-      visitorUUID,
-      pageUrl: window.location.href,
-      pageTitle: document.title,
-      metadata
+      visitorUUID
     }
 
     try {
@@ -130,25 +136,9 @@ export const useVisitorTracking = (visitorUUID: string): VisitorTrackingHook => 
 
     if (!sessionStartTime.current) {
       await startSession(metadata)
-    } else {
-      const sessionData = {
-        sessionID: currentSessionId.current,
-        pageUrl: window.location.href,
-        pageTitle: document.title,
-        metadata: { ...metadata, pageView: true }
-      }
-
-      try {
-        await fetch('/api/visit-session/update-session', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(sessionData)
-        })
-      } catch (error) {
-      }
     }
+    // For now, we just ensure session is started
+    // No need to update session on every page view since we track by day
   }
 
   return {
@@ -156,14 +146,4 @@ export const useVisitorTracking = (visitorUUID: string): VisitorTrackingHook => 
     endSession,
     trackPageView
   }
-}
-
-// Cookie utility function
-function getCookie(name: string): string | null {
-  if (typeof document === 'undefined') return null;
-  
-  const value = `; ${document.cookie}`;
-  const parts = value.split(`; ${name}=`);
-  if (parts.length === 2) return parts.pop()?.split(';').shift() || null;
-  return null;
 }

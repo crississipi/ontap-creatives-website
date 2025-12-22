@@ -12,7 +12,7 @@ const PrivacyPolicy = () => {
   const [showTableOfContents, setShowTableOfContents] = useState(false);
 
   return (
-    <div className='h-[100vh] w-full flex pb-5 overflow-hidden relative'>
+    <div className='h-screen w-full flex pb-5 overflow-hidden relative'>
         <motion.div 
         initial={{x: 100}}
         className='pt-20 hidden h-full w-[20%] lg:flex flex-col table-of-contents overflow-x-hidden duration-150 ease-out transition-normal'>

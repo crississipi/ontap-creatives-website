@@ -53,7 +53,7 @@ const SaveCookies = ({ setShowCookies, onAccept }: CookiesProps) => {
   return (
     <div 
       ref={cookiesRef} 
-      className='h-full w-full fixed z-[99999] bg-black/30 flex flex-col items-center pt-10 gap-5 px-5 md:px-0 select-none'
+      className='h-full w-full fixed z-99999 bg-black/30 flex flex-col items-center pt-10 gap-5 px-5 md:px-0 select-none'
     >
       {toast.show && (
         <Toast 

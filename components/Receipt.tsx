@@ -1,6 +1,6 @@
 "use client";
 
-import React, { JSX, useRef, useState } from "react";
+import React, { JSX, useRef } from "react";
 import Image from "next/image";
 import { RiStore3Fill, RiTruckLine } from "react-icons/ri";
 import { TbTruckDelivery } from "react-icons/tb";
@@ -241,7 +241,7 @@ const Receipt: React.FC<ReceiptProps> = ({
                   {items.map((item, index) => (
                     <div key={index} className='flex w-full py-3 items-center gap-3 border-b border-white'>
                       <span className='h-20 aspect-square rounded-md bg-light-blue flex items-center justify-center text-xs text-gray-600'>
-                        <img src={item.frontImg || item.imgUrl} alt="product image" className="w-full aspect-[3/2] rounded-md overflow-hidden"/>
+                        <img src={item.frontImg || item.imgUrl} alt="product image" className="w-full aspect-3/2 rounded-md overflow-hidden"/>
                       </span>
                       <span className='w-1/2 h-full flex flex-col justify-between'>
                         <h3 className='overflow-ellipsis text-nowrap w-full overflow-hidden font-bold'>{item.name}</h3>

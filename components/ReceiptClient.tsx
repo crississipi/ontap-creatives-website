@@ -88,6 +88,7 @@ export default function ReceiptClient({ orderID }: { orderID: string }) {
           total: data.total,
           orderDate: data.orderDate
         }),
+        credentials: 'include'
       });
 
       if (response.ok) {
@@ -228,7 +229,7 @@ export default function ReceiptClient({ orderID }: { orderID: string }) {
   // Show loading state
   if (loading) {
     return (
-      <div className='h-[100vh] w-[100vw] flex items-center justify-center bg-gradient-to-t from-violet via-light-blue to-white'>
+      <div className='h-screen w-screen flex items-center justify-center bg-linear-to-t from-violet via-light-blue to-white'>
         <Image
           height={2048}
           width={2048}

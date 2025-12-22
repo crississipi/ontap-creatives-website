@@ -24,12 +24,12 @@ interface VoucherRouletteProps {
 
 // 🎨 Fixed color mapping for each rarity
 const rarityColors: Record<Rarity, string> = {
-  "very-common": "#0FA36B", // Emerald — slightly teal-shifted for harmony
-  "common": "#44C767", // Fresh Green — lighter, more vibrant complement tone
-  "ultra": "#F43F5E", // Crimson Red — complements Cobalt beautifully
-  "rare": "#F97316", // Vibrant Orange — complements Blue
-  "very-rare": "#EAB308", // Golden Yellow — warmer, balances violet
-  "ultra-rare": "#6366F1" // Soft Indigo Violet — complements the warm tones
+  "very-common": "#10B981", // Emerald
+  "common": "#22C55E", // Green
+  "ultra": "#EF4444", // Red
+  "rare": "#F97316", // Orange
+  "very-rare": "#EAB308", // Yellow
+  "ultra-rare": "#8B5CF6" // Violet
 };
 
  const Discounts: Record<string, string> = {
@@ -52,8 +52,14 @@ export default function VoucherRoulette({setRoulette, onVoucherWon}: VoucherRoul
   const initializeClient = async () => {
     try {
       // Get user session
-      const sessionResponse = await fetch('https://ontap-creatives-website.vercel.app/api/auth/session');
-      
+      const sessionResponse = await fetch('https://ontap-creatives-website.vercel.app/api/auth/session', {
+            method: 'GET',
+            headers: {
+            'Content-Type': 'application/json',
+            },
+            credentials: 'include',
+        });
+        
       if (!sessionResponse.ok) {
         throw new Error('Failed to get session');
       }
@@ -481,20 +487,20 @@ const weightedVouchers = groupedVouchers.map((group) => ({
     return groupedVouchers.map((group) => {
       const sliceDegrees = group.weight * degreePerSlice;
       const sliceCenterAngle = currentAngle + (sliceDegrees / 2);
-      const radius = 100;
+      const radius = 130;
 
       currentAngle += sliceDegrees;
 
       return (
         <div
           key={group.voucher.id}
-          className="absolute left-1/2 top-1/2 pointer-events-none origin-center flex items-center justify-center z-999"
+          className="absolute left-1/2 top-1/2 pointer-events-none origin-center flex items-center justify-center z-20"
           style={{
-            transform: `translate(-50%, -50%) rotate(${sliceCenterAngle + 14}deg)`,
+            transform: `translate(-50%, -50%) rotate(${sliceCenterAngle}deg)`,
           }}
         >
           <div
-            className="absolute text-lg font-extrabold text-white mb-16 w-30 text-left drop-shadow-md"
+            className="absolute text-xs md:text-sm font-black text-white w-32 text-center drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]"
             style={{
               transform: `translateY(-${radius}px) rotate(90deg)`,
             }}
@@ -522,252 +528,164 @@ const weightedVouchers = groupedVouchers.map((group) => ({
   };
 
   return (
-    <div className="h-[100vh] bg-gradient-to-t from-0% from-[#e8e6e5] via-15% via-[#f3f1ee] to-25% to-[#f8f5f4] p-6 flex flex-col items-center justify-center gap-6 select-none fixed top-1/2 left-1/2 -translate-1/2 w-full z-999">
-      <motion.h1 
-        initial={{scale:0.6, opacity:0}}
-        animate={{scale:1, opacity:1}}
-        exit={{scale:0.6, opacity:0}}
-        transition={{type:'spring', stiffness:100, damping:20}}
-        className="text-5xl font-extrabold text-dark-blue z-50"
-      >Welcome to Spin-a-Wheel</motion.h1>
-      <motion.p 
-        initial={{scale:0.6, opacity:0}}
-        animate={{scale:1, opacity:1}}
-        exit={{scale:0.6, opacity:0}}
-        transition={{type:'spring', stiffness:100, damping:20}}
-        className="-mt-3 text-xl mb-10 z-50"
-      >Try your luck in claiming best discounts!</motion.p>
-      <div className="flex gap-20 z-50 ml-52">
-          <div className="h-2/5 absolute z-20 top-1/2 left-0">
-            <Image 
-              height={2048}
-              width={2048}
-              alt="robot animation"
-              src={
-                isSpinning 
-                  ? '/video/robot-animation.gif' 
-                  : showResult && getSelectedVoucher()?.label === 'Better Luck Next Time' 
-                    ? '/video/sad-animation.gif' 
-                    : showResult 
-                      ? '/video/happy-animation.gif'
-                      : '/video/robot-animation.gif'
-              }
-              className="h-full w-auto object-contain object-center"
-            />
-          </div>
-        <motion.div 
-          initial={{y:150, opacity:0}}
-          animate={{y:0, opacity:1}}
-          exit={{y:150, opacity:0}}
-          transition={{type:'spring', stiffness:100, damping:20}}
-          className="flex flex-col relative ml-36 z-40"
-        >
-          {/* 🎡 Roulette Container */}
-          <div className="relative">
-            {/* 📍 Pin */}
-            <motion.div
-              animate={bounce ? { 
-                rotateZ: [0, 4, -2, 3, 1, 0],
-                scale: [1, 1.05, 1, 1.02, 1, 1]
-              } : {}}
-              transition={{ duration: 0.8, ease: "easeOut" }}
-              style={{ 
-                rotate: pinRotation,
-                transformOrigin: 'center top'
-              }}
-              className="absolute left-1/2 -translate-x-1/2 -top-7 z-30"
-            >
-              <div className="flex flex-col items-center">
-                <div className="w-12 h-16 flex items-center justify-center">
-                  <IoTriangle className="text-dark-blue h-full w-full drop-shadow-md drop-shadow-black/30 rotate-z-180" />
+    <div className="min-h-screen bg-gray-50 text-gray-900 flex flex-col items-center justify-center p-4 overflow-hidden relative font-sans selection:bg-violet-500/30">
+      {/* Background Effects */}
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,var(--tw-gradient-stops))] from-white via-gray-100 to-gray-200 -z-10" />
+      
+      {/* Header */}
+      <motion.div 
+        initial={{ y: -50, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        className="text-center mb-8 z-10"
+      >
+        <h1 className="text-4xl md:text-6xl font-black tracking-tighter text-transparent bg-clip-text bg-linear-to-b from-gray-900 to-gray-600 drop-shadow-sm">
+          LUCKY SPIN
+        </h1>
+        <p className="text-gray-600 mt-2 font-medium tracking-wide uppercase text-sm">
+          Spin the wheel & win exclusive discounts
+        </p>
+      </motion.div>
+
+      {/* Main Content Area */}
+      <div className="flex flex-col items-center gap-12 z-10 w-full max-w-4xl">
+        
+        {/* 🎡 Roulette Machine */}
+        <div className="relative group">
+            {/* Outer Glow */}
+            <div className="absolute inset-0 bg-violet-500/10 blur-[100px] rounded-full" />
+            
+            {/* Machine Casing */}
+            <div className="relative w-[320px] h-80 md:w-120 md:h-120 rounded-full bg-white p-3 shadow-[0_20px_50px_rgba(0,0,0,0.1),inset_0_2px_0_rgba(255,255,255,1)] border border-gray-200 ring-1 ring-gray-100">
+                
+                {/* Inner Rim */}
+                <div className="w-full h-full rounded-full bg-gray-100 p-2 shadow-[inset_0_5px_10px_rgba(0,0,0,0.1)]">
+                    
+                    {/* The Wheel */}
+                    <div className="relative w-full h-full rounded-full overflow-hidden shadow-2xl">
+                        <motion.div
+                            className="w-full h-full rounded-full relative"
+                            style={{
+                                background: wheelBackground,
+                                rotate: rotation,
+                            }}
+                        >
+                            {/* Overlay Gradient for 3D effect */}
+                            <div className="absolute inset-0 rounded-full bg-[radial-gradient(circle_at_30%_30%,rgba(255,255,255,0.4),transparent_60%)] pointer-events-none z-10" />
+                            <div className="absolute inset-0 rounded-full shadow-[inset_0_0_20px_rgba(0,0,0,0.2)] pointer-events-none z-10" />
+                            
+                            {/* Labels */}
+                            {renderLabels()}
+                        </motion.div>
+                    </div>
                 </div>
-              </div>
-            </motion.div>
 
-            {/* 🎡 Wheel */}
-            <div className="relative w-120 h-120">
-              <div
-                className="w-full h-full rounded-full border-8 border-white shadow-2xl relative overflow-hidden"
-                style={{
-                  background: `${wheelBackground}`,
-                  transform: `rotate(${rotation}deg)`,
-                  transition: isSpinning ? 'none' : 'transform 0.5s cubic-bezier(0.23, 1, 0.32, 1)',
-                }}
-              >
-                {/* Slice Labels */}
-                {renderLabels()}
-              </div>
+                {/* 📍 Pin (Hyperrealistic) */}
+                <div className="absolute -top-6 left-1/2 -translate-x-1/2 z-30 filter drop-shadow-lg">
+                    <motion.div
+                        animate={bounce ? { rotateZ: [0, -15, 10, -5, 0] } : { rotateZ: pinRotation }}
+                        transition={{ duration: 0.2 }}
+                        style={{ transformOrigin: 'top center' }}
+                        className="relative w-12 h-16"
+                    >
+                        {/* Pin Body */}
+                        <div className="w-0 h-0 border-l-12 border-l-transparent border-r-12 border-r-transparent border-t-30 border-t-gray-800 filter drop-shadow-[0_4px_2px_rgba(0,0,0,0.1)]" />
+                        {/* Pin Head */}
+                        <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-4 rounded-full bg-linear-to-b from-gray-700 to-gray-900 shadow-md" />
+                    </motion.div>
+                </div>
 
-              {/* Decorative Outer Ring */}
-              <div className="absolute inset-0 rounded-full border-4 border-yellow-400 -m-4 pointer-events-none" />
+                {/* Center Spin Button */}
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20">
+                    <button
+                        onClick={startSpin}
+                        disabled={isSpinning || isLoading || spin >= 2}
+                        className={`
+                            relative w-20 h-20 md:w-24 md:h-24 rounded-full flex items-center justify-center
+                            transition-all duration-200 active:scale-95
+                            ${isSpinning || isLoading || spin >= 2 
+                                ? 'grayscale cursor-not-allowed opacity-80' 
+                                : 'hover:scale-105 cursor-pointer'}
+                        `}
+                    >
+                        {/* Button Bezel */}
+                        <div className="absolute inset-0 rounded-full bg-linear-to-b from-gray-100 to-gray-300 shadow-[0_10px_20px_rgba(0,0,0,0.1),inset_0_2px_0_rgba(255,255,255,0.8)]" />
+                        
+                        {/* Button Face */}
+                        <div className="absolute inset-2 rounded-full bg-linear-to-b from-white to-gray-100 shadow-[inset_0_2px_5px_rgba(0,0,0,0.1)] flex items-center justify-center border border-gray-200">
+                            {/* Inner Icon/Text */}
+                            <div className="text-gray-800 font-bold text-sm md:text-base tracking-widest drop-shadow-sm">
+                                {isSpinning ? '...' : 'SPIN'}
+                            </div>
+                        </div>
+                    </button>
+                </div>
             </div>
             
-            {/* Center Spin Button */}
-            <button
-              onClick={startSpin}
-              disabled={isSpinning || isLoading || spin >= 2}
-              className={`absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 rounded-full shadow-lg font-bold transition-all duration-200 border-4 ${
-                isSpinning || isLoading || spin >= 2
-                  ? 'bg-gray-100 border-gray-300 cursor-not-allowed text-gray-400'
-                  : 'bg-white text-violet-700 border-violet-200 hover:bg-violet-50 hover:scale-105 hover:text-violet-900 active:scale-95'
-              }`}
-            >
-              <Image
-                height={2048}
-                width={2048}
-                alt="spin icon"
-                src='/images/logo.png'
-                className={`h-12 w-12 object-contain object-center absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 ${
-                  isSpinning || isLoading || spin >= 2 ? 'opacity-50' : ''
-                }`}
-                draggable={false}
-              />
-            </button>
-
-            {/* Update spins counter to show when no spins left */}
-            <div className={`absolute -bottom-16 left-1/2 -translate-x-1/2 uppercase text-sm font-extrabold ${
-              spinsRemaining <= 0 ? 'text-red-500' : 'text-gray-600'
-            }`}>
-              {isLoading ? 'Loading...' : 
-              spinsRemaining <= 0 ? 'No spins remaining' : 
-              `Spins remaining: ${spinsRemaining}`}
-            </div>
-          </div>
-        </motion.div>
-        <div className="h-full w-auto grid grid-cols-3 gap-3 items-center">
-          {Array.from({length: 2}).map((_,i) => (
-            <div key={i} className="col-span-1 w-full h-full relative flex">  
-              <div className="w-full h-full flex flex-col overflow-hidden absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 -z-10">
-              <div className={`w-full aspect-square rounded-xl rounded-b-none ${wonVouchers[i] && wonVouchers[i]?.label === 'Better Luck Next Time' ? 'border-8 border-b-0 border-[#bb1d1c]' : 'border-4 border-b-0 border-dashed  border-black/30'}`}></div>
-                <div className={`h-8 w-full flex items-center justify-between ${wonVouchers[i] && wonVouchers[i]?.label === 'Better Luck Next Time' && 'border-x-8 border-[#bb1d1c]'}`}>
-                  {wonVouchers[i]?.label !== 'Better Luck Next Time' && (
-                    <>
-                      <span className="h-8 w-8 rounded-full border-4 border-dashed -ml-4  border-black/30"></span>
-                      <span className="h-8 w-8 rounded-full border-4 border-dashed -mr-4  border-black/30"></span>
-                    </>
-                  )}
+            {/* Spins Remaining Indicator */}
+            <div className="absolute -bottom-12 left-1/2 -translate-x-1/2 whitespace-nowrap">
+                <div className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider border ${
+                    spinsRemaining > 0 
+                        ? 'bg-emerald-50 border-emerald-200 text-emerald-600' 
+                        : 'bg-red-50 border-red-200 text-red-600'
+                }`}>
+                    {isLoading ? 'Loading...' : spinsRemaining <= 0 ? 'No spins left' : `${spinsRemaining} Spins Left`}
                 </div>
-                <div className={`w-full h-full rounded-xl rounded-t-none ${wonVouchers[i] && wonVouchers[i]?.label === 'Better Luck Next Time' ? 'border-8 border-t-0 border-[#bb1d1c]' : 'border-4 border-t-0 border-dashed  border-black/30'}`}></div>
-              </div>
-
-              <AnimatePresence>
-                {wonVouchers[i] ? (
-                  <>
-                    {wonVouchers[i]?.label !== 'Better Luck Next Time' ? (
-                      <motion.div 
-                        initial={{ opacity: 0, scale: 0.8, x: -100 }}
-                        animate={{ opacity: 1, scale: 1, x: 0 }}
-                        exit={{ opacity: 0, scale: 0.8, x: -100 }}
-                        transition={{ duration: 0.5, delay: 0.7 }}
-                        className="h-full w-full z-50"
-                      >
-                        <div className="h-full w-full rounded-xl z-50 flex flex-col bg-gradient-to-bl from-footer-bg via-violet to-dark-blue">
-                          <span className="w-full aspect-square rounded-sm border-b-2 border-dashed border-white/40 p-1 flex items-center justify-center ">
-                            <span className="w-full h-full rounded-lg overflow-hidden">
-                              <Image
-                                height={2048}
-                                width={2048}
-                                alt="voucher icon"
-                                src={Discounts[wonVouchers[i].label]}
-                                className="w-full h-full object-contain object-center"
-                              />
-                            </span>
-                          </span>
-                          <div className="min-h-10 w-full relative overflow-hidden -mt-4">
-                            <span className="h-7 w-7 rounded-full bg-[#f8f5f4] absolute -left-3 shadow-[inset_0_2px_5px_rgba(0,0,0,1)]"></span>
-                            <span className="h-7 w-7 rounded-full bg-[#f8f5f4] absolute -right-3 shadow-[inset_0_2px_5px_rgba(0,0,0,1)]"></span>
-                          </div>
-                          <span className="w-full flex flex-col items-center justify-center -mt-3 text-white">
-                            <h3 className="text-lg font-extrabold uppercase">{wonVouchers[i].label}</h3>
-                            <p className="text-sm -mt-1">in all items</p>
-                          </span>
-                          <div className="mt-auto h-auto w-full shadow-md rounded-b-xl flex flex-col p-3 gap-1">
-                            <div className="flex w-full items-center gap-1 text-neutral-50 text-left text-sm">
-                              <span className="bg-neutral-50 h-3 aspect-square rounded-full shadow-[inset_0_2px_5px_rgba(0,0,0,1)]"></span>
-                              <p>This voucher is <strong className="font-extrabold">one-time use only</strong></p>
-                            </div>
-                            <div className="flex w-full items-center gap-1 text-neutral-50 text-left text-sm">
-                              <span className="bg-neutral-50 h-3 aspect-square rounded-full shadow-[inset_0_2px_5px_rgba(0,0,0,1)]"></span>
-                              <p>
-                                Expires in{" "}
-                                <strong>
-                                  {(() => {
-                                    const d = new Date();
-                                    d.setMonth(d.getMonth() + 1);
-                                    return d.toLocaleString("default", { month: "long", year: "numeric" });
-                                  })()}
-                                </strong>
-                              </p>
-                            </div>
-                            <div className="flex w-full items-center gap-1 text-neutral-50 text-left text-sm">
-                              <span className="bg-neutral-50 h-3 aspect-square rounded-full shadow-[inset_0_2px_5px_rgba(0,0,0,1)]"></span>
-                              <p>You can only use <strong className="font-extrabold">1 voucher</strong> in every purchase</p>
-                            </div>
-                          </div>
-                        </div>
-                      </motion.div>
-                  ): (
-                      <motion.div 
-                      initial={{opacity: 0, scale: 1.3}}
-                      animate={{opacity: 1, scale: 1}}
-                      transition={{duration: 0.7}}
-                      className="h-full w-full aspect-square p-3 flex items-center justify-center"
-                      >
-                        <Image
-                          height={2048}
-                          width={2048}
-                          alt="better luck next time icon"
-                          src='/icons/better-luck-next-time.png'
-                          className="w-full aspect-square object-center object-contain"
-                        />
-                      </motion.div>
-                  )}
-                  </>
-                ) : (
-                  <div className="border-4 border-dashed border-black/10 m-auto mt-20 w-3/4 text-2xl font-extrabold text-black/10 text-center p-3 rounded-md">
-                    Your voucher goes here
-                  </div>
-                )}
-              </AnimatePresence>
             </div>
-          ))}
-          {/** voucher 1 */}
-
-          {wonVouchers.length === 2 && (
-            <div className="flex items-end h-full w-full ml-10 mb-20">
-              <motion.button 
-              animate={{ 
-                boxShadow: [
-                  '0 0 0 0px #C5D9E7',
-                  '0 0 0 5px #5A5CA8',
-                  '0 0 0 3px #C5D9E7',
-                  '0 0 0 5px #2C4594',
-                  '0 0 0 0px #5A5CA8',
-                ],
-              }}
-              transition={{
-                  duration: 1.5,
-                  ease: 'easeOut',
-                  repeat: Infinity,
-                  repeatType: 'loop',
-                }}
-              type="button" className="px-5 pr-3 py-3 rounded-md flex items-center gap-3 bg-blue font-bold text-white ring-4 hover:bg-violet focus:bg-dark-blue ease-out duration-200 z-50" onClick={() => setRoulette(false)}>GO BACK
-                <motion.span 
-                animate={{x: [-20,0,-10,0,-15,0]}}
-                transition={{
-                  duration: 0.5,
-                  ease: 'easeOut',
-                  repeat: Infinity,
-                  repeatType: 'loop',
-                  repeatDelay: 2
-                }}
-                className="text-2xl">
-                  <RiArrowRightLine />
-                </motion.span>
-              </motion.button>
-            </div>
-          )}
         </div>
+
+        {/* Results Section (Below) */}
+        <div className="w-full max-w-2xl">
+            <div className="grid grid-cols-2 gap-4">
+                {Array.from({length: 2}).map((_, i) => (
+                    <div key={i} className="relative h-24 md:h-32 rounded-xl bg-white border border-gray-200 overflow-hidden group shadow-sm">
+                        {wonVouchers[i] ? (
+                            <motion.div 
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className="h-full flex items-center p-4 gap-4"
+                            >
+                                {/* Icon */}
+                                <div className="h-12 w-12 md:h-16 md:w-16 shrink-0 rounded-lg bg-gray-50 p-2 border border-gray-100 shadow-inner">
+                                    <Image
+                                        height={100}
+                                        width={100}
+                                        alt="voucher"
+                                        src={wonVouchers[i]?.label === 'Better Luck Next Time' ? '/icons/better-luck-next-time.png' : Discounts[wonVouchers[i]!.label]}
+                                        className="w-full h-full object-contain"
+                                    />
+                                </div>
+                                {/* Text */}
+                                <div className="flex flex-col">
+                                    <span className={`text-sm md:text-lg font-bold ${wonVouchers[i]?.label === 'Better Luck Next Time' ? 'text-gray-500' : 'text-gray-900'}`}>
+                                        {wonVouchers[i]?.label}
+                                    </span>
+                                    {wonVouchers[i]?.label !== 'Better Luck Next Time' && (
+                                        <span className="text-xs text-emerald-600 font-medium">Active Reward</span>
+                                    )}
+                                </div>
+                            </motion.div>
+                        ) : (
+                            <div className="h-full flex items-center justify-center text-gray-400 text-sm font-medium uppercase tracking-wider border-2 border-dashed border-gray-200 rounded-xl m-1">
+                                Empty Slot
+                            </div>
+                        )}
+                    </div>
+                ))}
+            </div>
+            
+            {/* Back Button */}
+            {wonVouchers.length === 2 && (
+                <motion.button
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    onClick={() => setRoulette(false)}
+                    className="mt-8 w-full py-4 rounded-xl bg-linear-to-r from-violet-600 to-indigo-600 text-white font-bold text-lg shadow-lg shadow-violet-200 hover:shadow-violet-300 transition-all active:scale-[0.98]"
+                >
+                    Collect & Return
+                </motion.button>
+            )}
+        </div>
+
       </div>
     </div>
   );
