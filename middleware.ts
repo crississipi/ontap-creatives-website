@@ -36,6 +36,15 @@ const publicPaths = [
   '/api/cart',
   // Receipts need to be readable cross-site
   '/api/receipts',
+  '/api/profile/affiliate',
+  '/api/profile/change-password',
+  '/api/profile/orders',
+  '/api/profile/upload-image',
+  '/api/profile',
+  '/api/affiliate/apply',
+  '/api/affiliate/check',
+  '/api/newsletter/subscribe',
+  '/api/newsletter/unsubscribe'
 ];
 
 export function middleware(request: NextRequest) {
