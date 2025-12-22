@@ -257,20 +257,6 @@ model newsletter{
   unsubscribeToken  String   @unique @default(cuid())
 }
 
-model affiliate {
-  affiliateID    Int      @id @default(autoincrement())
-  clientID       Int      @unique
-  affiliateCode  String   @unique @db.VarChar(100)
-  totalEarnings  Float    @default(0) @db.Float
-  status         String   @default("Active") @db.VarChar(50)
-  createdAt      DateTime @default(now())
-  client         client   @relation(fields: [clientID], references: [clientID], onDelete: Cascade)
-
-  @@index([clientID])
-  @@index([affiliateCode])
-  @@map("affiliate")
-}
-
 model affiliateApplication {
   applicationID                Int       @id @default(autoincrement())
   
