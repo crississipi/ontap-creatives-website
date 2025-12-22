@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const redirectParam = searchParams.get('redirect');
     
-    let frontendUrl = 'https://darkslategray-horse-918539.hostingersite.com';
+    let frontendUrl = 'https://ontap.ph/';
     
     if (redirectParam) {
       frontendUrl = decodeURIComponent(redirectParam);

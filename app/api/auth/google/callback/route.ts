@@ -17,20 +17,20 @@ export async function GET(request: NextRequest) {
     
     if (error) {
       console.error('Google OAuth error:', error);
-      const errorUrl = new URL('https://darkslategray-horse-918539.hostingersite.com');
+      const errorUrl = new URL('https://ontap.ph/');
       errorUrl.searchParams.set('auth_error', `google_${error}`);
       return NextResponse.redirect(errorUrl.toString());
     }
     
     if (!code) {
       console.error('No authorization code received');
-      const errorUrl = new URL('https://darkslategray-horse-918539.hostingersite.com');
+      const errorUrl = new URL('https://ontap.ph/');
       errorUrl.searchParams.set('auth_error', 'no_code');
       return NextResponse.redirect(errorUrl.toString());
     }
     
     // Get frontend URL from state
-    let frontendUrl = 'https://darkslategray-horse-918539.hostingersite.com';
+    let frontendUrl = 'https://ontap.ph/';
     let callbackPath = '/auth/callback'; // Updated for App Router
     
     if (state) {
@@ -45,7 +45,7 @@ export async function GET(request: NextRequest) {
     }
     
     // Google OAuth callback URL
-    const backendBaseUrl = 'https://ontap-creatives-website.vercel.app';
+    const backendBaseUrl = 'https://ontap.ph/';
     const googleRedirectUri = `${backendBaseUrl}/api/auth/google/callback`;
     
     console.log('Will redirect user back to:', `${frontendUrl}${callbackPath}`);
@@ -190,7 +190,7 @@ export async function GET(request: NextRequest) {
     
   } catch (err: any) {
     console.error('Google callback error:', err);
-    const errorUrl = new URL('https://darkslategray-horse-918539.hostingersite.com');
+    const errorUrl = new URL('https://ontap.ph/');
     errorUrl.searchParams.set('auth_error', 'server_error');
     return NextResponse.redirect(errorUrl.toString());
   }
